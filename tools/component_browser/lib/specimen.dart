@@ -1,3 +1,4 @@
+import 'technical_specimens.dart';
 import 'demo_style.dart';
 import 'package:flutter/widgets.dart';
 import 'package:video_components/video_components.dart';
@@ -12,6 +13,7 @@ Widget specimen(
   DitherPrograms? programs, {
   bool videoControls = false,
 }) {
+  if (isTechnical(spec)) return technicalSpecimen(spec, p, progress);
   double number(String key) => (p[key] as num).toDouble();
   Widget centered(Widget child) => Center(
     child: Padding(padding: const EdgeInsets.all(32), child: child),

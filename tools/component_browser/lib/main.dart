@@ -628,6 +628,35 @@ class _BrowserPageState extends State<BrowserPage>
           ],
         ),
         codeBox(dartExample(spec, props)),
+        if (spec.data['usage'] != null) ...[
+          const SizedBox(height: 24),
+          Text(spec.data['usage'] as String),
+        ],
+        if ((spec.data['examples'] as List? ?? []).isNotEmpty) ...[
+          const SizedBox(height: 24),
+          const Text(
+            'Examples in context',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          ),
+          for (final example in spec.data['examples'] as List) ...[
+            const SizedBox(height: 16),
+            Text(
+              example['title'] as String,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(example['description'] as String),
+            SizedBox(
+              height: 260,
+              child: SpecimenFrame(
+                spec: spec,
+                props: spec.props(example['variant'] as String),
+                progress: 1,
+                programs: widget.programs,
+                canvas: const Size(960, 540),
+              ),
+            ),
+          ],
+        ],
         const SizedBox(height: 12),
         SelectableText(
           'Source: ${spec.source}\nWidget: ${spec.widget}',
@@ -635,7 +664,7 @@ class _BrowserPageState extends State<BrowserPage>
         ),
         const SizedBox(height: 8),
         const Text(
-          'Import package:video_components/video_components.dart; import Clip from package:fluvie/fluvie.dart for video. Preload images, GIF frames and DitherPrograms before capture; supply progress and outputSeconds from the composition.',
+          'Import package:video_components/video_components.dart; for diagram recipes also import package:video_components/technical_samples.dart. Supply your own VideoStyle (demoStyle is local to this browser). Import Clip from package:fluvie/fluvie.dart for video. Preload images, GIF frames and DitherPrograms before capture; supply progress and outputSeconds from the composition.',
           style: TextStyle(fontSize: 12, color: DemoPalette.muted),
         ),
       ],

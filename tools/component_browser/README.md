@@ -71,7 +71,7 @@ To add an element:
 4. Run the browser tests and build. The variant test covers every registry entry
    in both portrait and landscape; missing builders fail rather than silently hide.
 
-The catalog covers thirteen high-level building blocks, including image, GIF and video surfaces. Shader internals,
+The catalog covers 24 entries, including media, technical diagrams and charts. Shader internals,
 asset loaders, token constants and the Fluvie video wrapper remain documented
 APIs rather than separate browsable content components.
 
@@ -116,3 +116,14 @@ All styled specimens use the browser-local grayscale `lib/demo_style.dart`.
 Constructor examples assume an application-defined `demoStyle: VideoStyle`;
 provide your own palette and typography (see `components/CATALOG.md`). The public
 library does not bundle brand fonts or export default typography.
+
+
+## Technical visuals
+
+Filter **Technical diagrams** or **Charts** for nodes, connectors, flowcharts,
+architecture recipes, layer stacks, grids, sequences, annotations and four
+Fluvie-backed charts. Detail pages show usage notes and contextual sample presets
+alongside the editable preview and copyable Dart constructor. Chart data is
+edited as one `Label: value` per line; invalid input displays an explanation.
+Recipe constructors in the public package additionally require
+`package:video_components/technical_samples.dart`. All samples are illustrative.

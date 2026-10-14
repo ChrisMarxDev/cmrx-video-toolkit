@@ -1,3 +1,4 @@
+import 'technical_specimens.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
@@ -47,6 +48,7 @@ String flowReference(
 String literal(Object? value) => jsonEncode(value).replaceAll(r'$', r'\$');
 
 String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
+  if (isTechnical(spec)) return technicalDartExample(spec, p);
   final text = literal(p['text']);
   return switch (spec.id) {
     'video.image' =>

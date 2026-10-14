@@ -480,6 +480,622 @@
           }
         }
       ]
+    },
+    {
+      "id": "video.diagram-node",
+      "name": "Flowchart node",
+      "widget": "TechnicalNode",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/diagram.dart",
+      "motion": false,
+      "description": "Process, terminal, decision, database and document shapes with editable labels.",
+      "parameters": {
+        "label": {
+          "label": "Label",
+          "type": "text",
+          "default": "Process"
+        },
+        "shape": {
+          "label": "Shape",
+          "type": "choice",
+          "default": "process",
+          "options": [
+            "process",
+            "terminal",
+            "decision",
+            "database",
+            "document"
+          ]
+        },
+        "active": {
+          "label": "Highlight",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "process",
+          "props": {}
+        },
+        {
+          "id": "start-end",
+          "props": {
+            "shape": "terminal",
+            "label": "Start"
+          }
+        },
+        {
+          "id": "decision",
+          "props": {
+            "shape": "decision",
+            "label": "Valid?"
+          }
+        },
+        {
+          "id": "database",
+          "props": {
+            "shape": "database",
+            "label": "Store"
+          }
+        },
+        {
+          "id": "document",
+          "props": {
+            "shape": "document",
+            "label": "Report"
+          }
+        }
+      ],
+      "usage": "Use shape to signal meaning. Keep node labels short; put the explanation beside the diagram.",
+      "examples": [
+        {
+          "title": "Decision",
+          "description": "A question with labeled outgoing paths.",
+          "variant": "decision"
+        },
+        {
+          "title": "Stored state",
+          "description": "Use the cylinder for persisted data.",
+          "variant": "database"
+        }
+      ]
+    },
+    {
+      "id": "video.connector",
+      "name": "Routed connector",
+      "widget": "TechnicalDiagram",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/diagram.dart",
+      "motion": true,
+      "description": "Port-anchored arrows with explicit elbow waypoints, direction, labels and dashed feedback.",
+      "parameters": {
+        "label": {
+          "label": "Edge label",
+          "type": "text",
+          "default": "data"
+        },
+        "dashed": {
+          "label": "Dashed return",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "forward",
+          "props": {}
+        },
+        {
+          "id": "response",
+          "props": {
+            "dashed": true,
+            "label": "response"
+          }
+        }
+      ],
+      "usage": "A connector is shown between real nodes, not floating on an empty canvas. Waypoints are explicit for obstacle avoidance and loops.",
+      "examples": [
+        {
+          "title": "A response channel",
+          "description": "A dashed connector distinguishes a response from a solid request path.",
+          "variant": "response"
+        }
+      ]
+    },
+    {
+      "id": "video.flowchart",
+      "name": "Flowchart recipes",
+      "widget": "technicalDiagramExample",
+      "category": "Technical diagrams",
+      "source": "components/lib/technical_samples.dart",
+      "motion": true,
+      "description": "Editable pipeline, decision branch and feedback-loop examples; scrub the arrow reveal.",
+      "parameters": {
+        "example": {
+          "label": "Recipe",
+          "type": "choice",
+          "default": "pipeline",
+          "options": [
+            "pipeline",
+            "decision",
+            "feedback"
+          ]
+        },
+        "vertical": {
+          "label": "Vertical pipeline",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "pipeline",
+          "props": {}
+        },
+        {
+          "id": "portrait",
+          "props": {
+            "vertical": true
+          }
+        },
+        {
+          "id": "decision",
+          "props": {
+            "example": "decision"
+          }
+        },
+        {
+          "id": "feedback",
+          "props": {
+            "example": "feedback"
+          }
+        }
+      ],
+      "usage": "Show one relationship at a time. Pipeline can recompose vertically; other recipes preserve their logical canvas. All examples are illustrative.",
+      "examples": [
+        {
+          "title": "A branching decision",
+          "description": "One question, two clearly labeled outcomes.",
+          "variant": "decision"
+        },
+        {
+          "title": "Review and revise",
+          "description": "Dashed feedback returns to the review stage.",
+          "variant": "feedback"
+        }
+      ]
+    },
+    {
+      "id": "video.architecture",
+      "name": "System architecture",
+      "widget": "technicalDiagramExample",
+      "category": "Technical diagrams",
+      "source": "components/lib/technical_samples.dart",
+      "motion": true,
+      "description": "Illustrative service map, retrieval flow and parallel worker topology.",
+      "parameters": {
+        "example": {
+          "label": "Recipe",
+          "type": "choice",
+          "default": "serviceMap",
+          "options": [
+            "serviceMap",
+            "retrieval",
+            "fanout"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "service-map",
+          "props": {}
+        },
+        {
+          "id": "retrieval",
+          "props": {
+            "example": "retrieval"
+          }
+        },
+        {
+          "id": "fan-out",
+          "props": {
+            "example": "fanout"
+          }
+        }
+      ],
+      "usage": "Use a small service map to explain boundaries. These layouts are starting points, not verified architectures or product claims.",
+      "examples": [
+        {
+          "title": "Retrieval before generation",
+          "description": "Documents supply context to a generation step.",
+          "variant": "retrieval"
+        },
+        {
+          "title": "Parallel work",
+          "description": "Dispatch to several workers, then collect results.",
+          "variant": "fan-out"
+        }
+      ]
+    },
+    {
+      "id": "video.layer-stack",
+      "name": "Exploded layer stack",
+      "widget": "TechnicalStack",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/technical.dart",
+      "motion": true,
+      "description": "A labeled stack whose separation can be scrubbed without losing the labels.",
+      "parameters": {
+        "text": {
+          "label": "Layers, bottom to top",
+          "type": "text",
+          "default": "Storage\nLogic\nInterface"
+        },
+        "active": {
+          "label": "Active layer (zero-based)",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 5
+        }
+      },
+      "variants": [
+        {
+          "id": "software",
+          "props": {}
+        },
+        {
+          "id": "packet",
+          "props": {
+            "text": "Payload\nTransport\nNetwork",
+            "active": 1
+          }
+        },
+        {
+          "id": "assembly",
+          "props": {
+            "text": "Base\nBoard\nCover",
+            "active": 1
+          }
+        }
+      ],
+      "usage": "Use exploded layers for containment and composition. Layer order is bottom to top; labels remain legible when collapsed.",
+      "examples": [
+        {
+          "title": "Inside a network packet",
+          "description": "Separate payload, transport and network layers while preserving their order.",
+          "variant": "packet"
+        }
+      ]
+    },
+    {
+      "id": "video.tensor-grid",
+      "name": "Matrix / memory grid",
+      "widget": "TechnicalGrid",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/technical.dart",
+      "motion": false,
+      "description": "A labeled matrix with row or column emphasis for tensors, batches, pixels and memory.",
+      "parameters": {
+        "example": {
+          "label": "Values",
+          "type": "choice",
+          "default": "matrix",
+          "options": [
+            "matrix",
+            "memory",
+            "weights"
+          ]
+        },
+        "axis": {
+          "label": "Highlight",
+          "type": "choice",
+          "default": "row",
+          "options": [
+            "row",
+            "column"
+          ]
+        },
+        "active": {
+          "label": "Active index",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 3
+        }
+      },
+      "variants": [
+        {
+          "id": "matrix",
+          "props": {}
+        },
+        {
+          "id": "memory",
+          "props": {
+            "example": "memory",
+            "axis": "column"
+          }
+        },
+        {
+          "id": "weights",
+          "props": {
+            "example": "weights"
+          }
+        }
+      ],
+      "usage": "Rows and columns have meaning only when supplied by the explanation. The weights are synthetic; they are not real attention measurements.",
+      "examples": [
+        {
+          "title": "Inspect a memory column",
+          "description": "Address labels retain their locations as one column is selected.",
+          "variant": "memory"
+        }
+      ]
+    },
+    {
+      "id": "video.sequence",
+      "name": "Request / response sequence",
+      "widget": "TechnicalSequence",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/technical.dart",
+      "motion": true,
+      "description": "Top-to-bottom message order with solid requests and dashed responses.",
+      "parameters": {
+        "example": {
+          "label": "Scenario",
+          "type": "choice",
+          "default": "request",
+          "options": [
+            "request",
+            "tool"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "request-response",
+          "props": {}
+        },
+        {
+          "id": "tool-call",
+          "props": {
+            "example": "tool"
+          }
+        }
+      ],
+      "usage": "Use sequence diagrams when the order of messages matters more than spatial layout.",
+      "examples": [
+        {
+          "title": "Tool calling",
+          "description": "A model requests a tool; code returns its result before the answer.",
+          "variant": "tool-call"
+        }
+      ]
+    },
+    {
+      "id": "video.annotation",
+      "name": "Technical callout leaders",
+      "widget": "TechnicalAnnotation",
+      "category": "Technical diagrams",
+      "source": "components/lib/src/diagrams/technical.dart",
+      "motion": true,
+      "description": "Crosshair and leader annotations over any child widget, shown on an exploded layer example.",
+      "parameters": {
+        "label": {
+          "label": "Callout label",
+          "type": "text",
+          "default": "Selected layer"
+        }
+      },
+      "variants": [
+        {
+          "id": "layer",
+          "props": {}
+        },
+        {
+          "id": "detail",
+          "props": {
+            "label": "Inspect this interface"
+          }
+        }
+      ],
+      "usage": "Point to an exact feature. The callout and anchor use the same logical coordinates as the underlying drawing.",
+      "examples": [
+        {
+          "title": "Inspect an interface",
+          "description": "A leader names the selected part without adding another panel.",
+          "variant": "detail"
+        }
+      ]
+    },
+    {
+      "id": "video.chart-bar",
+      "name": "Bar chart",
+      "widget": "TechnicalChart",
+      "category": "Charts",
+      "source": "components/lib/src/charts.dart",
+      "motion": true,
+      "description": "Compare a small set of category magnitudes. Uses the existing Fluvie renderer.",
+      "parameters": {
+        "text": {
+          "label": "Data: one Label: value per line",
+          "type": "text",
+          "default": "A: 18\nB: 32\nC: 24"
+        },
+        "unit": {
+          "label": "Unit",
+          "type": "text",
+          "default": "units"
+        },
+        "source": {
+          "label": "Source / context",
+          "type": "text",
+          "default": "Illustrative data"
+        }
+      },
+      "variants": [
+        {
+          "id": "sample",
+          "props": {}
+        },
+        {
+          "id": "comparison",
+          "props": {
+            "text": "A: 12\nB: 28\nC: 20",
+            "unit": "items"
+          }
+        }
+      ],
+      "usage": "Data is illustrative until you supply your own values and source. Finite nonnegative values only. Legend numbers are final values; the reveal is visual, not changing data. Fluvie owns the geometry; this wrapper adds readable labels and a plain-widget frame scope.",
+      "examples": [
+        {
+          "title": "An illustrative comparison",
+          "description": "Three labeled values with explicit units. Replace the sample values and source before using this in a real story.",
+          "variant": "comparison"
+        }
+      ]
+    },
+    {
+      "id": "video.chart-line",
+      "name": "Line chart",
+      "widget": "TechnicalChart",
+      "category": "Charts",
+      "source": "components/lib/src/charts.dart",
+      "motion": true,
+      "description": "Show an ordered trend; category intervals are equally spaced. Uses the existing Fluvie renderer.",
+      "parameters": {
+        "text": {
+          "label": "Data: one Label: value per line",
+          "type": "text",
+          "default": "T1: 12\nT2: 24\nT3: 18\nT4: 36"
+        },
+        "unit": {
+          "label": "Unit",
+          "type": "text",
+          "default": "units"
+        },
+        "source": {
+          "label": "Source / context",
+          "type": "text",
+          "default": "Illustrative data"
+        }
+      },
+      "variants": [
+        {
+          "id": "sample",
+          "props": {}
+        },
+        {
+          "id": "comparison",
+          "props": {
+            "text": "A: 12\nB: 28\nC: 20",
+            "unit": "items"
+          }
+        }
+      ],
+      "usage": "Data is illustrative until you supply your own values and source. Finite nonnegative values only. Legend numbers are final values; the reveal is visual, not changing data. Fluvie owns the geometry; this wrapper adds readable labels and a plain-widget frame scope.",
+      "examples": [
+        {
+          "title": "An illustrative comparison",
+          "description": "Three labeled values with explicit units. Replace the sample values and source before using this in a real story.",
+          "variant": "comparison"
+        }
+      ]
+    },
+    {
+      "id": "video.chart-area",
+      "name": "Area chart",
+      "widget": "TechnicalChart",
+      "category": "Charts",
+      "source": "components/lib/src/charts.dart",
+      "motion": true,
+      "description": "Show magnitude over an ordered sequence; equally spaced categories. Uses the existing Fluvie renderer.",
+      "parameters": {
+        "text": {
+          "label": "Data: one Label: value per line",
+          "type": "text",
+          "default": "T1: 10\nT2: 16\nT3: 30\nT4: 24"
+        },
+        "unit": {
+          "label": "Unit",
+          "type": "text",
+          "default": "units"
+        },
+        "source": {
+          "label": "Source / context",
+          "type": "text",
+          "default": "Illustrative data"
+        }
+      },
+      "variants": [
+        {
+          "id": "sample",
+          "props": {}
+        },
+        {
+          "id": "comparison",
+          "props": {
+            "text": "A: 12\nB: 28\nC: 20",
+            "unit": "items"
+          }
+        }
+      ],
+      "usage": "Data is illustrative until you supply your own values and source. Finite nonnegative values only. Legend numbers are final values; the reveal is visual, not changing data. Fluvie owns the geometry; this wrapper adds readable labels and a plain-widget frame scope.",
+      "examples": [
+        {
+          "title": "An illustrative comparison",
+          "description": "Three labeled values with explicit units. Replace the sample values and source before using this in a real story.",
+          "variant": "comparison"
+        }
+      ]
+    },
+    {
+      "id": "video.chart-donut",
+      "name": "Donut chart",
+      "widget": "TechnicalChart",
+      "category": "Charts",
+      "source": "components/lib/src/charts.dart",
+      "motion": true,
+      "description": "Show a simple part-to-whole relationship with an explicit value legend. Uses the existing Fluvie renderer.",
+      "parameters": {
+        "text": {
+          "label": "Data: one Label: value per line",
+          "type": "text",
+          "default": "A: 50\nB: 30\nC: 20"
+        },
+        "unit": {
+          "label": "Unit",
+          "type": "text",
+          "default": "units"
+        },
+        "source": {
+          "label": "Source / context",
+          "type": "text",
+          "default": "Illustrative data"
+        }
+      },
+      "variants": [
+        {
+          "id": "sample",
+          "props": {}
+        },
+        {
+          "id": "comparison",
+          "props": {
+            "text": "A: 12\nB: 28\nC: 20",
+            "unit": "items"
+          }
+        }
+      ],
+      "usage": "Data is illustrative until you supply your own values and source. Finite nonnegative values only. Legend numbers are final values; the reveal is visual, not changing data. Fluvie owns the geometry; this wrapper adds readable labels and a plain-widget frame scope.",
+      "examples": [
+        {
+          "title": "An illustrative comparison",
+          "description": "Three labeled values with explicit units. Replace the sample values and source before using this in a real story.",
+          "variant": "comparison"
+        }
+      ]
     }
   ]
 }
