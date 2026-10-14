@@ -18,9 +18,16 @@ WEB = Path(__file__).parent / 'web'
 
 
 class Session:
-    def __init__(self, home):
+    def __init__(self, home, model=None):
         self.home = Path(home).expanduser().resolve()
         self.home.mkdir(parents=True, exist_ok=True)
+        self.default_model = model or os.environ.get('WHISPER_MODEL')
+        settings = self.home / 'settings.json'
+        if not self.default_model and settings.exists():
+            try:
+                self.default_model = review.read(settings).get('model')
+            except (ValueError, OSError):
+                pass
         self.lock = threading.RLock()
         self.cancel = threading.Event()
         self.workspace = None
@@ -72,9 +79,13 @@ class Session:
             source = path
         def operation():
             # Keep the previous session until this one has passed source validation.
-            document = review.prepare(source, workspace, data.get('model'), data.get('transcript'), self.progress, self.cancel)
+            chosen_model = data.get('model') or self.default_model
+            document = review.prepare(source, workspace, chosen_model, data.get('transcript'), self.progress, self.cancel)
             with self.lock:
                 self.workspace, self.document = workspace, document
+                if chosen_model:
+                    self.default_model = chosen_model
+                    review.write(self.home / 'settings.json', {'model': chosen_model})
         self.start(operation)
         self.last_open = dict(data)
 
@@ -264,11 +275,11 @@ class Handler(BaseHTTPRequestHandler):
         self.json(dict(path=str(destination), workspace=str(destination.parent.parent)))
 
 
-def make_server(port=0, home=None):
+def make_server(port=0, home=None, model=None):
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     server.daemon_threads = True
     server.token = secrets.token_urlsafe(32)
-    server.session = Session(home or Path.home() / 'VideoReviews')
+    server.session = Session(home or Path.home() / 'VideoReviews', model)
     return server
 
 
@@ -281,7 +292,7 @@ def main():
     parser.add_argument('--transcript')
     parser.add_argument('--home', help='Folder for videos selected through the browser')
     args = parser.parse_args()
-    server = make_server(args.port, args.home)
+    server = make_server(args.port, args.home, args.model)
     if args.video:
         server.session.open(dict(path=args.video, workspace=args.workspace, model=args.model, transcript=args.transcript))
     print(f'Open http://127.0.0.1:{server.server_address[1]}/#token={server.token}', flush=True)

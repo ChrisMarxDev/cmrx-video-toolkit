@@ -10,6 +10,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 import wave
 import array
 
@@ -106,6 +107,18 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('/api/save',payload)[0],400)
         payload['revision']=1;payload['source_sha256']='f'*64
         self.assertEqual(self.request('/api/save',payload)[0],400)
+
+    def test_model_default_is_used_and_remembered(self):
+        state=self.server.session
+        state.default_model='model chosen at startup.bin'
+        with patch.object(review,'prepare',return_value=document()) as prepare:
+            state.open({'path':str(Path(self.temp.name)/'video.mp4')})
+            state.worker.join(2)
+            self.assertFalse(state.job['busy'])
+            self.assertIsNone(state.job['error'])
+            self.assertEqual(prepare.call_args.args[2],'model chosen at startup.bin')
+        reopened=server.Session(self.temp.name)
+        self.assertEqual(reopened.default_model,'model chosen at startup.bin')
 
     def test_range_serving(self):
         state=self.server.session;state.workspace=Path(self.temp.name);(state.workspace/'source').mkdir()

@@ -32,7 +32,9 @@ The service binds to `127.0.0.1` only. It does not open or automate your browser
 Stop it with Ctrl+C. Use `--port 0` for an available port, or `--port 8092` to
 choose another. The web UI offers file selection or a local path and preparation
 options. `--workspace`, `--model`, and `--transcript` also work on the command line.
-`WHISPER_MODEL` supplies the default model path. Models stay outside the repository.
+`WHISPER_MODEL` or `--model` supplies the default model path. A successfully used
+model path is remembered in the local review home for subsequent app sessions.
+Models stay outside the repository.
 
 On macOS, the optional `bash apps/editor/tool/setup.sh` installs Homebrew tools and
 a base model, then prints the model setting. On other systems install FFmpeg and

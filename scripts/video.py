@@ -30,6 +30,15 @@ def run(args, **kwargs):
     return subprocess.run([str(a) for a in args], check=True, **kwargs)
 
 
+def filter_graph_args(path):
+    # FFmpeg 9 removed the legacy flag; older FFmpeg lacks slash-prefixed file options.
+    # Detect the advertised flag rather than imposing a platform-specific version pin.
+    help_text = run(['ffmpeg', '-hide_banner', '-h', 'full'], capture_output=True,
+                    text=True, errors='replace').stdout
+    flag = '-filter_complex_script' if '-filter_complex_script' in help_text else '-/filter_complex'
+    return [flag, str(path)]
+
+
 def probe(path):
     return json.loads(run(['ffprobe', '-v', 'error', '-show_format', '-show_streams',
                            '-of', 'json', path], capture_output=True, text=True).stdout)
@@ -216,7 +225,7 @@ def cut(args):
     graph.write_text(';\n'.join(filters))
     target = p / 'composition/assets/rough-cut.mp4'
     temporary = target.with_name('rough-cut.pending.mp4')
-    run(['ffmpeg', '-v', 'error', '-y', '-i', config['source'], '-filter_complex_script', graph,
+    run(['ffmpeg', '-v', 'error', '-y', '-i', config['source'], *filter_graph_args(graph),
          '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
          '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-movflags', '+faststart', temporary])
     temporary.replace(target)

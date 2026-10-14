@@ -329,7 +329,7 @@ The project references local original media; copy/relink that media when moving 
         graph = target / 'edit/filtergraph.txt'
         graph.write_text(';\n'.join(filters), encoding='utf-8')
         cut = target / 'composition/assets/rough-cut.mp4'
-        run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', source, '-filter_complex_script', graph, '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-c:a', 'aac', '-movflags', '+faststart', cut], cancel)
+        run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', source, *video.filter_graph_args(graph), '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-c:a', 'aac', '-movflags', '+faststart', cut], cancel)
         if abs(float(video.probe(cut)['format']['duration']) - timeline['duration']) > .15:
             raise ValueError(f'Render timing drift exceeds 150 ms; inspect {target}')
         run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', cut, '-vn', '-c:a', 'pcm_s16le', target / 'edit/narration.wav'], cancel)
