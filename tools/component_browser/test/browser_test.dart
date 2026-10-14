@@ -28,7 +28,6 @@ void main() {
       final catalog = (await tester.runAsync(loadCatalog))!;
       final programs = (await tester.runAsync(DitherPrograms.load))!;
       await tester.runAsync(() async {
-        await VideoType.loadForCapture();
         await (FontLoader(
           'MaterialIcons',
         )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
@@ -42,10 +41,7 @@ void main() {
         );
         for (final variant in spec.variants) {
           final props = spec.props(variant['id']);
-          expect(
-            dartExample(spec, props),
-            contains(spec.widget == 'VideoType' ? 'VideoType' : spec.widget),
-          );
+          expect(dartExample(spec, props), contains(spec.widget));
           final ref = jsonDecode(flowReference(spec, variant['id'], props));
           expect(ref['props'], props);
           for (final canvas in [const Size(960, 540), const Size(540, 960)]) {
@@ -149,7 +145,6 @@ void main() {
       final catalog = (await tester.runAsync(loadCatalog))!;
       final programs = (await tester.runAsync(DitherPrograms.load))!;
       await tester.runAsync(() async {
-        await VideoType.loadForCapture();
         await (FontLoader(
           'MaterialIcons',
         )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
@@ -227,7 +222,7 @@ void main() {
         ComponentBrowser(
           catalog: catalog,
           programs: programs,
-          initialRoute: '/video.texture?variant=lavender-lime',
+          initialRoute: '/video.texture?variant=surface-accent',
         ),
       );
       await tester.pump();
@@ -241,7 +236,7 @@ void main() {
         isNot(first),
       );
       expect(
-        tester.widget<VideoTexture>(find.byType(VideoTexture)).lavenderLime,
+        tester.widget<VideoTexture>(find.byType(VideoTexture)).accentPalette,
         isTrue,
       );
       binding.platformDispatcher.accessibilityFeaturesTestValue =

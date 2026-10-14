@@ -1,3 +1,4 @@
+import 'demo_style.dart';
 import 'package:flutter/widgets.dart';
 import 'package:video_components/video_components.dart';
 import 'catalog.dart';
@@ -22,6 +23,7 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoImage(
+                style: demoStyle,
                 image: demoImage!.images.first,
                 fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
                 framed: p['framed'],
@@ -33,6 +35,7 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoGif(
+                style: demoStyle,
                 frames: demoGif!,
                 seconds: progress * 10,
                 fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
@@ -42,33 +45,38 @@ Widget specimen(
     'video.video' => Padding(
       padding: const EdgeInsets.all(32),
       child: VideoVideo(
+        style: demoStyle,
         framed: p['framed'],
         child: videoControls
             ? videoPreview(p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain)
             : (demoImage == null
                   ? const SizedBox()
                   : VideoImage(
+                      style: demoStyle,
                       image: demoImage!.images.first,
                       fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
                     )),
       ),
     ),
     'video.stage' => VideoStage(
+      style: demoStyle,
       theme: p['theme'] == 'dark' ? VideoTheme.dark : VideoTheme.light,
       child: centered(const Text('An idea takes shape.')),
     ),
     'video.block' => centered(
       VideoBlock(
+        style: demoStyle,
         active: p['active'],
         padding: number('padding'),
         child: Text(p['text']),
       ),
     ),
     'video.caption' => centered(
-      VideoCaption(p['text'], fontSize: number('fontSize')),
+      VideoCaption(style: demoStyle, p['text'], fontSize: number('fontSize')),
     ),
     'video.code' => centered(
       VideoCode(
+        style: demoStyle,
         lines: (p['text'] as String).split('\n'),
         focusLine: effectiveFocus(p),
       ),
@@ -76,6 +84,7 @@ Widget specimen(
     'video.layers' => Padding(
       padding: const EdgeInsets.all(24),
       child: VideoLayers(
+        style: demoStyle,
         expansion: progress,
         activeLayer: (p['activeLayer'] as num).toInt(),
       ),
@@ -86,47 +95,55 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoTexture(
+                style: demoStyle,
                 programs: programs,
                 seconds: progress * 10,
                 animated: p['animated'],
                 strong: p['strong'],
-                lavenderLime: p['lavenderLime'],
+                accentPalette: p['accentPalette'],
               ),
             ),
     'video.dither-background' =>
       programs == null
           ? shaderUnavailable()
           : VideoDitherBackground(
+              style: demoStyle,
               programs: programs,
               seconds: progress * 10,
               speed: number('speed'),
-              lavenderLime: p['lavenderLime'],
+              accentPalette: p['accentPalette'],
               pixelSize: number('pixelSize'),
-              child: centered(const VideoBlock(child: Text('Clean foreground'))),
+              child: centered(
+                const VideoBlock(
+                  style: demoStyle,
+                  child: Text('Clean foreground'),
+                ),
+              ),
             ),
     'video.type' => centered(
       Text(
         p['text'],
         style: switch (p['role']) {
-          'mono' => VideoType.mono,
-          'caption' => VideoType.caption,
-          _ => VideoType.body,
+          'mono' => DemoType.mono,
+          'caption' => DemoType.caption,
+          _ => DemoType.body,
         },
       ),
     ),
     'video.reveal' => centered(
       Reveal(
         progress: progress,
-        child: VideoBlock(child: Text(p['text'])),
+        child: VideoBlock(style: demoStyle, child: Text(p['text'])),
       ),
     ),
     _ => throw StateError('Missing specimen: ${spec.id}'),
   };
   return VideoStage(
+    style: demoStyle,
     child: ColoredBox(
       color: spec.id == 'video.type' && p['role'] == 'caption'
-          ? VideoTokens.ink
-          : VideoTokens.lavender,
+          ? DemoPalette.ink
+          : DemoPalette.surface,
       child: content,
     ),
   );

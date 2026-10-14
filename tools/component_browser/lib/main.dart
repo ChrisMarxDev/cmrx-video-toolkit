@@ -1,3 +1,4 @@
+import 'demo_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_components/video_components.dart';
@@ -49,15 +50,14 @@ class ComponentBrowser extends StatelessWidget {
     initialRoute: initialRoute,
     theme: ThemeData(
       useMaterial3: true,
-      fontFamily: 'packages/video_components/Space Grotesk',
-      scaffoldBackgroundColor: VideoTokens.white,
-      colorScheme: ColorScheme.fromSeed(seedColor: VideoTokens.ink).copyWith(
-        primary: VideoTokens.ink,
-        onPrimary: VideoTokens.white,
-        secondary: VideoTokens.lime,
-        surface: VideoTokens.white,
-        onSurface: VideoTokens.ink,
-        outline: VideoTokens.rule,
+      scaffoldBackgroundColor: DemoPalette.white,
+      colorScheme: ColorScheme.fromSeed(seedColor: DemoPalette.ink).copyWith(
+        primary: DemoPalette.ink,
+        onPrimary: DemoPalette.white,
+        secondary: DemoPalette.accent,
+        surface: DemoPalette.white,
+        onSurface: DemoPalette.ink,
+        outline: DemoPalette.rule,
       ),
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(borderRadius: BorderRadius.zero),
@@ -71,8 +71,8 @@ class ComponentBrowser extends StatelessWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: VideoTokens.lime,
-          foregroundColor: VideoTokens.ink,
+          backgroundColor: DemoPalette.accent,
+          foregroundColor: DemoPalette.ink,
           shape: const RoundedRectangleBorder(),
           minimumSize: const Size(44, 44),
         ),
@@ -201,13 +201,19 @@ class _BrowserPageState extends State<BrowserPage>
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: VideoTokens.white,
+        backgroundColor: DemoPalette.white,
         surfaceTintColor: Colors.transparent,
         toolbarHeight: 80,
         title: Row(
           children: [
-            const Text('CMRX Video Toolkit'),
-            const SizedBox(width: 24),
+            const Flexible(
+              child: Text(
+                'CMRX Video Toolkit',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 16),
             const Flexible(
               child: Text('Component browser', style: TextStyle(fontSize: 18)),
             ),
@@ -230,7 +236,7 @@ class _BrowserPageState extends State<BrowserPage>
 
   Widget navigation() => Container(
     decoration: const BoxDecoration(
-      border: Border(right: BorderSide(color: VideoTokens.rule)),
+      border: Border(right: BorderSide(color: DemoPalette.rule)),
     ),
     child: ListView(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -246,7 +252,7 @@ class _BrowserPageState extends State<BrowserPage>
             padding: const EdgeInsets.fromLTRB(20, 24, 16, 4),
             child: Text(
               group,
-              style: const TextStyle(color: VideoTokens.muted, fontSize: 13),
+              style: const TextStyle(color: DemoPalette.muted, fontSize: 13),
             ),
           ),
           for (final spec in widget.catalog.where((e) => e.category == group))
@@ -254,7 +260,7 @@ class _BrowserPageState extends State<BrowserPage>
               dense: true,
               title: Text(spec.name),
               selected: selected?.id == spec.id,
-              selectedTileColor: VideoTokens.lavender,
+              selectedTileColor: DemoPalette.surface,
               onTap: () => navigate(spec.id),
             ),
         ],
@@ -315,7 +321,7 @@ class _BrowserPageState extends State<BrowserPage>
                 onPressed: () => setState(() => category = group),
                 style: TextButton.styleFrom(
                   backgroundColor: category == group
-                      ? VideoTokens.lavender
+                      ? DemoPalette.surface
                       : null,
                   shape: const RoundedRectangleBorder(),
                 ),
@@ -326,7 +332,7 @@ class _BrowserPageState extends State<BrowserPage>
         const SizedBox(height: 16),
         Text(
           '${results.length} ${results.length == 1 ? 'component' : 'components'}',
-          style: const TextStyle(color: VideoTokens.muted),
+          style: const TextStyle(color: DemoPalette.muted),
         ),
         const SizedBox(height: 12),
         Align(
@@ -366,9 +372,9 @@ class _BrowserPageState extends State<BrowserPage>
                     width:
                         (constraints.maxWidth - (columns - 1) * 16) / columns,
                     child: Material(
-                      color: VideoTokens.white,
+                      color: DemoPalette.white,
                       shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: VideoTokens.rule),
+                        side: BorderSide(color: DemoPalette.rule),
                       ),
                       child: InkWell(
                         onTap: () => navigate(spec.id),
@@ -384,7 +390,8 @@ class _BrowserPageState extends State<BrowserPage>
                                   props: spec.props(spec.variants.first['id']),
                                   progress:
                                       (spec.id == 'video.texture' ||
-                                          spec.id == 'video.dither-background' ||
+                                          spec.id ==
+                                              'video.dither-background' ||
                                           spec.id == 'video.gif')
                                       ? clock.value
                                       : .65,
@@ -407,14 +414,14 @@ class _BrowserPageState extends State<BrowserPage>
                                   const SizedBox(height: 6),
                                   Text(
                                     spec.id,
-                                    style: VideoType.mono.copyWith(fontSize: 12),
+                                    style: DemoType.mono.copyWith(fontSize: 12),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
                                     '${spec.variants.length} variants · ${spec.category}',
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: VideoTokens.muted,
+                                      color: DemoPalette.muted,
                                     ),
                                   ),
                                 ],
@@ -470,7 +477,7 @@ class _BrowserPageState extends State<BrowserPage>
           children: [
             SelectableText(
               spec.id,
-              style: VideoType.mono.copyWith(fontSize: 15),
+              style: DemoType.mono.copyWith(fontSize: 15),
             ),
             FilledButton.icon(
               onPressed: () => copy(flowReference(spec, variant, props)),
@@ -501,7 +508,7 @@ class _BrowserPageState extends State<BrowserPage>
               children: [
                 Container(
                   height: 390,
-                  color: VideoTokens.mist,
+                  color: DemoPalette.mist,
                   padding: const EdgeInsets.all(16),
                   child: SpecimenFrame(
                     spec: spec,
@@ -522,7 +529,7 @@ class _BrowserPageState extends State<BrowserPage>
                         onPressed: () => setState(() => format = ratio),
                         style: OutlinedButton.styleFrom(
                           backgroundColor: format == ratio
-                              ? VideoTokens.lavender
+                              ? DemoPalette.surface
                               : null,
                         ),
                         child: Text(ratio),
@@ -532,7 +539,10 @@ class _BrowserPageState extends State<BrowserPage>
                 const SizedBox(height: 8),
                 Text(
                   '${canvas.width.toInt()} × ${canvas.height.toInt()} · fitted preview',
-                  style: const TextStyle(fontSize: 12, color: VideoTokens.muted),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: DemoPalette.muted,
+                  ),
                 ),
                 if (spec.motion) ...[
                   const SizedBox(height: 16),
@@ -567,7 +577,7 @@ class _BrowserPageState extends State<BrowserPage>
                   ),
                   const Text(
                     '10-second inspection loop · 30 fps. Video timing comes from the edited timeline.',
-                    style: TextStyle(fontSize: 12, color: VideoTokens.muted),
+                    style: TextStyle(fontSize: 12, color: DemoPalette.muted),
                   ),
                 ],
               ],
@@ -621,12 +631,12 @@ class _BrowserPageState extends State<BrowserPage>
         const SizedBox(height: 12),
         SelectableText(
           'Source: ${spec.source}\nWidget: ${spec.widget}',
-          style: VideoType.mono.copyWith(fontSize: 12),
+          style: DemoType.mono.copyWith(fontSize: 12),
         ),
         const SizedBox(height: 8),
         const Text(
           'Import package:video_components/video_components.dart; import Clip from package:fluvie/fluvie.dart for video. Preload images, GIF frames and DitherPrograms before capture; supply progress and outputSeconds from the composition.',
-          style: TextStyle(fontSize: 12, color: VideoTokens.muted),
+          style: TextStyle(fontSize: 12, color: DemoPalette.muted),
         ),
       ],
     );
@@ -671,7 +681,7 @@ class _BrowserPageState extends State<BrowserPage>
       const SizedBox(height: 12),
       const Text(
         'Variant links open the preset. The flow reference includes your edited properties.',
-        style: TextStyle(fontSize: 12, color: VideoTokens.muted),
+        style: TextStyle(fontSize: 12, color: DemoPalette.muted),
       ),
     ],
   );
@@ -737,8 +747,8 @@ class _BrowserPageState extends State<BrowserPage>
 
   Widget codeBox(String value) => Container(
     width: double.infinity,
-    color: VideoTokens.mist,
+    color: DemoPalette.mist,
     padding: const EdgeInsets.all(20),
-    child: SelectableText(value, style: VideoType.mono.copyWith(fontSize: 13)),
+    child: SelectableText(value, style: DemoType.mono.copyWith(fontSize: 13)),
   );
 }

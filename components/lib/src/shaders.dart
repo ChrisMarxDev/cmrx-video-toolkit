@@ -1,11 +1,12 @@
 import 'dart:ui' as ui;
-import 'video_tokens.dart';
 import 'package:flutter/widgets.dart';
 
 /// Preload programs before frame zero; widgets below never load during capture.
 abstract final class VideoShaderAssets {
-  static const ditherField = 'packages/video_components/shaders/dither_field.frag';
-  static const ditherImage = 'packages/video_components/shaders/dither_image.frag';
+  static const ditherField =
+      'packages/video_components/shaders/dither_field.frag';
+  static const ditherImage =
+      'packages/video_components/shaders/dither_image.frag';
   static const sculpture = 'packages/video_components/shaders/sculpture.frag';
 }
 
@@ -102,12 +103,6 @@ enum DitherPattern { bayer2, bayer4, bayer8 }
 
 enum DitherShape { wave, sphere, ripple }
 
-abstract final class DitherTokens {
-  static const ink = VideoTokens.ink;
-  static const surface = VideoTokens.lavender;
-  static const paper = VideoTokens.white;
-}
-
 /// Two-color settings. pixelSize is measured in final output pixels;
 /// outputScale is output pixels per local canvas unit (including parent scaling).
 class DitherStyle {
@@ -115,8 +110,8 @@ class DitherStyle {
     this.pixelSize = 1,
     this.outputScale = 1,
     this.pattern = DitherPattern.bayer4,
-    this.background = DitherTokens.ink,
-    this.foreground = DitherTokens.surface,
+    this.background = const Color(0xFF000000),
+    this.foreground = const Color(0xFFFFFFFF),
     this.contrast = 1,
     this.bias = 0,
   }) {

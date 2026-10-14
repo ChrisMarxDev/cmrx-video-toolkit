@@ -240,9 +240,10 @@ def compose(args):
     main = composition / 'lib/main.dart'
     if main.exists() and not args.replace:
         raise ValueError('Composition exists. Edit it directly, or explicitly pass --replace to regenerate.')
-    package = Path(os.environ.get('CMRX_COMPONENT_PACKAGE', str(ROOT / 'design_system')))
+    package = Path(os.environ.get('CMRX_COMPONENT_PACKAGE', str(ROOT / 'components')))
     package_name = os.environ.get('CMRX_COMPONENT_NAME', 'video_components')
-    token_class = os.environ.get('CMRX_TOKEN_CLASS', 'VideoTokens')
+    token_class = os.environ.get('CMRX_TOKEN_CLASS')
+    background = f'{token_class}.ink' if token_class else 'const Color(0xFF000000)'
     (composition / 'pubspec.yaml').write_text(f'''name: video_composition
 publish_to: none
 environment:
@@ -275,7 +276,7 @@ Video build() => Video(
   fps: {config['fps']},
   scenes: [Scene(
     duration: {timeline['duration']}.seconds,
-    background: Background.color({token_class}.ink),
+    background: Background.color({background}),
     children: [
       Clip.asset('assets/rough-cut.mp4', fit: BoxFit.contain),
     ],

@@ -339,7 +339,7 @@ packages:
   video_components:
     dependency: "direct main"
     description:
-      path: "../../design_system"
+      path: "../../components"
       relative: true
     source: path
     version: "0.1.0"

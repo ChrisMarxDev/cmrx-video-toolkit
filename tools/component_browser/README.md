@@ -52,20 +52,20 @@ schema. Narration cues still come from the imported source-to-output timeline.
 
 ## Agent discovery and maintenance
 
-The single metadata catalog is [`../../design_system/components.json`](../../design_system/components.json).
+The single metadata catalog is [`../../components/components.json`](../../components/components.json).
 It records stable IDs, real widget names/source paths, descriptions, typed controls,
 defaults and named preset overrides. The browser loads this package asset directly.
 The catalog is available in a built app at `assets/packages/video_components/components.json`.
 
-Read the JSON and [`CATALOG.md`](../../design_system/CATALOG.md) when planning a
+Read the JSON and [`CATALOG.md`](../../components/CATALOG.md) when planning a
 video. IDs are durable: change a display name without renaming its ID. Preset
 props are defaults; an explicit props object overrides them. IDs and presets do
 not authorize decorative content or invent product behavior.
 
 To add an element:
 
-1. Implement the reusable widget in `design_system/lib/`.
-2. Add its metadata and valid presets to `design_system/components.json`.
+1. Implement the reusable widget in `components/lib/`.
+2. Add its metadata and valid presets to `components/components.json`.
 3. Add its actual preview and constructor example in `lib/specimen.dart` and
    `lib/catalog.dart`. Include all meaningful knobs and use canonical tokens.
 4. Run the browser tests and build. The variant test covers every registry entry
@@ -111,3 +111,8 @@ presets remain still. Pause all overview animation with its preview control.
 Native widget tests validate GIF timing and shader pixels; they do not certify
 HTML video playback in a browser. The production video component supplies a
 frame around a caller-provided Fluvie Clip, not an HTML player in exported video.
+
+All styled specimens use the browser-local grayscale `lib/demo_style.dart`.
+Constructor examples assume an application-defined `demoStyle: VideoStyle`;
+provide your own palette and typography (see `components/CATALOG.md`). The public
+library does not bundle brand fonts or export default typography.

@@ -9,7 +9,7 @@
       "widget": "VideoStage",
       "category": "Layout",
       "description": "The base canvas and inherited typography. Does not position or scale its children.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": false,
       "parameters": {
         "theme": {
@@ -41,7 +41,7 @@
       "widget": "VideoBlock",
       "category": "Content",
       "description": "A square block for one meaningful label or concept.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": false,
       "parameters": {
         "active": {
@@ -81,7 +81,7 @@
       "widget": "VideoCaption",
       "category": "Content",
       "description": "Faithful spoken text on a solid backplate. Replace the sample with transcript text.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": false,
       "parameters": {
         "text": {
@@ -116,7 +116,7 @@
       "widget": "VideoCode",
       "category": "Content",
       "description": "Actual code with one selected line. Keep production examples truthful.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": false,
       "parameters": {
         "text": {
@@ -151,7 +151,7 @@
       "widget": "VideoLayers",
       "category": "Diagrams",
       "description": "Three connected layers separate to explain a structure. Scrub the preview to inspect motion.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": true,
       "parameters": {
         "activeLayer": {
@@ -187,7 +187,7 @@
       "widget": "VideoTexture",
       "category": "Texture",
       "description": "Fine ordered dithering inside an illustration region. Keep text and faces clean.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": true,
       "parameters": {
         "strong": {
@@ -200,8 +200,8 @@
           "type": "bool",
           "default": true
         },
-        "lavenderLime": {
-          "label": "Lavender + lime",
+        "accentPalette": {
+          "label": "Surface + accent",
           "type": "bool",
           "default": false
         }
@@ -230,9 +230,9 @@
           }
         },
         {
-          "id": "lavender-lime",
+          "id": "surface-accent",
           "props": {
-            "lavenderLime": true
+            "accentPalette": true
           }
         }
       ]
@@ -243,7 +243,7 @@
       "widget": "VideoDitherBackground",
       "category": "Texture",
       "description": "A slow full-canvas texture behind clean foreground content. Use only when requested.",
-      "source": "design_system/lib/src/components.dart",
+      "source": "components/lib/src/components.dart",
       "motion": true,
       "parameters": {
         "speed": {
@@ -260,8 +260,8 @@
           "min": 1,
           "max": 4
         },
-        "lavenderLime": {
-          "label": "Lavender + lime",
+        "accentPalette": {
+          "label": "Surface + accent",
           "type": "bool",
           "default": false
         }
@@ -278,9 +278,9 @@
           }
         },
         {
-          "id": "lavender-lime",
+          "id": "surface-accent",
           "props": {
-            "lavenderLime": true
+            "accentPalette": true
           }
         }
       ]
@@ -288,10 +288,10 @@
     {
       "id": "video.type",
       "name": "Typography",
-      "widget": "VideoType",
+      "widget": "Text",
       "category": "Identity",
-      "description": "Package-qualified Space Grotesk and IBM Plex Mono with local fonts.",
-      "source": "design_system/lib/src/components.dart",
+      "description": "Caller-supplied body, monospace and caption text styles.",
+      "source": "components/lib/src/components.dart",
       "motion": false,
       "parameters": {
         "role": {
@@ -336,7 +336,7 @@
       "widget": "Reveal",
       "category": "Motion",
       "description": "A deterministic fade and upward entrance. In video, supply progress from resolved output cues.",
-      "source": "design_system/lib/src/motion.dart",
+      "source": "components/lib/src/motion.dart",
       "motion": true,
       "parameters": {
         "text": {
@@ -357,9 +357,9 @@
       "name": "Image",
       "widget": "VideoImage",
       "category": "Media",
-      "source": "design_system/lib/src/media.dart",
+      "source": "components/lib/src/media.dart",
       "motion": false,
-      "description": "A clean image surface. Compare contain, cover and a lime frame. Decode source images before video capture.",
+      "description": "A clean image surface. Compare contain, cover and a accent frame. Decode source images before video capture.",
       "parameters": {
         "fit": {
           "label": "Fit",
@@ -400,7 +400,7 @@
       "name": "Video",
       "widget": "VideoVideo",
       "category": "Media",
-      "source": "design_system/lib/src/media.dart",
+      "source": "components/lib/src/media.dart",
       "motion": false,
       "description": "A reusable video surface with native browser playback controls. In compositions, supply a Fluvie Clip as the child.",
       "parameters": {
@@ -443,7 +443,7 @@
       "name": "Animated GIF",
       "widget": "VideoGif",
       "category": "Media",
-      "source": "design_system/lib/src/media.dart",
+      "source": "components/lib/src/media.dart",
       "motion": true,
       "description": "A looping GIF with encoded frame durations. Play or scrub it deterministically using the preview clock.",
       "parameters": {

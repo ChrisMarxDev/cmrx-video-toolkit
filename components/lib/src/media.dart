@@ -1,17 +1,23 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
-import 'video_tokens.dart';
+import 'style.dart';
 
 /// Shared clean media surface. Caller owns the content's fit and playback.
 class VideoVideo extends StatelessWidget {
-  const VideoVideo({super.key, required this.child, this.framed = false});
+  const VideoVideo({
+    super.key,
+    required this.style,
+    required this.child,
+    this.framed = false,
+  });
+  final VideoStyle style;
   final Widget child;
   final bool framed;
   @override
   Widget build(BuildContext context) => Container(
     padding: EdgeInsets.all(framed ? 8 : 0),
-    color: framed ? VideoTokens.lime : VideoTokens.ink,
+    color: framed ? style.accent : style.foreground,
     child: ClipRect(child: child),
   );
 }
@@ -20,15 +26,18 @@ class VideoVideo extends StatelessWidget {
 class VideoImage extends StatelessWidget {
   const VideoImage({
     super.key,
+    required this.style,
     required this.image,
     this.fit = BoxFit.contain,
     this.framed = false,
   });
+  final VideoStyle style;
   final ui.Image image;
   final BoxFit fit;
   final bool framed;
   @override
   Widget build(BuildContext context) => VideoVideo(
+    style: style,
     framed: framed,
     child: RawImage(
       image: image,
@@ -95,16 +104,22 @@ class VideoGifFrames {
 class VideoGif extends StatelessWidget {
   const VideoGif({
     super.key,
+    required this.style,
     required this.frames,
     required this.seconds,
     this.fit = BoxFit.contain,
     this.framed = false,
   });
+  final VideoStyle style;
   final VideoGifFrames frames;
   final double seconds;
   final BoxFit fit;
   final bool framed;
   @override
-  Widget build(BuildContext context) =>
-      VideoImage(image: frames.at(seconds), fit: fit, framed: framed);
+  Widget build(BuildContext context) => VideoImage(
+    style: style,
+    image: frames.at(seconds),
+    fit: fit,
+    framed: framed,
+  );
 }

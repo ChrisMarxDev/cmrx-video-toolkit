@@ -94,6 +94,8 @@ class MediaIntegrationTests(unittest.TestCase):
             self.assertEqual({s['codec_type'] for s in info['streams']}, {'audio', 'video'})
             self.assertTrue((p / 'edit/narration.wav').exists())
             self.assertIn("Clip.asset('assets/rough-cut.mp4'", (p / 'composition/lib/main.dart').read_text())
+            self.assertIn(str(ROOT / 'components'), (p / 'composition/pubspec.yaml').read_text())
+            self.assertIn('Background.color(const Color(0xFF000000))', (p / 'composition/lib/main.dart').read_text())
             self.assertNotEqual(call('compose', p).returncode, 0)
             timeline = video.read(p / 'edit/timeline.json'); timeline['revision'] = 'changed'
             video.write(p / 'edit/timeline.json', timeline)

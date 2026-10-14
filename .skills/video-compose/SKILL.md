@@ -5,7 +5,7 @@ description: Author editable Fluvie video compositions using toolkit components.
 
 # Video Compose
 
-Read flow/05-compose/README.md and design_system/CATALOG.md. scripts/video.py
+Read flow/05-compose/README.md and components/CATALOG.md. scripts/video.py
 compose creates a baseline; never replace an existing authored composition unless
 requested. Preload programs/fonts/media, then use frame-derived motion and immutable
 props. Keep the audio-bearing clip mounted throughout. Use private design-package

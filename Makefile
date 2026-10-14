@@ -6,7 +6,7 @@ doctor:
 test:
 	python3 -m unittest discover -s tests -v
 	node --test tools/dither/core.test.mjs
-	cd design_system && flutter pub get && flutter analyze && flutter test
+	cd components && flutter pub get && flutter analyze && flutter test
 	cd examples/gallery && flutter pub get && flutter analyze && flutter test
 	python3 tools/component_browser/scripts/demo_media.py
 	cd tools/component_browser && flutter pub get && flutter analyze && flutter test

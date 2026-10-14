@@ -6,7 +6,7 @@ hosted service or autonomous editor. Bring your own recordings and editorial rev
 - `apps/editor/`: Flutter macOS transcript editor, cuts, notes and export handoff.
 - `tools/component_browser/`: actual Flutter components, props, variants and motion scrubber.
 - `tools/dither/`: local image/field dithering and PNG export.
-- `design_system/`: reusable Flutter components, shaders and media helpers.
+- `components/`: unstyled Flutter building blocks, shaders and media helpers; callers supply appearance.
 - `scripts/`, `video_tools/`, `schemas/`: edit timelines, soundmaps, rendering/QA and media operations.
 - `.skills/`: agent workflows. Your brand and creative choices belong in your workspace.
 - `examples/`: synthetic fixtures; never product facts or real client footage.
@@ -37,7 +37,11 @@ private Flutter design package for generated baseline compositions. See .skills/
 
 ## License
 
-Repository-authored software is MIT licensed. Bundled fonts retain their SIL OFL
-licenses; third-party dependencies retain their own licenses. See THIRD_PARTY.md.
+Repository-authored software is MIT licensed. Third-party dependencies retain
+their own licenses. No brand fonts are bundled. See THIRD_PARTY.md.
 No client assets, private recordings, internal knowledge or private Git history are
 included. This is an early toolkit: review the output and keep originals immutable.
+
+Component styling and migration from `design_system/` are documented in
+[components/CATALOG.md](components/CATALOG.md). Brand palettes, typography, fonts
+and editorial presets belong in consuming workspaces, not this toolkit.

@@ -15,3 +15,7 @@ mapping. No library default may imply a user's content/brand approval.
 
 Follow .skills/git-sync/SKILL.md. Push this repo before a parent Studio records its
 commit. Ask the user before UI automation when required by the host workspace.
+
+Reusable Flutter primitives live in components/, not a design system. Require
+caller-owned appearance; brand tokens, fonts and design direction belong in the
+consuming workspace. Keep browser demonstration styling application-local.

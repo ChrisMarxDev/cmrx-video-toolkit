@@ -1,3 +1,4 @@
+import 'package:video_component_browser/demo_style.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
@@ -29,14 +30,19 @@ void main() {
       SizedBox(
         width: 320,
         height: 180,
-        child: VideoGif(frames: frames, seconds: .5, framed: true),
+        child: VideoGif(
+          style: demoStyle,
+          frames: frames,
+          seconds: .5,
+          framed: true,
+        ),
       ),
     );
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'Lavender lime dither changes with time and uses only its two colors',
+    'Caller palette dither changes with time and uses only its two colors',
     (tester) async {
       final programs = (await tester.runAsync(DitherPrograms.load))!;
       final key = GlobalKey();
@@ -49,9 +55,10 @@ void main() {
                 width: 96,
                 height: 96,
                 child: VideoTexture(
+                  style: demoStyle,
                   programs: programs,
                   animated: true,
-                  lavenderLime: true,
+                  accentPalette: true,
                   seconds: seconds,
                 ),
               ),
@@ -79,7 +86,7 @@ void main() {
       for (var i = 0; i < a.length; i += 4) {
         colors.add(a.sublist(i, i + 4).join(','));
       }
-      expect(colors, equals({'225,231,239,255', '184,228,213,255'}));
+      expect(colors, equals({'224,224,224,255', '176,176,176,255'}));
     },
   );
 }

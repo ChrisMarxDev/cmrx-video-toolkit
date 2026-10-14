@@ -1,4 +1,4 @@
-export 'src/video_tokens.dart';
+export 'src/style.dart';
 export 'src/components.dart';
 export 'src/motion.dart';
 export 'src/shaders.dart';
