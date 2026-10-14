@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Single-video review",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "video-review"
+    },
+    "version": {
+      "const": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "duration": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "duration",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "transcript": {
+      "type": "object",
+      "properties": {
+        "time_base": {
+          "const": "source"
+        },
+        "granularity": {
+          "const": "segment"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "ready"
+          ]
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_start": {
+                "type": "number",
+                "minimum": 0
+              },
+              "source_end": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "source_start",
+              "source_end",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "time_base",
+        "granularity",
+        "status",
+        "segments"
+      ],
+      "additionalProperties": false
+    },
+    "marks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "source_end": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "kind": {
+            "enum": [
+              "good",
+              "bad",
+              "comment"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_start",
+          "source_end",
+          "kind",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "source_end": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rect": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "source_start",
+          "source_end",
+          "text",
+          "rect"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "revision",
+    "source",
+    "transcript",
+    "marks",
+    "objects"
+  ],
+  "additionalProperties": false
+}

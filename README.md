@@ -19,7 +19,7 @@ Local-first · Python + FFmpeg + Flutter · MIT licensed
 
 | Tool | What you can do |
 | --- | --- |
-| [Transcript editor](apps/editor/) | Cut passages, add source-timed notes and export a precise handoff. |
+| [Transcript editor](apps/editor/) | Review keep/cut ranges, draw timed visual requests and export an agent handoff. |
 | [Component browser](tools/component_browser/) | Explore real Flutter widgets, variants, props and motion. |
 | [Video components](components/) | Compose with reusable widgets, shaders, media and deterministic motion. |
 | [Dither tool](tools/dither/) | Explore local image/field dithering and export PNGs. |
@@ -40,11 +40,10 @@ make components
 
 Open **http://localhost:8090** to explore the component browser.
 
-For the macOS transcript editor, follow its [setup instructions](apps/editor/README.md), then:
+For the local Linux/macOS/Windows review app, follow its [setup instructions](apps/editor/README.md), then:
 
 ```sh
-cd apps/editor
-bash tool/open.sh /absolute/path/to/recording.mp4
+python3 apps/editor/server.py
 ```
 
 [Read the full quick start →](https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/)

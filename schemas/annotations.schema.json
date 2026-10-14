@@ -2,21 +2,109 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Source-timed agent video annotations",
   "type": "object",
-  "required": ["version", "notes"],
+  "required": [
+    "version",
+    "notes"
+  ],
   "properties": {
-    "version": {"const": 1},
-    "notes": {"type": "array", "items": {
-      "type": "object", "required": ["id", "source_start", "source_end", "intent", "component", "presentation"],
-      "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "source_start": {"type": "number", "minimum": 0},
-        "source_end": {"type": "number", "exclusiveMinimum": 0},
-        "intent": {"type": "string", "minLength": 1},
-        "component": {"type": "string"},
-        "presentation": {"enum": ["fullscreen", "overlay", "presenter"]}
-      },
-      "additionalProperties": false
-    }}
+    "version": {
+      "const": 1
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source_start",
+          "source_end",
+          "intent",
+          "component",
+          "presentation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "source_end": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "intent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "component": {
+            "type": "string"
+          },
+          "presentation": {
+            "enum": [
+              "fullscreen",
+              "overlay",
+              "presenter"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "good",
+              "bad",
+              "comment",
+              "visual"
+            ]
+          },
+          "authority": {
+            "enum": [
+              "required",
+              "comment"
+            ]
+          },
+          "timing": {
+            "const": "approximate"
+          },
+          "placement": {
+            "const": "approximate"
+          },
+          "rect": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": false
 }

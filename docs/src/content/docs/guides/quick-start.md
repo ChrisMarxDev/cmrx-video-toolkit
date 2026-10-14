@@ -7,7 +7,8 @@ description: Clone the toolkit, check prerequisites and open the component brows
 
 The video tools use **Python 3**, **FFmpeg/ffprobe** and **Flutter**. The tested
 Flutter stack is 3.47.2 / Dart 3.13.2; each package pins its dependencies. The
-transcript editor and native Scene capture currently have macOS-specific paths.
+review editor runs locally in a browser on Linux, macOS and Windows; native Scene
+capture still has macOS-specific paths.
 Whisper and its transcription model are separate installs; neither is bundled.
 
 ```sh
@@ -35,8 +36,7 @@ video compositor. Stop it before launching another app on the same port.
 From the repository root, after setting up the editor's transcription prerequisites:
 
 ```sh
-cd apps/editor
-bash tool/open.sh /absolute/path/to/recording.mp4
+python3 apps/editor/server.py
 ```
 
 See the [editor reference](/cmrx-video-toolkit/reference/editor/) for the

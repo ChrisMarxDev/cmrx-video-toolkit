@@ -63,3 +63,6 @@ __pycache__/
 
 /tools/component_browser/assets/demo/
 /projects/
+
+# Local video-review projects contain private transcripts and source media.
+*.review/

@@ -13,3 +13,5 @@ if [ ! -s "$model_dir/ggml-base.bin" ]; then
   mv "$model_dir/ggml-base.bin.part" "$model_dir/ggml-base.bin"
 fi
 printf 'Whisper model ready: %s/ggml-base.bin\n' "$model_dir"
+
+printf 'Run: WHISPER_MODEL="%s/ggml-base.bin" python3 apps/editor/server.py\n' "$model_dir"

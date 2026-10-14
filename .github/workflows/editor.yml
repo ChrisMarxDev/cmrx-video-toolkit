@@ -1,0 +1,32 @@
+name: Local video review
+on:
+  push:
+    branches: [main]
+    paths: ['apps/editor/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
+  pull_request:
+    paths: ['apps/editor/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Install FFmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install FFmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+      - name: Install FFmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg --no-progress -y
+      - name: Check editor and real media exports
+        run: python -m unittest discover -s apps/editor/tests -v
+      - name: Check timeline and rectangle interactions
+        run: node --test apps/editor/tests/model.test.mjs

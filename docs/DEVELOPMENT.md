@@ -2,7 +2,9 @@
 
 Run commands from the toolkit root. `make test` covers Python pipeline/media
 operations, dither CPU tests, Flutter components/gallery, browser, and editor.
-`dart run tool/smoke.dart` from apps/editor checks a synthetic real-FFmpeg export.
+`python3 -m unittest discover -s apps/editor/tests -v` checks the local review app,
+including two synthetic real-FFmpeg exports. `apps/editor/tool/full_flow.py` also
+checks real local recognition and HTTP lifecycle for two narrated test videos.
 Build tools/component_browser with `flutter build web --no-web-resources-cdn`.
 Synthetic demo files are generated locally and ignored.
 
