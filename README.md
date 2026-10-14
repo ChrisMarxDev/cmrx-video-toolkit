@@ -20,7 +20,7 @@ bundled. `python3 scripts/doctor.py` reports prerequisites. From this repo:
 ```sh
 make test
 make components
-# Or: cd apps/editor && flutter pub get && flutter run -d macos
+# Editor: cd apps/editor && bash tool/open.sh /absolute/recording.mp4
 ```
 
 The browser serves localhost:8090. It is a component workbench, not a compositor.

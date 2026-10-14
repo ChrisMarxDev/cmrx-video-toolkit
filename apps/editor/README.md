@@ -4,7 +4,7 @@ A single-recording Flutter macOS editor, launched by a script. Local preparation
 searchable transcript → cuts and source-timed notes → an agent handoff folder.
 
 ```sh
-cd flut_script
+cd apps/editor
 bash tool/setup.sh                  # once: Homebrew tools + multilingual base model
 bash tool/open.sh /absolute/recording.mp4
 # Optional second argument: a workspace directory outside the repository.
