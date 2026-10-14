@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="title desc">
+<title id="title">CMRX Video Toolkit</title><desc id="desc">Open tools and agent skills for programmable video. Record, edit, compose, render.</desc>
+<rect width="1200" height="380" fill="#24143D"/>
+<path d="M0 0H1200V5H0Z" fill="#D5FF45"/>
+<g font-family="system-ui, sans-serif" fill="#FFFFFF"><text x="64" y="82" font-size="20" letter-spacing="3" fill="#DFD6F4">CMRX / OPEN SOURCE</text><text x="60" y="170" font-size="64" font-weight="650" letter-spacing="-3">Video Toolkit.</text><text x="64" y="222" font-size="23" fill="#DFD6F4">Open tools. Agent skills. Your creative direction.</text></g>
+<g fill="#DFD6F4" font-family="monospace" font-size="15"><text x="64" y="322">RECORD</text><text x="191" y="322">EDIT</text><text x="302" y="322">COMPOSE</text><text x="450" y="322">RENDER</text></g><path d="M140 316H172M251 316H283M391 316H430" stroke="#D5FF45"/>
+<g stroke="#DFD6F4" stroke-width="2" stroke-linejoin="round"><path d="M837 244L978 173L1119 244L978 315Z" fill="#38234F"/><path d="M837 190L978 119L1119 190L978 261Z" fill="#DFD6F4"/><path d="M837 136L978 65L1119 136L978 207Z" fill="#24143D"/><path d="M955 111L1003 135L955 159Z" fill="#D5FF45" stroke="#D5FF45"/><path d="M837 136V244M1119 136V244M978 207V315" stroke-dasharray="4 6"/></g></svg>

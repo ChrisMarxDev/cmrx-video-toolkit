@@ -1,0 +1,36 @@
+/* CMRX documentation identity only. Video components remain caller-styled. */
+:root {
+  --sl-color-accent-low: #38234f;
+  --sl-color-accent: #d5ff45;
+  --sl-color-accent-high: #d5ff45;
+  --sl-color-white: #f5f1fc;
+  --sl-color-gray-1: #dfd6f4;
+  --sl-color-gray-2: #c1b8d0;
+  --sl-color-gray-3: #a297b3;
+  --sl-color-gray-4: #604779;
+  --sl-color-gray-5: #38234f;
+  --sl-color-gray-6: #24143d;
+  --sl-color-black: #190d2b;
+  --sl-font: 'Segoe UI', system-ui, sans-serif;
+  --sl-content-width: 48rem;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #dfd6f4;
+  --sl-color-accent: #54307d;
+  --sl-color-accent-high: #24143d;
+  --sl-color-white: #24143d;
+  --sl-color-gray-1: #38234f;
+  --sl-color-gray-2: #51465f;
+  --sl-color-gray-3: #696277;
+  --sl-color-gray-4: #93879f;
+  --sl-color-gray-5: #ddd8e7;
+  --sl-color-gray-6: #f7f5fc;
+  --sl-color-gray-7: #fbfaff;
+  --sl-color-black: #ffffff;
+}
+h1,h2,h3{letter-spacing:-.035em}
+h1{font-weight:600}
+.card,.sl-link-button,.expressive-code .frame{border-radius:0!important}
+.sl-link-button.primary{background:#d5ff45;color:#24143d;border:1px solid #24143d}
+.site-title{font-weight:650;letter-spacing:-.035em}
+.hero{padding-block:3rem}

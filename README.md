@@ -1,47 +1,100 @@
-# CMRX Video Toolkit
+![CMRX Video Toolkit — open tools and agent skills for programmable video](docs/public/readme-banner.svg)
 
-Open tools and agent skills for programmable video. A local-first toolkit, not a
-hosted service or autonomous editor. Bring your own recordings and editorial review.
+<p align="center">
+  <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/">Documentation</a> ·
+  <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/">Quick start</a> ·
+  <a href="components/CATALOG.md">Components</a> ·
+  <a href="https://cmrx.dev">Chris Marx Studio</a>
+</p>
 
-- `apps/editor/`: Flutter macOS transcript editor, cuts, notes and export handoff.
-- `tools/component_browser/`: actual Flutter components, props, variants and motion scrubber.
-- `tools/dither/`: local image/field dithering and PNG export.
-- `components/`: unstyled Flutter building blocks, shaders and media helpers; callers supply appearance.
-- `scripts/`, `video_tools/`, `schemas/`: edit timelines, soundmaps, rendering/QA and media operations.
-- `.skills/`: agent workflows. Your brand and creative choices belong in your workspace.
-- `examples/`: synthetic fixtures; never product facts or real client footage.
+# Your recording. Your workflow. Your style.
 
-## Start
+**Open tools and agent skills for making videos with code.** Review transcript-based
+cuts, plan the visuals, compose Flutter scenes and render a finished video — with
+original media preserved and creative decisions in your hands.
 
-Use Python 3, FFmpeg/ffprobe, Flutter (tested 3.47.2/Dart 3.13.2), and the pinned
-Flutter dependencies. Install Whisper separately for transcription; no model is
-bundled. `python3 scripts/doctor.py` reports prerequisites. From this repo:
+Local-first · Python + FFmpeg + Flutter · MIT licensed
+
+## What’s inside
+
+| Tool | What you can do |
+| --- | --- |
+| [Transcript editor](apps/editor/) | Cut passages, add source-timed notes and export a precise handoff. |
+| [Component browser](tools/component_browser/) | Explore real Flutter widgets, variants, props and motion. |
+| [Video components](components/) | Compose with reusable widgets, shaders, media and deterministic motion. |
+| [Dither tool](tools/dither/) | Explore local image/field dithering and export PNGs. |
+| [Pipeline tools](scripts/) | Work with edit timelines, soundmaps, rendering and media checks. |
+| [Agent skills](.skills/) | Follow a stage-by-stage workflow with your own creative direction. |
+
+## Get started
+
+Install **Python 3**, **FFmpeg/ffprobe** and **Flutter** (tested with Flutter 3.47.2 /
+Dart 3.13.2). Transcription requires a separate Whisper installation and model.
 
 ```sh
-make test
+git clone https://github.com/ChrisMarxDev/cmrx-video-toolkit.git
+cd cmrx-video-toolkit
+python3 scripts/doctor.py
 make components
-# Editor: cd apps/editor && bash tool/open.sh /absolute/recording.mp4
 ```
 
-The browser serves localhost:8090. It is a component workbench, not a compositor.
-See each app README for limitations. Native Scene GPU capture uses a separate
-macOS path; headless Fluvie GPU integration is not assumed.
+Open **http://localhost:8090** to explore the component browser.
 
-## Studio integration
+For the macOS transcript editor, follow its [setup instructions](apps/editor/README.md), then:
 
-Pin a release or Git commit as a submodule. The toolkit is independent of the studio
-and must build from a fresh clone. Keep recordings/transcripts/renders outside Git.
-Set CMRX_WORKSPACE to your private project root when invoking scripts/video.py.
-Optional CMRX_COMPONENT_PACKAGE, CMRX_COMPONENT_NAME and CMRX_TOKEN_CLASS select a
-private Flutter design package for generated baseline compositions. See .skills/.
+```sh
+cd apps/editor
+bash tool/open.sh /absolute/path/to/recording.mp4
+```
+
+[Read the full quick start →](https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/)
+
+## A workflow with review built in
+
+**Ingest → Transcribe → Edit → Storyboard → Compose → Review → Render**
+
+Start with [video-flow](.skills/video-flow/SKILL.md). Review the rough cut before
+detailed animation. Map source cues through the edited timeline; do not guess
+animation timestamps. Keep recordings, transcripts, models and renders outside Git.
+
+This is an early toolkit, not a hosted service or an autonomous editor. The browser
+is a workbench, not a compositor. Native Scene GPU capture uses a separate macOS
+path; headless Fluvie GPU integration is not assumed. Inspect the final output.
+
+## Bring your own style
+
+`components/` contains the `video_components` Flutter package. Styled widgets
+require your own `VideoStyle`; the toolkit does not impose colors, fonts or
+editorial presets. The CMRX colors on this README and documentation site style
+those pages only.
+
+Pin the toolkit as a Git submodule in a separate production workspace. Set
+`CMRX_WORKSPACE` to your project root; optional `CMRX_COMPONENT_PACKAGE`,
+`CMRX_COMPONENT_NAME` and `CMRX_TOKEN_CLASS` connect your own Flutter design package.
+
+[Workspace integration →](https://chrismarxdev.github.io/cmrx-video-toolkit/guides/workspace/)
+
+## Develop & contribute
+
+Run `make test` from the repository root for the video tooling checks.
+Read [development guidance](docs/DEVELOPMENT.md) and the relevant skill before editing.
+Use synthetic examples and preserve source/output timing contracts.
+
+For this Starlight documentation site (Node.js >=22.12):
+
+```sh
+npm --prefix docs ci
+npm --prefix docs run dev
+npm --prefix docs run build
+```
+
+GitHub Actions builds and publishes the docs to GitHub Pages on `main`. Reference
+pages are generated from the existing app, component and pipeline documentation.
 
 ## License
 
-Repository-authored software is MIT licensed. Third-party dependencies retain
-their own licenses. No brand fonts are bundled. See THIRD_PARTY.md.
-No client assets, private recordings, internal knowledge or private Git history are
-included. This is an early toolkit: review the output and keep originals immutable.
+Repository-authored software is [MIT licensed](LICENSE). Dependencies retain their
+own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). No brand fonts, private recordings
+or client materials are bundled.
 
-Component styling and migration from `design_system/` are documented in
-[components/CATALOG.md](components/CATALOG.md). Brand palettes, typography, fonts
-and editorial presets belong in consuming workspaces, not this toolkit.
+Built by [Chris Marx Studio](https://cmrx.dev).

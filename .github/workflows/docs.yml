@@ -1,0 +1,37 @@
+name: Documentation
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'README.md', 'components/CATALOG.md', 'apps/editor/README.md', 'tools/component_browser/README.md', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['docs/**', 'README.md', 'components/CATALOG.md', 'apps/editor/README.md', 'tools/component_browser/README.md', '.github/workflows/docs.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: withastro/action@3eafd002e65cc31b4f0eae0bb05450d521562247 # v6
+        with:
+          path: docs
+          node-version: 24
+          package-manager: npm
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy documentation
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
