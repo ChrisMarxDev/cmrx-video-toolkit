@@ -8,6 +8,11 @@ export default defineConfig({
     description: 'Open tools and agent skills for programmable video.',
     social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ChrisMarxDev/cmrx-video-toolkit' }],
     customCss: ['./src/styles/cmrx.css'],
+    components: {
+      ThemeProvider: './src/components/LightTheme.astro',
+      ThemeSelect: './src/components/NoThemeSelect.astro',
+    },
+    expressiveCode: { themes: ['github-light'] },
     sidebar: [
       { label: 'Start here', items: [
         { label: 'Overview', slug: '' },
