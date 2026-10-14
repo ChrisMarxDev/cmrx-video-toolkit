@@ -30,3 +30,18 @@ h1{font-weight:550}
 .site-title{color:#38234f;font-weight:600;letter-spacing:-.025em}
 .hero{padding-block:2.5rem}
 .hero h1{font-size:clamp(2.3rem,5vw,3.5rem)}
+
+/* A reading-first documentation layout, without the promotional splash/cards. */
+html,body{background:#ffffff!important;color:#302b38}
+.header{background:#ffffff!important;border-bottom:1px solid #ece8f1}
+.sidebar-pane{background:#f8f6fc!important;border-inline-end:1px solid #ece8f1}
+.main-frame,.main-pane,.content-panel{background:#ffffff}
+.content-panel+.content-panel{border-top-color:#ece8f1}
+h1{font-size:clamp(1.9rem,3vw,2.5rem);font-weight:600;letter-spacing:-.025em}
+.site-title{font-size:1rem;font-weight:600}
+.sl-markdown-content table{font-size:.94rem}
+.sl-markdown-content th{background:#faf8fd;font-weight:500}
+.sl-markdown-content td,.sl-markdown-content th{border-color:#e9e4ef;padding:.85rem 1rem}
+.sl-markdown-content tr:nth-child(2n){background:#fdfcfe}
+[aria-current='page'],[aria-current='page']:hover,[aria-current='page']:focus{background:#ede7f5!important;color:#38234f!important;font-weight:500}
+.pagination-links a{box-shadow:none;border:1px solid #e9e4ef;background:white;border-radius:3px}
