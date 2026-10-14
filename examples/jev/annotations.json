@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "notes": [{
+    "id": "question-routing",
+    "source_start": 1.2,
+    "source_end": 5.0,
+    "intent": "Illustrative demo: show a question entering a classifier and selecting one answer. Replace labels with real Jev behavior before use.",
+    "component": "question-classifier",
+    "presentation": "fullscreen"
+  }]
+}

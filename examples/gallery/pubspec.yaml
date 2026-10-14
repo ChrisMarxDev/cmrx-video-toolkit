@@ -1,0 +1,16 @@
+name: agentic_video_gallery
+publish_to: none
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  fluvie: 0.3.1
+  video_components:
+    path: ../../design_system
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  alchemist: ^0.14.0
+flutter:
+  uses-material-design: true

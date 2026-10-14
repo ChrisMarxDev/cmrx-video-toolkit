@@ -1,0 +1,65 @@
+.tools/
+.venv/
+.dart_tool/
+**/.dart_tool/
+**/.fluvie/
+**/build/
+**/.flutter-plugins-dependencies
+__pycache__/
+*.pyc
+/clients/*/projects/*
+!/clients/*/projects/.gitkeep
+.env
+*.mp4
+*.mov
+*.wav
+*.webm
+
+# Local single-video editor workspaces contain transcripts and media.
+*.flut_script/
+
+# The repository is the software factory; recording workspaces stay local.
+/clients/cmrx/examples/jev_video/
+
+# Generated renders, captures, reviews and intermediate output (any package).
+**/renders/
+**/capture/
+**/captures/
+**/review/
+**/preview/
+**/artifacts/
+**/coverage/
+*.rgba
+*.f32
+*.pcm
+*.yuv
+*.log
+*.srt
+*.vtt
+
+# Source/export media. Reusable still images, logos and fonts remain versioned.
+*.[mM][pP]4
+*.[mM][oO][vV]
+*.[wW][eE][bB][mM]
+*.[mM][kK][vV]
+*.[aA][vV][iI]
+*.[mM]4[vV]
+*.[wW][aA][vV]
+*.[mM][pP]3
+*.[mM]4[aA]
+*.[aA][aA][cC]
+*.[fF][lL][aA][cC]
+*.[oO][gG][gG]
+.DS_Store
+.env.*
+!.env.example
+
+# Protect local workspaces from pre-consolidation checkouts during migration.
+/projects/
+/examples/jev_video/
+
+# Reproducible component-browser demo media.
+/clients/cmrx/tools/component_browser/assets/demo/
+
+/tools/component_browser/assets/demo/
+/projects/

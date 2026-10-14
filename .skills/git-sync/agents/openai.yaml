@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Sync"
+  short_description: "Commit, rebase, and push on the current branch"
+  default_prompt: "Use $git-sync to commit my work on the current branch, integrate remote changes, push, and verify synchronization."

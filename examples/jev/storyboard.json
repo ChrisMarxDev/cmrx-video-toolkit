@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "timeline_revision": "replace-with-project-timeline-revision",
+  "illustrative_only": true,
+  "scenes": [{
+    "id": "classification",
+    "annotation_id": "question-routing",
+    "start": 1.0,
+    "end": 4.8,
+    "component": "QuestionClassifier",
+    "presentation": "fullscreen",
+    "intent": "Explain routing through categories while the original narrator continues.",
+    "props": {"question": "How do I connect my account?", "classifier": "Jev — demo", "answers": ["Setup guidance", "Troubleshooting", "Ask for context"], "selectedIndex": 0},
+    "cues": [
+      {"action": "question-enter", "word_id": "w000002", "time": 1.0},
+      {"action": "classify", "word_id": "w000006", "time": 2.0},
+      {"action": "answer-highlight", "word_id": "w000010", "time": 3.6}
+    ]
+  }]
+}

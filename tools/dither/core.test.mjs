@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {bayer,render} from './core.mjs';
+const base={width:16,height:16,cell:1,order:4,background:'#24143D',foreground:'#DFD6F4',contrast:1,bias:0,invert:false,shape:'solid',phase:2.4};
+test('4x4 matrix matches canonical ordering',()=>{const matrix=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];for(let y=0;y<4;y++)for(let x=0;x<4;x++)assert.equal(bayer(x,y,4),(matrix[y][x]+.5)/16);});
+test('all matrix sizes yield half coverage and only palette colors',()=>{for(const order of [2,4,8]){const pixels=render({...base,order});let count=0;for(let i=0;i<pixels.length;i+=4){const rgb=[...pixels.slice(i,i+3)];assert.ok(JSON.stringify(rgb)==='[36,20,61]'||JSON.stringify(rgb)==='[223,214,244]');count+=pixels[i]===223;assert.equal(pixels[i+3],255);}assert.equal(count,128);}});
+test('density endpoints, inversion and deterministic frames',()=>{assert.equal(render({...base,bias:-1})[0],36);assert.equal(render({...base,bias:1})[0],223);const source=new Uint8ClampedArray(1024);for(let i=0;i<1024;i+=4){source[i+3]=i%256;}const normal=render({...base,source}),inverse=render({...base,source,invert:true});assert.equal(normal[0],36);assert.equal(inverse[0],223);for(let i=3;i<1024;i+=4)assert.equal(normal[i],source[i]);const a=render({...base,shape:'wave',phase:1});render({...base,shape:'wave',phase:9});assert.deepEqual(a,render({...base,shape:'wave',phase:1}));});
+test('rejects excessive allocations and invalid cells',()=>{assert.throws(()=>render({...base,width:4096,height:4096}));assert.throws(()=>render({...base,cell:0}));assert.throws(()=>render({...base,source:new Uint8ClampedArray(4)}));});

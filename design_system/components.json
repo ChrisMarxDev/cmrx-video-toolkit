@@ -1,0 +1,485 @@
+{
+  "schemaVersion": 1,
+  "identity": "video-toolkit@0.1.0",
+  "importPath": "package:video_components/video_components.dart",
+  "components": [
+    {
+      "id": "video.stage",
+      "name": "Stage",
+      "widget": "VideoStage",
+      "category": "Layout",
+      "description": "The base canvas and inherited typography. Does not position or scale its children.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": false,
+      "parameters": {
+        "theme": {
+          "label": "Theme",
+          "type": "choice",
+          "default": "light",
+          "options": [
+            "light",
+            "dark"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "light",
+          "props": {}
+        },
+        {
+          "id": "dark",
+          "props": {
+            "theme": "dark"
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.block",
+      "name": "Explanatory block",
+      "widget": "VideoBlock",
+      "category": "Content",
+      "description": "A square block for one meaningful label or concept.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": false,
+      "parameters": {
+        "active": {
+          "label": "Active",
+          "type": "bool",
+          "default": false
+        },
+        "text": {
+          "label": "Label",
+          "type": "text",
+          "default": "Context"
+        },
+        "padding": {
+          "label": "Padding",
+          "type": "number",
+          "default": 20,
+          "min": 8,
+          "max": 40
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "active",
+          "props": {
+            "active": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.caption",
+      "name": "Speech caption",
+      "widget": "VideoCaption",
+      "category": "Content",
+      "description": "Faithful spoken text on a solid backplate. Replace the sample with transcript text.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": false,
+      "parameters": {
+        "text": {
+          "label": "Caption text",
+          "type": "text",
+          "default": "From an idea to a video."
+        },
+        "fontSize": {
+          "label": "Font size",
+          "type": "number",
+          "default": 32,
+          "min": 22,
+          "max": 44
+        }
+      },
+      "variants": [
+        {
+          "id": "single-line",
+          "props": {}
+        },
+        {
+          "id": "two-lines",
+          "props": {
+            "text": "One clear idea.\nRoom to understand it."
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.code",
+      "name": "Code focus",
+      "widget": "VideoCode",
+      "category": "Content",
+      "description": "Actual code with one selected line. Keep production examples truthful.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": false,
+      "parameters": {
+        "text": {
+          "label": "Code lines",
+          "type": "text",
+          "default": "final seconds = frame / fps;\nfinal progress = cueProgress(\n  seconds, start, end,\n);"
+        },
+        "focusLine": {
+          "label": "Focused line",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 3
+        }
+      },
+      "variants": [
+        {
+          "id": "focused",
+          "props": {}
+        },
+        {
+          "id": "second-line",
+          "props": {
+            "focusLine": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.layers",
+      "name": "Exploded layers",
+      "widget": "VideoLayers",
+      "category": "Diagrams",
+      "description": "Three connected layers separate to explain a structure. Scrub the preview to inspect motion.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": true,
+      "parameters": {
+        "activeLayer": {
+          "label": "Active layer",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 2
+        }
+      },
+      "variants": [
+        {
+          "id": "middle",
+          "props": {}
+        },
+        {
+          "id": "top",
+          "props": {
+            "activeLayer": 2
+          }
+        },
+        {
+          "id": "bottom",
+          "props": {
+            "activeLayer": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.texture",
+      "name": "Bounded texture",
+      "widget": "VideoTexture",
+      "category": "Texture",
+      "description": "Fine ordered dithering inside an illustration region. Keep text and faces clean.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": true,
+      "parameters": {
+        "strong": {
+          "label": "Strong contrast",
+          "type": "bool",
+          "default": false
+        },
+        "animated": {
+          "label": "Animate density",
+          "type": "bool",
+          "default": true
+        },
+        "lavenderLime": {
+          "label": "Lavender + lime",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "quiet",
+          "props": {}
+        },
+        {
+          "id": "strong",
+          "props": {
+            "strong": true
+          }
+        },
+        {
+          "id": "moving",
+          "props": {
+            "animated": true
+          }
+        },
+        {
+          "id": "frozen",
+          "props": {
+            "animated": false
+          }
+        },
+        {
+          "id": "lavender-lime",
+          "props": {
+            "lavenderLime": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.dither-background",
+      "name": "Dither background",
+      "widget": "VideoDitherBackground",
+      "category": "Texture",
+      "description": "A slow full-canvas texture behind clean foreground content. Use only when requested.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": true,
+      "parameters": {
+        "speed": {
+          "label": "Drift speed",
+          "type": "number",
+          "default": 0.04,
+          "min": 0,
+          "max": 0.16
+        },
+        "pixelSize": {
+          "label": "Pixel size",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 4
+        },
+        "lavenderLime": {
+          "label": "Lavender + lime",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "gentle",
+          "props": {}
+        },
+        {
+          "id": "frozen",
+          "props": {
+            "speed": 0
+          }
+        },
+        {
+          "id": "lavender-lime",
+          "props": {
+            "lavenderLime": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.type",
+      "name": "Typography",
+      "widget": "VideoType",
+      "category": "Identity",
+      "description": "Package-qualified Space Grotesk and IBM Plex Mono with local fonts.",
+      "source": "design_system/lib/src/components.dart",
+      "motion": false,
+      "parameters": {
+        "role": {
+          "label": "Type role",
+          "type": "choice",
+          "default": "body",
+          "options": [
+            "body",
+            "mono",
+            "caption"
+          ]
+        },
+        "text": {
+          "label": "Sample text",
+          "type": "text",
+          "default": "Make the idea clear."
+        }
+      },
+      "variants": [
+        {
+          "id": "body",
+          "props": {}
+        },
+        {
+          "id": "mono",
+          "props": {
+            "role": "mono",
+            "text": "frame / fps"
+          }
+        },
+        {
+          "id": "caption",
+          "props": {
+            "role": "caption"
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.reveal",
+      "name": "Reveal",
+      "widget": "Reveal",
+      "category": "Motion",
+      "description": "A deterministic fade and upward entrance. In video, supply progress from resolved output cues.",
+      "source": "design_system/lib/src/motion.dart",
+      "motion": true,
+      "parameters": {
+        "text": {
+          "label": "Label",
+          "type": "text",
+          "default": "The next idea"
+        }
+      },
+      "variants": [
+        {
+          "id": "standard",
+          "props": {}
+        }
+      ]
+    },
+    {
+      "id": "video.image",
+      "name": "Image",
+      "widget": "VideoImage",
+      "category": "Media",
+      "source": "design_system/lib/src/media.dart",
+      "motion": false,
+      "description": "A clean image surface. Compare contain, cover and a lime frame. Decode source images before video capture.",
+      "parameters": {
+        "fit": {
+          "label": "Fit",
+          "type": "choice",
+          "default": "contain",
+          "options": [
+            "contain",
+            "cover"
+          ]
+        },
+        "framed": {
+          "label": "Lime frame",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "contain",
+          "props": {}
+        },
+        {
+          "id": "cover",
+          "props": {
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "framed",
+          "props": {
+            "framed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.video",
+      "name": "Video",
+      "widget": "VideoVideo",
+      "category": "Media",
+      "source": "design_system/lib/src/media.dart",
+      "motion": false,
+      "description": "A reusable video surface with native browser playback controls. In compositions, supply a Fluvie Clip as the child.",
+      "parameters": {
+        "fit": {
+          "label": "Fit",
+          "type": "choice",
+          "default": "contain",
+          "options": [
+            "contain",
+            "cover"
+          ]
+        },
+        "framed": {
+          "label": "Lime frame",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "contain",
+          "props": {}
+        },
+        {
+          "id": "cover",
+          "props": {
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "framed",
+          "props": {
+            "framed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.gif",
+      "name": "Animated GIF",
+      "widget": "VideoGif",
+      "category": "Media",
+      "source": "design_system/lib/src/media.dart",
+      "motion": true,
+      "description": "A looping GIF with encoded frame durations. Play or scrub it deterministically using the preview clock.",
+      "parameters": {
+        "fit": {
+          "label": "Fit",
+          "type": "choice",
+          "default": "contain",
+          "options": [
+            "contain",
+            "cover"
+          ]
+        },
+        "framed": {
+          "label": "Lime frame",
+          "type": "bool",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "contain",
+          "props": {}
+        },
+        {
+          "id": "cover",
+          "props": {
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "framed",
+          "props": {
+            "framed": true
+          }
+        }
+      ]
+    }
+  ]
+}
