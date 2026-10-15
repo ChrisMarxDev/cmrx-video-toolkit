@@ -1,0 +1,62 @@
+// Run only with explicit browser-automation permission from the host.
+const {chromium}=require('playwright');
+const fs=require('fs'); const assert=require('assert');
+const root=process.env.REVIEW_FIXTURES;
+assert(root&&process.env.REVIEW_URL,'Set REVIEW_FIXTURES to full_flow.py output and REVIEW_URL to the server URL.');
+fs.mkdirSync(root+'/browser-tests',{recursive:true});
+const run=Date.now();
+(async()=>{
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto(process.env.REVIEW_URL);
+await page.screenshot({path:root+'/browser-tests/start.png',fullPage:true});
+const results=[];
+for(let i=0;i<2;i++){
+ const workspace=root+'/browser-tests/ui-'+run+'-video-'+i;
+ await page.locator('#open-button').click();
+ await page.locator('#path').fill(root+`/original ${i}.${i?'mkv':'mp4'}`);
+ if(!await page.locator('details').evaluate(e=>e.open))await page.locator('summary').click();
+ await page.locator('#workspace-path').fill(workspace);
+ await page.locator('#prepare').click();
+ await page.waitForFunction(async workspace=>{const s=await fetch('/api/state',{headers:{'X-Review-Token':sessionStorage.getItem('review-token')}}).then(r=>r.json());return s.workspace===workspace&&!s.job.busy&&document.querySelector('#source-name').textContent.startsWith('original')},workspace,{timeout:180000});
+ await page.waitForTimeout(1000);
+ await page.waitForFunction(()=>document.querySelector('video').readyState>=2);
+ await page.locator('#play').click(); await page.waitForTimeout(1000); await page.locator('#play').click();
+ assert(await page.locator('video').evaluate(v=>v.currentTime)>0);
+ const passages=await page.locator('.passage').count();assert(passages>0);
+ await page.locator('.passage').first().click();
+ await page.locator('#search').fill('zzzznonexistent');assert.equal(await page.locator('.passage').count(),0);await page.locator('#search').fill('');
+ async function range(a,b){await page.locator('#range-start').fill(''+a);await page.locator('#range-start').press('Tab');await page.locator('#range-end').fill(''+b);await page.locator('#range-end').press('Tab');assert.equal(Number(await page.locator('#range-start').inputValue()),a);assert.equal(Number(await page.locator('#range-end').inputValue()),b);}
+ await range(0,2);await page.locator('[data-mark="good"]').click();
+ await range(4,6);await page.locator('[data-mark="bad"]').click();
+ await range(7,9);await page.locator('[data-mark="comment"]').click();await page.locator('#item-text').fill('Keep the explanation clear');
+ await range(1,4);
+ await page.locator('#draw').click();
+ const b=await page.locator('#overlay').boundingBox();
+ await page.mouse.move(b.x+b.width*.15,b.y+b.height*.2);await page.mouse.down();await page.mouse.move(b.x+b.width*.5,b.y+b.height*.6,{steps:12});await page.mouse.up();
+ await page.locator('#request-text').fill(i?'Add a colorful diagram':'Add a giraffe');await page.locator('#request-form button[type="submit"]').click();
+ await page.waitForTimeout(600);
+ let box=await page.locator('.box').boundingBox();
+ await page.mouse.move(box.x+20,box.y+20);await page.mouse.down();await page.mouse.move(box.x+45,box.y+35,{steps:8});await page.mouse.up();
+ const handle=await page.locator('.box-handle').boundingBox();
+ await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);await page.mouse.down();await page.mouse.move(handle.x+25,handle.y+25,{steps:8});await page.mouse.up();
+ await page.locator('.bar.visual').scrollIntoViewIfNeeded();
+ const bar=await page.locator('.bar.visual').boundingBox();
+ await page.mouse.move(bar.x+bar.width/2,bar.y+bar.height/2);await page.mouse.down();await page.mouse.move(bar.x+bar.width/2+50,bar.y+bar.height/2,{steps:8});await page.mouse.up();
+ await page.waitForTimeout(900);
+ let saved=JSON.parse(fs.readFileSync(workspace+'/review.json'));
+ assert.deepEqual(saved.marks.map(m=>[m.source_start,m.source_end]),[[0,2],[4,6],[7,9]]);assert.equal(saved.marks.length,3);assert.equal(saved.objects.length,1);assert(saved.objects[0].source_start>1);assert(saved.objects[0].rect.x>.15);assert(saved.objects[0].rect.width>.35);
+ await page.locator('#undo').click();await page.waitForTimeout(500);await page.locator('#redo').click();await page.waitForTimeout(500);
+ await page.locator('.lane-label').filter({hasText:'Visual request'}).click();
+ await page.locator('.box').waitFor({state:'visible'});
+ await page.screenshot({path:root+`/browser-tests/video-${i}-desktop.png`,fullPage:true});
+ await page.reload();await page.waitForSelector('.bar.visual');assert.equal(await page.locator('.bar').count(),4);
+ await page.setViewportSize({width:800,height:1000});await page.screenshot({path:root+`/browser-tests/video-${i}-narrow.png`,fullPage:true});await page.setViewportSize({width:1440,height:1000});
+ await page.locator('#export-button').click();await page.locator('#render-cut').check();await page.locator('#export-form button[type="submit"]').click();
+ await page.waitForFunction(()=>!document.querySelector('#export-result').hidden&&!document.querySelector('#export-button').disabled,null,{timeout:120000});
+ assert.equal(await page.locator('#error').isVisible(),false,await page.locator('#error').textContent());
+ results.push({video:i,passages,workspace,export:await page.locator('#export-result').textContent(),rect:saved.objects[0].rect,interval:[saved.objects[0].source_start,saved.objects[0].source_end]});
+}
+assert.deepEqual(errors,[]);fs.writeFileSync(root+'/browser-tests/ui-evidence.json',JSON.stringify({passed:true,errors,results},null,2));await browser.close();console.log(JSON.stringify(results,null,2));
+})().catch(e=>{console.error(e);process.exit(1)});

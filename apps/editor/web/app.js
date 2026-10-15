@@ -104,7 +104,8 @@ function renderTimeline(){
 function renderOverlay(){
   if(!doc)return;const overlay=$('overlay');overlay.replaceChildren();overlay.classList.toggle('drawing',drawing);
   for(const value of doc.objects){
-    if(video.currentTime<value.source_start||video.currentTime>=value.source_end)continue;
+    // Media clocks can round a requested seek slightly below its source timestamp.
+    if(video.currentTime+.001<value.source_start||video.currentTime>=value.source_end)continue;
     const box=element('div',`box ${value.id===selected?'selected':''}`);box.dataset.id=value.id;
     positionBox(box,value.rect);box.append(element('span','box-label',value.text));
     const handle=element('span','box-handle');box.append(handle);box.tabIndex=0;box.setAttribute('aria-label',value.text);
@@ -138,7 +139,8 @@ video.onerror=()=>error('The browser could not play the prepared preview. Retry 
 $('play').onclick=()=>video.paused?video.play().catch(e=>error(e.message)):video.pause();
 $('seek').oninput=()=>{video.currentTime=Number($('seek').value);};
 $('search').oninput=renderTranscript;$('zoom').oninput=renderTimeline;
-for(const id of ['range-start','range-end'])$(id).onchange=()=>setSelection(Number($('range-start').value),Number($('range-end').value));
+$('range-start').onchange=()=>{const start=clamp(Number($('range-start').value),0,doc.source.duration);setSelection(start,Math.max(start,selection[1]));};
+$('range-end').onchange=()=>{const end=clamp(Number($('range-end').value),0,doc.source.duration);setSelection(Math.min(selection[0],end),end);};
 for(const button of document.querySelectorAll('[data-mark]'))button.onclick=()=>mark(button.dataset.mark);
 $('draw').onclick=()=>{drawing=!drawing;pendingRect=null;video.pause();$('draw').textContent=drawing?'Cancel drawing':'Draw visual request';renderOverlay();};
 $('request-form').onsubmit=e=>{e.preventDefault();if(!pendingRect)return;checkpoint();const start=selection[1]>selection[0]?selection[0]:clamp(video.currentTime,0,doc.source.duration-.05);const end=selection[1]>selection[0]?selection[1]:Math.min(start+3,doc.source.duration);const value={id:crypto.randomUUID(),text:$('request-text').value.trim(),source_start:start,source_end:end,rect:pendingRect};if(!value.text)return;doc.objects.push(value);selected=value.id;video.currentTime=start;pendingRect=null;$('request-dialog').close();changed();};
@@ -194,6 +196,7 @@ async function poll(){
     return;
   }
   if(state.document&&(workspace!==state.workspace||!doc)){
+    $('export-result').hidden=true;lastExport=state.job.export||null;
     doc=state.document;workspace=state.workspace;$('source-name').textContent=doc.source.path.split(/[\\/]/).pop();selected=null;undo=[];redo=[];dirty=false;selection=[0,0];
     video.src='/media?token='+encodeURIComponent(token)+'&revision='+encodeURIComponent(doc.source.sha256);$('stage').style.aspectRatio=`${doc.source.width}/${doc.source.height}`;$('seek').max=doc.source.duration;
     $('range-start').value=selection[0];$('range-end').value=selection[1];$('path').value=workspace+'/review.json';$('workspace-path').value='';render();fitStage();

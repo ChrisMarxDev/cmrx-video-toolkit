@@ -142,3 +142,15 @@ The regular suite uses explicit synthetic transcript fixtures and tests landscap
 and portrait media, migration, persistence, cut mapping and HTTP access restrictions.
 CI runs the regular editor checks on Linux, macOS and Windows. UI interaction must
 also be checked in a browser when the host grants automation permission.
+
+For an explicitly authorized browser test, install Playwright in a separate local
+folder (`npm install playwright`, then `npx playwright install chromium`). Start
+`server.py` with your local Whisper model. Run `tool/browser_flow.cjs` using Node
+with `NODE_PATH` pointing to that folder's `node_modules`, `REVIEW_FIXTURES` set to
+the full-flow output above, and `REVIEW_URL` set to the server's printed URL
+(including its token). Optional `CHROMIUM_PATH` selects an installed executable.
+It opens both synthetic recordings in fresh workspaces, checks playback, transcript
+search, keep/cut/comment entry, box drawing/move/resize, timeline dragging, undo/redo,
+autosave/reload and rendered export. Screenshots at desktop and narrow widths and
+`ui-evidence.json` are saved under the fixtures' `browser-tests/` directory.
+These environment variables are test-runner inputs, not app configuration.
