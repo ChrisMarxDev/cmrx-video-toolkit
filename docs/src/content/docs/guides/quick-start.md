@@ -17,9 +17,9 @@ cd cmrx-video-toolkit
 python3 scripts/doctor.py
 ```
 
-Address missing prerequisites reported by the doctor before using that capability.
-You do not need Node.js to use the Python/Flutter tools; Node >=22.12 is for this
-documentation site.
+Install any missing dependencies reported for the tool you want to use.
+Node.js is used by the documentation site and the optional MCP review integration.
+See the [dependency inventory](https://github.com/ChrisMarxDev/cmrx-video-toolkit/blob/main/docs/EXTERNAL-REQUIREMENTS.md) for requirements by tool.
 
 ## Explore the components
 
@@ -28,8 +28,9 @@ make components
 ```
 
 Open `http://localhost:8090`. The browser renders the actual Flutter widgets and
-lets you explore props, variants and motion. It is a component workbench, not a
-video compositor. Stop it before launching another app on the same port.
+lets you adjust their properties and preview animations. Assemble the video in
+Flutter after choosing components. Stop the browser before launching another app
+on the same port.
 
 ## Open a recording in the editor
 
@@ -40,7 +41,7 @@ python3 apps/editor/server.py
 ```
 
 See the [editor reference](/cmrx-video-toolkit/reference/editor/) for the
-workspace, Whisper model requirements and export behavior. Keep originals immutable.
+workspace, Whisper model requirements and export behavior. Keep the original recording unchanged.
 
 ## Check the toolkit
 

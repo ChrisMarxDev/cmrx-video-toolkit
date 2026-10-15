@@ -7,24 +7,27 @@
   <a href="https://cmrx.dev">Chris Marx Studio</a>
 </p>
 
-# Your recording. Your workflow. Your style.
+# CMRX Video Toolkit
 
-**Open tools and agent skills for making videos with code.** Review transcript-based
-cuts, plan the visuals, compose Flutter scenes and render a finished video — with
-original media preserved and creative decisions in your hands.
+Edit recordings through a transcript, add captions and Flutter animations, and
+render videos with FFmpeg. The toolkit includes a browser editor, reusable video
+components and skills that guide a coding agent through each stage.
 
-Local-first · Python + FFmpeg + Flutter · MIT licensed
+You review the cuts and visual plan before the agent builds the animation. Your
+recordings stay on your machine; you supply the colors, fonts and editorial direction.
+
+Python + FFmpeg + Flutter · MIT licensed
 
 ## What’s inside
 
 | Tool | What you can do |
 | --- | --- |
-| [Transcript editor](apps/editor/) | Review keep/cut ranges, draw timed visual requests and export an agent handoff. |
+| [Transcript editor](apps/editor/) | Review keep/cut ranges, add timed visual notes and export an agent handoff. |
 | [Component browser](tools/component_browser/) | Explore real Flutter widgets, variants, props and motion. |
 | [Video components](components/) | Compose with reusable widgets, shaders, media and deterministic motion. |
 | [Dither tool](tools/dither/) | Explore local image/field dithering and export PNGs. |
 | [Pipeline tools](scripts/) | Work with edit timelines, soundmaps, rendering and media checks. |
-| [Agent skills](.skills/) | Follow a stage-by-stage workflow with your own creative direction. |
+| [Agent skills](.skills/) | Give a coding agent instructions for editing, animation and review. |
 
 ## Get started
 
@@ -52,7 +55,7 @@ python3 apps/editor/server.py
 
 [Read the full quick start →](https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/)
 
-## A workflow with review built in
+## From recording to finished video
 
 **Ingest → Transcribe → Edit → Storyboard → Compose → Review → Render**
 
@@ -60,11 +63,12 @@ Start with [video-flow](.skills/video-flow/SKILL.md). Review the rough cut befor
 detailed animation. Map source cues through the edited timeline; do not guess
 animation timestamps. Keep recordings, transcripts, models and renders outside Git.
 
-This is an early toolkit, not a hosted service or an autonomous editor. The browser
-is a workbench, not a compositor. Native Scene GPU capture uses a separate macOS
-path; headless Fluvie GPU integration is not assumed. Inspect the final output.
+The toolkit is in early development and runs locally. Use the browser editor to
+review cuts and visual notes; compose the video in Flutter. Native Scene GPU
+capture currently uses a separate macOS path. Check the rendered video before
+publishing.
 
-## Bring your own style
+## Set your video style
 
 `components/` contains the `video_components` Flutter package. Styled widgets
 require your own `VideoStyle`; the toolkit does not impose colors, fonts or

@@ -7,14 +7,14 @@ Pin the toolkit to a reviewed Git commit or release in your own workspace. Keep
 recordings, transcripts, generated previews, models and exports outside Git.
 Do not commit private knowledge or client materials to the public toolkit.
 
-## Bring your own appearance
+## Set colors and typography
 
 The Flutter package is `video_components`, located in `components/`. Styled widgets
-require a caller-owned `VideoStyle`: supply colors and typography from your own
-application. The component browser's grayscale demo style is only an example.
+require a `VideoStyle` supplied by your application, with your colors and
+typography. The component browser's grayscale demo style is only an example.
 
-The purple, lavender and lime on this documentation website are CMRX's **website
-identity**, not defaults applied to your videos.
+Set these values in your workspace; the toolkit does not apply the documentation
+site’s colors to your videos.
 
 Read the [component catalog](/cmrx-video-toolkit/reference/components/) for the
 current styling contract and migration guidance.
@@ -35,5 +35,5 @@ workspace. Inspect generated compositions before rendering.
 ## Extend the component browser
 
 The catalog metadata, specimen builder and constructor examples must agree.
-Metadata alone cannot load arbitrary Dart implementations. Private component
-registries currently need a compile-time integration app.
+To preview your own Dart components, register their implementations in a Flutter
+app and compile it. Adding a catalog entry alone does not load the widget.

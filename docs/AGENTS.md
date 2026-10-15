@@ -9,3 +9,9 @@ Guides live in src/content/docs/guides/. scripts/sync-reference.mjs generates th
 reference pages from canonical Markdown elsewhere in this public repository.
 Edit those source files rather than generated reference pages. Run npm run build
 from docs/ after changes. Never put private media, transcripts or knowledge here.
+
+Write copy around concrete actions and verified behavior. Cut generic slogans,
+repeated promises and forced contrasts. Use plain sentences with named tools and
+outcomes. Keep setup commands, limitations and API contracts precise; a shorter
+sentence must not make a broader claim. Avoid decorative em dashes and formulaic
+three-part taglines.
