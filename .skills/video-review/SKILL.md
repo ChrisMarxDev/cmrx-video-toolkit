@@ -16,6 +16,10 @@ explain the missing capability instead of claiming installation succeeded.
 
 ## Source recording review with a human
 
+Before new transcription, follow **Language-aware preparation** in
+`.skills/video-transcribe/SKILL.md`; chat language is a hint, while the recording
+and explicit user instructions determine recognition settings.
+
 Read `apps/review-agent/README.md`. Use a configured `open_review` MCP tool with
 the recording path and workspace (or an existing review.json). The same editor
 is an MCP App in supporting hosts and a normal web app through `browserUrl`.
