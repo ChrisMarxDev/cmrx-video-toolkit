@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video review sample</title>
+<style>
+  :root { color-scheme: light dark; font: 15px system-ui; } body { margin: 16px; }
+  main { max-width: 640px; margin: auto; } video { width: 100%; border-radius: 8px; background: #111; }
+  h1 { font-size: 18px; } label { display: block; margin: 12px 0; }
+  textarea { width: 100%; box-sizing: border-box; padding: 8px; font: inherit; } input { width: 72px; padding: 6px; }
+  button { padding: 10px 16px; font: inherit; cursor: pointer; } output { display: block; margin-top: 12px; overflow-wrap: anywhere; }
+  small { opacity: .75; } #error { color: #c43b30; }
+</style>
+<main>
+  <h1>Video review · connection test</h1>
+  <p>Play and seek the synthetic clip, write one instruction, then click Done.</p>
+  <video id="video" controls playsinline preload="metadata"></video>
+  <small id="playback">Video not loaded yet.</small>
+  <form id="form">
+    <label>Instruction<textarea id="note" rows="2" required maxlength="1000" placeholder="Add a title here"></textarea></label>
+    <label>From <input id="start" type="number" min="0" max="8" step="0.1" value="1" required>
+      to <input id="end" type="number" min="0" max="8" step="0.1" value="3" required> seconds</label>
+    <button id="done" disabled>Done — save and continue</button>
+  </form>
+  <output id="status" role="status">Connecting to the host…</output><output id="error" role="alert"></output>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  let session, sequence = 0, ready = false;
+  const pending = new Map(), playback = { played: false, seeked: false, currentTime: 0, error: '' };
+  function notify(method, params) { parent.postMessage({ jsonrpc: '2.0', method, params }, '*'); }
+  function rpc(method, params) {
+    return new Promise((resolve, reject) => {
+      const id = ++sequence;
+      const timer = setTimeout(() => { pending.delete(id); reject(Error(`Host did not answer ${method}.`)); }, 15000);
+      pending.set(id, { resolve, reject, timer });
+      parent.postMessage({ jsonrpc: '2.0', id, method, params }, '*');
+    });
+  }
+  function update(result) {
+    const doc = result?.structuredContent;
+    if (!doc?.sessionId) return;
+    session = doc;
+    if ($('video').src !== doc.videoUrl) $('video').src = doc.videoUrl;
+    $('done').disabled = !ready || doc.status === 'completed';
+    if (doc.status === 'completed') $('status').textContent = `Saved locally: ${doc.artifactPath}`;
+    else $('status').textContent = 'Ready. Your instruction will be saved on the server’s computer.';
+  }
+  window.addEventListener('message', event => {
+    if (event.source !== parent || event.data?.jsonrpc !== '2.0') return;
+    const message = event.data;
+    if (pending.has(message.id)) {
+      const request = pending.get(message.id); pending.delete(message.id); clearTimeout(request.timer);
+      message.error ? request.reject(Error(message.error.message)) : request.resolve(message.result);
+    } else if (message.method === 'ui/notifications/tool-result') update(message.params);
+    else if (message.method === 'ui/resource-teardown') {
+      $('video').pause(); parent.postMessage({ jsonrpc: '2.0', id: message.id, result: {} }, '*');
+    }
+  });
+  for (const name of ['loadedmetadata', 'playing', 'seeked', 'timeupdate', 'error']) $('video').addEventListener(name, () => {
+    if (name === 'playing') playback.played = true;
+    if (name === 'seeked') playback.seeked = true;
+    if (name === 'error') playback.error = `Media error ${$('video').error?.code}: ${$('video').error?.message || 'Playback blocked'}`.slice(0, 300);
+    playback.currentTime = $('video').currentTime;
+    $('playback').textContent = playback.error || `Playback: ${playback.played ? 'yes' : 'not yet'} · Seeking: ${playback.seeked ? 'yes' : 'not yet'} · ${playback.currentTime.toFixed(1)}s`;
+  });
+  $('form').onsubmit = async event => {
+    event.preventDefault(); $('done').disabled = true; $('error').textContent = '';
+    try {
+      const result = await rpc('tools/call', { name: 'finish_review_sample', arguments: {
+        sessionId: session.sessionId, text: $('note').value, start: Number($('start').value), end: Number($('end').value), playback,
+      } });
+      if (result.isError) throw Error(result.content?.[0]?.text || 'Save failed');
+      update(result); $('video').pause();
+      try {
+        await rpc('ui/message', { role: 'user', content: [{ type: 'text', text:
+          `I finished video review sample ${session.sessionId}. Call get_review_sample with this sessionId, read the saved annotation and playback diagnostics, and report the local artifact path. Do not start rendering.` }] });
+        $('status').textContent += '\nContinuation requested from the host.';
+      } catch { $('status').textContent += '\nSaved, but this host did not accept the continuation request. Ask the agent to read this review session.'; }
+    } catch (error) { $('error').textContent = error.message; $('done').disabled = false; }
+  };
+  (async () => {
+    try {
+      await rpc('ui/initialize', { appInfo: { name: 'video-review-sample', version: '0.1.0' }, appCapabilities: {}, protocolVersion: '2026-01-26' });
+      ready = true; notify('ui/notifications/initialized', {});
+      if (session) update({ structuredContent: session });
+      new ResizeObserver(() => notify('ui/notifications/size-changed', { height: document.documentElement.scrollHeight })).observe(document.body);
+    } catch (error) { $('error').textContent = error.message + ' Open this resource through an MCP Apps host.'; }
+  })();
+</script></html>
