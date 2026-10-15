@@ -275,15 +275,15 @@ class Handler(BaseHTTPRequestHandler):
         self.json(dict(path=str(destination), workspace=str(destination.parent.parent)))
 
 
-def make_server(port=0, home=None, model=None):
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+def make_server(port=0, home=None, model=None, handler=Handler):
+    server = ThreadingHTTPServer(('127.0.0.1', port), handler)
     server.daemon_threads = True
     server.token = secrets.token_urlsafe(32)
     server.session = Session(home or Path.home() / 'VideoReviews', model)
     return server
 
 
-def main():
+def main(handler=Handler):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('video', nargs='?', help='Video path or saved review.json')
     parser.add_argument('--port', type=int, default=8091)
@@ -292,7 +292,7 @@ def main():
     parser.add_argument('--transcript')
     parser.add_argument('--home', help='Folder for videos selected through the browser')
     args = parser.parse_args()
-    server = make_server(args.port, args.home, args.model)
+    server = make_server(args.port, args.home, args.model, handler)
     if args.video:
         server.session.open(dict(path=args.video, workspace=args.workspace, model=args.model, transcript=args.transcript))
     print(f'Open http://127.0.0.1:{server.server_address[1]}/#token={server.token}', flush=True)
