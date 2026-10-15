@@ -14,6 +14,15 @@ Resolve source cues through scripts/video.py import-edit; never guess timestamps
 Drafts can be rendered for review. Final approval is a human decision, not a CLI flag.
 Read the matching stage skill below before using a command. Keep media outside Git.
 
+## No-terminal user experience
+
+Run setup and launch commands yourself when your host permits it. Never ask a
+nontechnical user to open a terminal, paste a command, edit MCP configuration or
+manage a background server. Commands in this skill are agent/developer instructions.
+Prefer an installed plugin/tool; if setup needs a host restart or a graphical
+permission, give the user that single UI action. If you cannot perform setup,
+explain the missing capability instead of claiming installation succeeded.
+
 ## Human recording review
 
 Read `.skills/video-review/SKILL.md` for the shared MCP App/browser review flow.

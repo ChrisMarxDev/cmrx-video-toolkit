@@ -106,3 +106,12 @@ Authoritative implementation references: [editor setup](../apps/editor/README.md
 [agent integration](../apps/review-agent/README.md), [pipeline](../scripts/video.py),
 [media tools](../video_tools/README.md), [component manifest](../components/pubspec.yaml),
 [development](DEVELOPMENT.md), and the manifests/setup scripts named above.
+
+### Local desktop test plugin setup
+
+`apps/review-agent/install-local.py` is agent-operated setup for an existing
+checkout, not an end-user terminal step or bundled installer. It additionally
+uses the Codex CLI to register a local marketplace/plugin. Runtime requirements
+remain Python, Node, FFmpeg and a supported local desktop host; transcription
+still needs whisper.cpp and its model. No tunnel is added. System dependencies
+are not yet bundled. A user must never be told to run these setup commands.

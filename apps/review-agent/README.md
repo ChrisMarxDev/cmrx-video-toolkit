@@ -131,3 +131,38 @@ They cover resource bundling/CSP, media ranges, canonical saves, stale revisions
 completion receipts, cancellation, authentication, external file changes and
 cleanup. Bridge tests cover failed saves, concurrent Done and notification failure.
 Browser and simulated embedded-host checks are distinct from actual host acceptance.
+
+## Agent-managed desktop test installation
+
+Nontechnical users must not run terminal commands. The following setup is for an
+agent operating an existing developer checkout. It installs a local desktop
+plugin containing the review skill and an automatically launched stdio server:
+
+```sh
+python3 apps/review-agent/install-local.py --root /absolute/video/project
+```
+
+The agent runs this command. `--entry /absolute/adapter/mcp.mjs` selects a
+caller-owned UI adapter. The helper checks Node 22+, npm, Codex, FFmpeg and ffprobe,
+installs locked Node dependencies if absent, and captures the Python executable
+and PATH so GUI launches do not depend on an interactive shell. It creates a
+managed local marketplace and installs/enables `video-review@video-review-local`.
+Existing unrelated plugins are preserved. Rerun after moving the checkout or
+changing the skill. It provides portable and legacy Codex plugin manifests because
+older clients do not discover root mcp.json automatically.
+
+The user's steps are: restart ChatGPT desktop, open a fresh local/Work or Codex
+session, and ask Video Review to review a recording. After editing, click Done;
+the agent retrieves the approved artifact. A host permission prompt may still
+need a click. The skill and tools are loaded together; the old synthetic sample
+is not the full editor.
+
+This setup requires a supported local desktop executor. ChatGPT web does not read
+local Codex plugin configuration. It does not install system runtimes, distribute
+a standalone package, or establish a remote connection. Missing prerequisites
+are reported to the operating agent, which must provision them or offer graphical
+installation rather than delegate shell commands to the user. Clean-machine
+installation remains a separate acceptance requirement.
+
+References: [plugin packaging](https://developers.openai.com/plugins/build/plugins)
+and [local MCP plugins](https://developers.openai.com/plugins/deploy/desktop-only).

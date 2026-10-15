@@ -5,6 +5,15 @@ description: Revise a video at the affected workflow stage without losing prior 
 
 # Video Review
 
+## No-terminal user experience
+
+Run setup and launch commands yourself when your host permits it. Never ask a
+nontechnical user to open a terminal, paste a command, edit MCP configuration or
+manage a background server. Commands in this skill are agent/developer instructions.
+Prefer an installed plugin/tool; if setup needs a host restart or a graphical
+permission, give the user that single UI action. If you cannot perform setup,
+explain the missing capability instead of claiming installation succeeded.
+
 ## Source recording review with a human
 
 Read `apps/review-agent/README.md`. Use a configured `open_review` MCP tool with
