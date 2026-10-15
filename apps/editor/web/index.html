@@ -1,23 +1,243 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video Review</title><link rel="stylesheet" href="/style.css"></head>
-<body>
-<header><div><strong>Video Review</strong><span id="source-name" class="muted">One recording · your direction</span></div><div class="actions"><span id="save-status" role="status"></span><button id="open-button">Open video / review</button><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button><button id="export-button" disabled>Export handoff</button></div></header>
-<div id="job" role="status"><span id="job-text">Open a video to begin</span><button id="cancel" hidden>Cancel</button><button id="retry" hidden>Retry preparation</button></div>
-<div id="error" role="alert" hidden></div>
-<div id="export-result" hidden></div>
-<main id="empty"><h1>Watch. Mark. Give direction.</h1><p>Keep the good parts, cut the bad parts, and show where an idea belongs.</p><p>Draw a box. Write “add a giraffe.” Let the video agent work out the details.</p><button id="begin">Open one video</button><p class="muted">Runs on this computer. Your original recording stays unchanged.</p></main>
-<main id="editor" hidden>
-<section class="workspace">
-<div class="viewer-panel"><div class="video-shell"><div id="stage"><video id="video" preload="metadata" playsinline></video><div id="overlay" aria-label="Visual requests on the video"></div></div></div>
-<div class="transport"><button id="play">Play</button><input id="seek" aria-label="Playback position" type="range" min="0" value="0" step="0.01"><output id="position">0:00.00</output><label><input type="checkbox" id="cut-preview"> Skip cuts</label></div>
-<div class="actions"><button id="draw">Draw visual request</button><span id="draw-hint" class="muted">Placement and timing are approximate.</span></div>
-<section id="inspector" hidden aria-label="Selected annotation"><div class="actions"><strong id="item-title"></strong><button id="delete">Delete</button></div><label>Instruction / comment<textarea id="item-text" placeholder="Add a giraffe" rows="2"></textarea></label><div class="actions"><label>From <input id="item-start" type="number" min="0" step="0.1"></label><label>To <input id="item-end" type="number" min="0" step="0.1"></label><button id="apply-item">Apply</button></div><p class="muted">Drag the bar to move it; drag either edge to change its lifetime. Boxes can be moved and resized.</p></section>
-</div>
-<aside><div class="actions"><h2>Transcript</h2><span id="segment-count" class="muted"></span></div><input id="search" type="search" placeholder="Search transcript" aria-label="Search transcript"><p class="muted">Click a passage to select and seek. Shift-click to extend the range.</p><div id="transcript"></div></aside>
-</section>
-<section class="timeline-panel"><div class="actions timeline-toolbar"><strong>Source timeline</strong><label>From <input id="range-start" type="number" min="0" step="0.1" value="0"></label><label>To <input id="range-end" type="number" min="0" step="0.1" value="0"></label><button data-mark="good" class="good">Must keep</button><button data-mark="bad" class="bad">Must cut</button><button data-mark="comment">Comment</button><label class="zoom">Zoom <input id="zoom" type="range" min="1" max="12" value="1" step=".5"></label></div><p class="muted">Drag across the recording row to select a range. Each request has its own row. Space: play · I/O: range start/end · Ctrl/Cmd+Z: undo.</p><div id="timeline-scroll"><div id="timeline"></div></div></section>
-</main>
-<dialog id="open-dialog"><form id="open-form"><h2>Open one recording</h2><p>Your current review is saved before switching.</p><label>Video or saved review.json path<input id="path" placeholder="/path/to/video.mp4 or C:\Videos\review.json"></label><p class="muted">Or choose a video to copy into your local review folder:</p><input type="file" id="video-file" accept="video/*,.mkv,.mov,.avi,.webm"><details><summary>Preparation options</summary><label>Project folder (optional)<input id="workspace-path" placeholder="Defaults to a folder beside the video"></label><label>whisper.cpp model path<input id="model-path" placeholder="Uses saved model or WHISPER_MODEL"></label><label>Existing transcript path (optional)<input id="transcript-path" placeholder="Whisper JSON or review.json"></label><label>Relink missing original (opening review.json)<input id="relink-path" placeholder="New path to the same recording"></label></details><p class="muted">Requires FFmpeg. For new transcripts: whisper.cpp and a model. Preparation is reusable after errors or cancellation.</p><div class="actions"><button type="button" id="close-open">Cancel</button><button type="submit" id="prepare">Open & prepare</button></div></form></dialog>
-<dialog id="request-dialog"><form id="request-form"><h2>What should appear here?</h2><label>Instruction<input id="request-text" placeholder="Add a giraffe" required autocomplete="off"></label><p class="muted">The agent can refine your approximate placement and timing.</p><div class="actions"><button type="button" id="close-request">Cancel</button><button type="submit">Add request</button></div></form></dialog>
-<dialog id="export-dialog"><form id="export-form"><h2>Export agent handoff</h2><p>Includes the transcript, keep/cut decisions, visual requests, and timestamp mappings.</p><label><input type="checkbox" id="render-cut"> Also render a rough-cut video and audio</label><p class="muted">Selected cut boundaries are a starting point. Your instructions preserve intent for the agent to refine.</p><div class="actions"><button type="button" id="close-export">Cancel</button><button type="submit">Export</button></div></form></dialog>
-<script type="module" src="/app.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Video Review</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="notifications">
+      <div id="job" role="status" hidden>
+        <span id="job-text"></span><button id="cancel" hidden>Cancel</button
+        ><button id="retry" hidden>Retry</button>
+      </div>
+      <div id="error" role="alert" hidden></div>
+      <div id="export-result" role="status" hidden></div>
+    </div>
+    <main id="empty">
+      <h1>A little direction.<br />A better video.</h1>
+      <p>Open a recording. Mark what matters.</p>
+      <button id="begin">Open video</button>
+    </main>
+    <main id="editor" hidden>
+      <section class="viewer-panel" aria-label="Video and timeline">
+        <div class="video-shell">
+          <video id="video" preload="metadata" playsinline></video>
+        </div>
+        <div class="scrubber">
+          <input
+            id="seek"
+            aria-label="Playback position"
+            type="range"
+            min="0"
+            value="0"
+            step="0.01"
+          />
+          <div class="video-meta">
+            <span id="source-name"></span><output id="position">0:00</output>
+          </div>
+        </div>
+        <div id="timeline-scroll">
+          <div id="timeline" aria-label="Comment timeline"></div>
+        </div>
+      </section>
+      <aside>
+        <div class="transcript-heading">
+          <h2>Transcript</h2>
+          <span id="save-status" role="status"></span>
+        </div>
+        <input
+          id="search"
+          type="search"
+          placeholder="Search transcript"
+          aria-label="Search transcript"
+        />
+        <div id="transcript"></div>
+      </aside>
+    </main>
+    <section
+      id="comment-popover"
+      role="dialog"
+      aria-label="Edit comment"
+      hidden
+    >
+      <div class="popover-heading">
+        <span id="comment-time"></span
+        ><button
+          id="close-comment"
+          class="icon"
+          aria-label="Close comment (Escape)"
+          title="Close comment (Escape)"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M6 18 18 6" />
+          </svg>
+        </button>
+      </div>
+      <textarea
+        id="item-text"
+        aria-label="Comment"
+        placeholder="Add a little direction…"
+        rows="2"
+      ></textarea>
+      <div class="popover-actions">
+        <button
+          id="positive"
+          class="icon positive"
+          aria-label="Keep"
+          title="Keep"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg></button
+        ><button
+          id="negative"
+          class="icon negative"
+          aria-label="Cut"
+          title="Cut"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14" />
+          </svg></button
+        ><span class="spacer"></span
+        ><button
+          id="delete"
+          class="icon"
+          aria-label="Delete comment"
+          title="Delete comment"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6m4-6v6" />
+          </svg>
+        </button>
+      </div>
+    </section>
+    <nav class="action-bar" aria-label="Video actions">
+      <button
+        id="open-button"
+        class="icon"
+        aria-label="Open video"
+        title="Open video"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 7h6l2 2h10l-3 11H3z" />
+          <path d="M3 7V4h7l2 3h7v2" />
+        </svg></button
+      ><span class="divider"></span
+      ><button
+        id="undo"
+        class="icon"
+        aria-label="Undo (Ctrl/Cmd+Z)"
+        title="Undo (Ctrl/Cmd+Z)"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="m8 4-5 5 5 5M3 9h10a7 7 0 0 1 0 14"
+            transform="translate(0 -2)"
+          />
+        </svg></button
+      ><button
+        id="play"
+        class="icon primary"
+        aria-label="Play (Space)"
+        title="Play (Space)"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m9 5 11 7-11 7z" />
+        </svg></button
+      ><button
+        id="redo"
+        class="icon"
+        aria-label="Redo (Ctrl/Cmd+Shift+Z)"
+        title="Redo (Ctrl/Cmd+Shift+Z)"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="m16 4 5 5-5 5m5-5H11a7 7 0 0 0 0 14"
+            transform="translate(0 -2)"
+          />
+        </svg></button
+      ><span class="divider"></span
+      ><button
+        id="export-button"
+        class="icon"
+        aria-label="Export review"
+        title="Export review"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V3m-5 5 5-5 5 5M4 14v7h16v-7" />
+        </svg>
+      </button>
+    </nav>
+    <dialog id="open-dialog">
+      <form id="open-form">
+        <h2>Open one recording</h2>
+        <p>Your current review is saved before switching.</p>
+        <label
+          >Video or saved review.json path<input
+            id="path"
+            placeholder="/path/to/video.mp4 or C:\Videos\review.json"
+        /></label>
+        <p class="muted">
+          Or choose a video to copy into your local review folder:
+        </p>
+        <input
+          type="file"
+          id="video-file"
+          accept="video/*,.mkv,.mov,.avi,.webm"
+        />
+        <details>
+          <summary>Preparation options</summary>
+          <label
+            >Project folder (optional)<input
+              id="workspace-path"
+              placeholder="Defaults to a folder beside the video" /></label
+          ><label
+            >whisper.cpp model path<input
+              id="model-path"
+              placeholder="Uses saved model or WHISPER_MODEL" /></label
+          ><label
+            >Existing transcript path (optional)<input
+              id="transcript-path"
+              placeholder="Whisper JSON or review.json" /></label
+          ><label
+            >Relink missing original (opening review.json)<input
+              id="relink-path"
+              placeholder="New path to the same recording"
+          /></label>
+        </details>
+        <p class="muted">
+          Requires FFmpeg. For new transcripts: whisper.cpp and a model.
+          Preparation is reusable after errors or cancellation.
+        </p>
+        <div class="actions">
+          <button type="button" id="close-open">Cancel</button
+          ><button type="submit" id="prepare">Open & prepare</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="export-dialog">
+      <form id="export-form">
+        <h2>Export agent handoff</h2>
+        <p>
+          Includes the transcript, keep/cut decisions, visual requests, and
+          timestamp mappings.
+        </p>
+        <label
+          ><input type="checkbox" id="render-cut" /> Also render a rough-cut
+          video and audio</label
+        >
+        <p class="muted">
+          Selected cut boundaries are a starting point. Your instructions
+          preserve intent for the agent to refine.
+        </p>
+        <div class="actions">
+          <button type="button" id="close-export">Cancel</button
+          ><button type="submit">Export</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

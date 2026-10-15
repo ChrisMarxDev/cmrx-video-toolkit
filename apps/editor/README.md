@@ -1,8 +1,7 @@
 # Video Review
 
 A local, single-recording review tool for **Linux, macOS and Windows**. Open a
-video, prepare audio and a timestamped transcript, mark what to keep/cut, and draw
-timed visual requests. The browser is the interface; Python runs media processing
+video, prepare audio and a timestamped transcript, leave short comments on ranges, and mark them keep or cut. The browser is the interface; Python runs media processing
 on your computer. No account, hosted service, uploads to third parties, Node build,
 or Flutter installation is needed for the editor.
 
@@ -70,27 +69,31 @@ editor launch path.
 
 ## Review
 
-- Click a transcript passage to select and seek; Shift-click extends the range.
-  Search filters the transcript without changing annotations.
-- Drag across the recording timeline row, or edit From/To. Mark **Must keep**,
-  **Must cut**, or **Comment**. Each mark is editable; overlapping contradictory
-  keep/cut decisions require resolution. Unmarked footage remains untouched.
-- **Draw visual request**, drag a rectangle on the video, and type an instruction
-  such as “add a giraffe.” It uses the selected range, or three seconds at the
-  playhead when no range is selected. Each request has its own timeline row.
-- Drag a bar to move it; drag either edge to change its lifetime. Select a box to
-  move it or resize its bottom-right handle. Arrow keys nudge selected bars/boxes;
-  Shift increases bar nudges or resizes boxes. Requests can overlap in time.
-- Changes autosave. Undo/redo cover marks, requests, geometry and timing.
-  Space plays/pauses; I/O set range boundaries outside text fields.
-- **Skip cuts** previews retained footage by seeking over marked cuts. This is an
-  approximate browser preview; render a rough cut for an accurate joined file.
+The workspace stays within one screen: video and scrubber on the left, transcript
+on the right, a compact comment lane below the scrubber, and a floating action bar.
 
-Keep/cut decisions and visual wishes are authoritative **intent**. Their selected
-time boundaries and rectangular placements are approximate guidance. The agent
-can refine the execution and add other visuals; requests are not a complete
-storyboard. No suggestion mode, generator integration, keyframes or final graphics
-rendering is included in this review tool.
+- Drag on empty timeline space to select a range and open its comment popover.
+  Type a comment, choose green **+** (keep), or red **−** (cut). Text is optional
+  for keep/cut. Click an active sign again to return to neutral. Opposite decisions
+  cannot overlap; a conflicting change is rejected without losing the saved range.
+- Click a transcript passage to seek and comment; Shift-click extends the range.
+  Search filters the transcript without changing annotations.
+- Click a comment bar to edit. Drag its middle to move the range or its visible
+  end handles to resize. Arrow keys nudge; Shift increases the nudge, Alt adjusts
+  the end. Non-overlapping comments share a row; overlaps stack in the same lane.
+- Enter saves and closes the popover; Shift+Enter inserts a newline. Escape or
+  clicking outside closes it. Empty neutral drafts are discarded. Changes autosave.
+- The floating action bar contains Open, Undo, Play/Pause, Redo and Export.
+  Space plays/pauses outside text fields. Ctrl/Cmd+Z undoes; add Shift to redo.
+- The current UI creates only time-range comments. Existing rectangle requests
+  remain visible as comments and retain their geometry in saved/exported files.
+  Their text and timing can be edited; +/− are disabled for these legacy objects.
+  No large inspector, on-video rectangle editing or zoom/timing form is shown.
+
+Comments express human intent for the composing agent. Keep/cut choices still
+produce the corresponding rough-cut export; their boundaries are approximate
+guidance for later creative work. Generator integration and final graphics
+rendering remain downstream. The shared file format is unchanged.
 
 ## Standalone transcription uses the same format
 
@@ -150,7 +153,8 @@ with `NODE_PATH` pointing to that folder's `node_modules`, `REVIEW_FIXTURES` set
 the full-flow output above, and `REVIEW_URL` set to the server's printed URL
 (including its token). Optional `CHROMIUM_PATH` selects an installed executable.
 It opens both synthetic recordings in fresh workspaces, checks playback, transcript
-search, keep/cut/comment entry, box drawing/move/resize, timeline dragging, undo/redo,
-autosave/reload and rendered export. Screenshots at desktop and narrow widths and
+search, compact comment creation, keep/cut toggles, timeline movement/edge resizing,
+undo/redo, autosave/reload, stable layout, overlap handling, legacy preservation
+and rendered export. Screenshots at desktop and narrow widths and
 `ui-evidence.json` are saved under the fixtures' `browser-tests/` directory.
 These environment variables are test-runner inputs, not app configuration.
