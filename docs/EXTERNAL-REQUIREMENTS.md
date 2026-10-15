@@ -15,6 +15,7 @@ No dependency removal or bundled installer is claimed by this inventory.
 | Agent launches browser and waits for Done | Same as browser review + the user's existing agent/terminal; no Node/MCP required |
 | Local MCP tools / embedded MCP App | Review requirements + Node.js 22+, npm dependencies, local MCP-capable host; inline display needs MCP Apps support |
 | Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe |
+| Standalone dither studio | Browser only; open the already-built tools/dither/index.html locally |
 | Flutter composition / component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
 | Fluvie preview/final render | Composition requirements + `fluvie` CLI on PATH and runtime/capture support for the selected platform |
 | Optional person/background cutout | Media tools + Python venv/pip + NumPy + ONNX Runtime + RVM model |
@@ -61,6 +62,7 @@ and contribute to the footprint. Full transitive dependencies belong in lockfile
 | `numpy==2.2.6`, `onnxruntime==1.23.2` | Optional person matting, isolated Python environment; `video_tools/requirements.txt` |
 | RVM MobileNetV3 FP32 ONNX model | Optional matting; setup script downloads and checks SHA-256; `video_tools/setup.sh` and README record provenance/license |
 | Astro, Starlight and their dependencies | Documentation site development/build only; `docs/package.json` and package-lock.json |
+| `esbuild@0.25.12` via npx | Rebuilding the standalone dither studio after editing its JavaScript; `tools/dither/README.md`; not needed to use the committed app bundle |
 
 ## Optional setup, development and experiment tools
 
