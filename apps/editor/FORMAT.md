@@ -4,7 +4,7 @@
 Both `review.py` and the browser app produce and consume this contract.
 Machine schema: `schemas/video-review.schema.json` at toolkit root. The Python
 `review.validate` function additionally checks ranges, identity uniqueness,
-rectangle bounds, chronological transcripts and keep/cut conflicts.
+legacy rectangle bounds, chronological transcripts and keep/cut conflicts.
 
 ```json
 {
@@ -29,9 +29,7 @@ rectangle bounds, chronological transcripts and keep/cut conflicts.
   "marks": [
     {"id": "m1", "kind": "good", "source_start": 0.4, "source_end": 3.2, "text": "Keep this explanation"}
   ],
-  "objects": [
-    {"id": "o1", "source_start": 1.0, "source_end": 3.0, "text": "Add a giraffe", "rect": {"x": 0.6, "y": 0.1, "width": 0.3, "height": 0.5}}
-  ]
+  "objects": []
 }
 ```
 
@@ -39,7 +37,9 @@ The example hash is a placeholder. Producers calculate the actual SHA-256 of the
 original file. Paths resolve relative to the review document, or may be absolute.
 Relinking requires an identical hash. One document owns exactly one source.
 `width`/`height` describe the displayed, rotation-corrected original video, not its
-letterboxed browser container. Rectangles use normalized top-left x/y and width/
+letterboxed browser container. The current editor creates keep/cut/comment ranges.
+The `objects` array preserves legacy spatial requests for compatibility; new reviews
+leave it empty. Legacy rectangles use normalized top-left x/y and width/
 height in that coordinate space; each rectangle has a single source-time lifetime.
 Each object ID is also its stable lane identity. Display order follows array order.
 

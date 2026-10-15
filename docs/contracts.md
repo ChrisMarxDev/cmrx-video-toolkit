@@ -94,13 +94,15 @@ edit metadata. Import invalidates the cut, captions, storyboard and composition.
 The local browser editor and standalone transcription CLI share `review.json`
 (`format: video-review`, `version: 1`). See `apps/editor/FORMAT.md` and
 `schemas/video-review.schema.json`. It holds one original source identity, an
-explicitly segment-precision transcript, keep/cut/comment ranges and timed
-rectangles with free-text instructions. No fabricated word alignment is needed.
+explicitly segment-precision transcript and keep/cut/comment time ranges with
+free-text instructions. No fabricated word alignment is needed.
 
 Review export produces the normal version-2 retainedRanges input and standard
 project/timeline files. Optional annotation fields `kind`, `authority`, `timing`,
 `placement` and `rect` are backward-compatible additions to annotations version 1.
-Rectangles are normalized to the displayed source video, excluding letterboxing.
+Legacy spatial requests remain supported in stored documents and exports; they
+are not created by the current editor. Their bounds are normalized to the displayed
+source video, excluding letterboxing.
 Timing and placement are approximate guides; the human's intent is authoritative.
 The agent may refine execution and add other visuals. A rough export applies the
 selected cuts exactly, then maps requests through those actual cuts. Refining cuts

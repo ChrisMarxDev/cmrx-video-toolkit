@@ -55,7 +55,7 @@ another video saves the current review and replaces it. There is no multi-clip
 project or media bin. Processing is serialized and can be cancelled.
 
 The saved **review.json** contains source identity, segment transcript, range
-marks and timed rectangles. Original media is immutable. Full-rate WAV narration,
+marks with free-text instructions. Legacy spatial requests are preserved for compatibility. Original media is immutable. Full-rate WAV narration,
 16 kHz mono transcription WAV, and a browser-compatible H.264/AAC MP4 are derived
 under `source/`. Raw Whisper JSON and normalized segments live under `transcript/`.
 No-speech recordings can still be annotated; an empty successful transcript is

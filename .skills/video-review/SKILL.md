@@ -33,6 +33,9 @@ or `WHISPER_MODEL` for new local transcription, or `--transcript JSON` to import
 existing recognition. Use caller-owned launch adapters when the workspace has
 one. Do not clear previous reviews or overwrite originals to start a session.
 
+The current editor supports keep/cut/comment time ranges with free-text notes.
+Report the saved range types, source times and notes after review.
+
 Wait for explicit Done. The UI flushes edits and saves review.json plus a
 review-completion.json receipt. The embedded app requests conversation
 continuation; the browser CLI returns a final JSON result. MCP/browser fallback

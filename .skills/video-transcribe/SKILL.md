@@ -24,8 +24,8 @@ precision. An empty ready transcript means no detected speech; pending is distin
 Review text corrections before editing decisions. Existing annotations stay
 anchored to source time if a transcript is revisited.
 
-The review file contains good/bad/comment ranges and timed rectangular visual
-requests with free text. Their intent is authoritative; timing and geometry are
-approximate guides the composing agent can refine. Export uses existing version-2
+The review file contains good/bad/comment time ranges with free-text instructions.
+Their intent is authoritative; timing is an approximate guide the composing agent
+can refine. Export uses existing version-2
 retainedRanges and the pipeline's source/output map; do not cast segments to words.
 See flow/02-transcribe/README.md for the preparation workflow.
