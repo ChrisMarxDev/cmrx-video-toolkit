@@ -16,8 +16,8 @@
       <div id="export-result" role="status" hidden></div>
     </div>
     <main id="empty">
-      <h1>A little direction.<br />A better video.</h1>
-      <p>Open a recording. Mark what matters.</p>
+      <h1>Review a video</h1>
+      <p>Select a moment. Leave a comment.</p>
       <button id="begin">Open video</button>
     </main>
     <main id="editor" hidden>
@@ -78,7 +78,7 @@
       <textarea
         id="item-text"
         aria-label="Comment"
-        placeholder="Add a little direction…"
+        placeholder="Add a comment…"
         rows="2"
       ></textarea>
       <div class="popover-actions">
@@ -113,7 +113,7 @@
         </button>
       </div>
     </section>
-    <nav class="action-bar" aria-label="Video actions">
+    <nav class="action-bar" aria-label="Video actions" hidden>
       <button
         id="open-button"
         class="icon"
@@ -172,21 +172,18 @@
     </nav>
     <dialog id="open-dialog">
       <form id="open-form">
-        <h2>Open one recording</h2>
-        <p>Your current review is saved before switching.</p>
-        <label
-          >Video or saved review.json path<input
-            id="path"
-            placeholder="/path/to/video.mp4 or C:\Videos\review.json"
-        /></label>
-        <p class="muted">
-          Or choose a video to copy into your local review folder:
-        </p>
+        <h2>Open video</h2>
+        <p>Your review saves automatically.</p>
+        <label for="video-file">Choose a video</label>
         <input
           type="file"
           id="video-file"
           accept="video/*,.mkv,.mov,.avi,.webm"
         />
+        <label
+          >Or paste a video or saved review path
+          <input id="path" placeholder="Video file or review.json" />
+        </label>
         <details>
           <summary>Preparation options</summary>
           <label
@@ -207,31 +204,24 @@
               placeholder="New path to the same recording"
           /></label>
         </details>
-        <p class="muted">
-          Requires FFmpeg. For new transcripts: whisper.cpp and a model.
-          Preparation is reusable after errors or cancellation.
-        </p>
         <div class="actions">
           <button type="button" id="close-open">Cancel</button
-          ><button type="submit" id="prepare">Open & prepare</button>
+          ><button type="submit" id="prepare">Open video</button>
         </div>
       </form>
     </dialog>
     <dialog id="export-dialog">
       <form id="export-form">
-        <h2>Export agent handoff</h2>
+        <h2>Export review</h2>
         <p>
-          Includes the transcript, keep/cut decisions, visual requests, and
-          timestamp mappings.
+          Save comments, keep/cut guidance, and the timed transcript for the
+          composing agent.
         </p>
         <label
-          ><input type="checkbox" id="render-cut" /> Also render a rough-cut
-          video and audio</label
+          ><input type="checkbox" id="render-cut" /> Include a rough-cut video
+          and audio</label
         >
-        <p class="muted">
-          Selected cut boundaries are a starting point. Your instructions
-          preserve intent for the agent to refine.
-        </p>
+        <p class="muted">Timing is guidance. The agent can refine the edit.</p>
         <div class="actions">
           <button type="button" id="close-export">Cancel</button
           ><button type="submit">Export</button>

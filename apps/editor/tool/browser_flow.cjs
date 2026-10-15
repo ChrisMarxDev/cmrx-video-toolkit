@@ -23,9 +23,19 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
     run = Date.now();
   try {
     await page.goto(process.env.REVIEW_URL);
+    if (await page.locator("#empty").isVisible()) {
+      assert(await page.locator("#begin").isVisible());
+      assert(!(await page.locator(".action-bar").isVisible()));
+    }
     for (let i = 0; i < 2; i++) {
       const workspace = root + "/browser-tests/compact-" + run + "-" + i;
-      await page.locator("#open-button").click();
+      await page
+        .locator(
+          (await page.locator("#empty").isVisible())
+            ? "#begin"
+            : "#open-button",
+        )
+        .click();
       await page
         .locator("#path")
         .fill(root + `/original ${i}.${i ? "mkv" : "mp4"}`);
@@ -65,7 +75,9 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
         assert.equal(await page.locator("#save-status").textContent(), "Saved");
       }
       async function draw(a, b) {
-        await page.locator("#timeline").scrollIntoViewIfNeeded();
+        await page.locator("#timeline-scroll").evaluate((el) => {
+          el.scrollTop = el.scrollHeight;
+        });
         const bounds = await page.locator("#timeline").boundingBox();
         const duration = read().source.duration;
         // Empty space below the packed bars is always available for a new range.
@@ -268,7 +280,11 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
     // Opening old rectangle annotations must neither hide nor rewrite their data.
     const legacy = fixtureEvidence.videos[0].workspace,
       before = JSON.parse(fs.readFileSync(legacy + "/review.json"));
-    await page.locator("#open-button").click();
+    await page
+      .locator(
+        (await page.locator("#empty").isVisible()) ? "#begin" : "#open-button",
+      )
+      .click();
     await page.locator("#path").fill(legacy + "/review.json");
     if (!(await page.locator("details").evaluate((e) => e.open)))
       await page.locator("summary").click();

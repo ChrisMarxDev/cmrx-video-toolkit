@@ -102,6 +102,7 @@ async function flush() {
   if (dirty) return flush();
 }
 function controls() {
+  document.querySelector(".action-bar").hidden = !doc;
   $("undo").disabled = busy || !undo.length;
   $("redo").disabled = busy || !redo.length;
   $("play").disabled = busy || !doc;
@@ -353,7 +354,7 @@ function renderTimeline() {
   timeline.replaceChildren();
   const all = [...items(), ...(draft ? [draft] : [])],
     rows = annotationRows(all);
-  timeline.style.height = Math.max(78, rows.count * 30 + 12) + "px";
+  timeline.style.height = Math.max(56, rows.count * 30 + 24) + "px";
   if (!all.length)
     timeline.append(
       element("span", "timeline-empty", "Drag to leave a comment"),

@@ -253,10 +253,10 @@ h2 {
 }
 #timeline {
   position: relative;
-  min-height: 78px;
+  min-height: 56px;
   touch-action: none;
   cursor: crosshair;
-  border-radius: 6px;
+  border-radius: 0;
   background: repeating-linear-gradient(
     90deg,
     transparent 0,
