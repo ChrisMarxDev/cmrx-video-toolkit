@@ -1,18 +1,12 @@
-import {
-  clamp,
-  range,
-  moveInterval,
-  conflict,
-  clock,
-  annotationRows,
-} from "./model.mjs";
+import { clamp, range, moveInterval, clock, annotationRows } from "./model.mjs";
 import { createHost } from "./agent.mjs";
 import { createReviewBridge } from "../../review-agent/bridge.mjs";
 const $ = (id) => document.getElementById(id);
-const token =
-  globalThis.__VIDEO_REVIEW_MCP__ ? "" : new URLSearchParams(location.hash.slice(1)).get("token") ||
-  sessionStorage.getItem("review-token") ||
-  "";
+const token = globalThis.__VIDEO_REVIEW_MCP__
+  ? ""
+  : new URLSearchParams(location.hash.slice(1)).get("token") ||
+    sessionStorage.getItem("review-token") ||
+    "";
 if (!globalThis.__VIDEO_REVIEW_MCP__) {
   sessionStorage.setItem("review-token", token);
   history.replaceState(null, "", location.pathname);
@@ -33,7 +27,8 @@ let doc = null,
   selection = [0, 0],
   undo = [],
   redo = [];
-let completing = false, ended = false;
+let completing = false,
+  ended = false;
 let busy = false,
   dirty = false,
   saving = null,
@@ -82,8 +77,6 @@ async function flush() {
     return;
   }
   if (!dirty || !doc) return;
-  if (conflict(doc.marks))
-    throw Error("Keep and cut overlap. Adjust one of the ranges.");
   const generation = editGeneration;
   $("save-status").textContent = "Saving…";
   saving = api("save", {
@@ -210,15 +203,6 @@ function editComment(patch) {
   const proposed = { ...value, ...patch };
   if (value.rect && !proposed.text.trim()) {
     error("Existing visual direction needs text. Use Delete to remove it.");
-    return;
-  }
-  if (
-    !value.rect &&
-    conflict([...doc.marks.filter((v) => v.id !== value.id), proposed])
-  ) {
-    error(
-      "Keep and cut overlap. Adjust the range or clear the opposite choice.",
-    );
     return;
   }
   if (draft) {
@@ -360,10 +344,16 @@ function renderTimeline() {
   timeline.replaceChildren();
   const all = [...items(), ...(draft ? [draft] : [])],
     rows = annotationRows(all);
-  timeline.style.height = Math.max(56, rows.count * 30 + 24) + "px";
+  const height = Math.max(104, rows.count * 30 + 24);
+  timeline.style.height = height + "px";
+  $("editor").style.setProperty("--timeline-content-height", height + "px");
   if (!all.length)
     timeline.append(
-      element("span", "timeline-empty", "Drag to leave a comment"),
+      element(
+        "span",
+        "timeline-empty",
+        "Double-click to comment · drag to select",
+      ),
     );
   for (const { value, row } of rows.items) {
     const bar = element(
@@ -383,12 +373,36 @@ function renderTimeline() {
       element(
         "span",
         "bar-text",
-        (value.kind === "good" ? "+ " : value.kind === "bad" ? "− " : "") +
-          (value.text || "Comment"),
+        value.text ||
+          (value.kind === "good"
+            ? "Keep"
+            : value.kind === "bad"
+              ? "Cut"
+              : "Comment"),
       ),
       element("span", "edge start"),
       element("span", "edge end"),
     );
+    if (value.kind === "good" || value.kind === "bad") {
+      const icon = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
+      icon.setAttribute("viewBox", "0 0 24 24");
+      icon.setAttribute("aria-hidden", "true");
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
+      path.setAttribute(
+        "d",
+        "M7 10v11H3V10h4Zm0 0 5-8c2 0 3 2 2 5l-1 3h6a2 2 0 0 1 2 2l-2 7a3 3 0 0 1-3 2H7",
+      );
+      if (value.kind === "bad")
+        path.setAttribute("transform", "rotate(180 12 12)");
+      icon.append(path);
+      bar.prepend(icon);
+    }
     bar.onpointerdown = (e) => {
       if (busy || e.button !== 0) return;
       const original = structuredClone(value),
@@ -423,11 +437,9 @@ function renderTimeline() {
           placeBar(bar, value);
         },
         (_e, cancelled) => {
-          if (cancelled || conflict(doc.marks)) {
+          if (cancelled) {
             Object.assign(value, original);
             render();
-            if (!cancelled)
-              error("Keep and cut overlap. The range was left unchanged.");
             return;
           }
           if (moved && value !== draft) {
@@ -454,10 +466,6 @@ function renderTimeline() {
         doc.source.duration,
         e.altKey ? "end" : "move",
       );
-      if (conflict(doc.marks.map((v) => (v.id === value.id ? proposed : v)))) {
-        error("Keep and cut overlap.");
-        return;
-      }
       if (value !== draft) checkpoint();
       Object.assign(value, proposed);
       if (value !== draft) changed();
@@ -482,21 +490,48 @@ $("timeline").onpointerdown = (e) => {
   let end = start;
   const band = element("div", "bar draft selected");
   band.style.top = "6px";
-  timeline.append(band);
+  let moved = false;
   video.currentTime = start;
+  highlightPlayback();
   pointerDrag(
     e,
     (m) => {
+      if (!moved && Math.abs(m.clientX - e.clientX) < 4) return;
+      if (!moved) {
+        moved = true;
+        timeline.append(band);
+      }
       end = at(m.clientX);
       const [a, b] = range(start, end, doc.source.duration);
       placeBar(band, { source_start: a, source_end: b });
     },
     (_e, cancelled) => {
       band.remove();
-      if (!cancelled) createDraft(start, end);
+      if (!cancelled && moved) createDraft(start, end);
       else render();
     },
   );
+};
+$("timeline").ondblclick = (e) => {
+  if (!doc || busy || e.target.closest(".bar")) return;
+  const bounds = $("timeline").getBoundingClientRect();
+  const time =
+    clamp((e.clientX - bounds.left) / bounds.width, 0, 1) * doc.source.duration;
+  const start = Math.min(time, Math.max(0, doc.source.duration - 0.05));
+  createDraft(start, Math.min(start + 2, doc.source.duration));
+};
+$("expand-timeline").onclick = () => {
+  const expanded = $("editor").classList.toggle("timeline-expanded");
+  $("expand-timeline").setAttribute("aria-expanded", String(expanded));
+  $("expand-timeline").setAttribute(
+    "aria-label",
+    expanded ? "Collapse timeline" : "Expand timeline",
+  );
+  $("expand-timeline").title = expanded
+    ? "Collapse timeline"
+    : "Expand timeline";
+  $("timeline-scroll").scrollTop = 0;
+  positionPopover();
 };
 $("timeline-scroll").onscroll = positionPopover;
 function highlightPlayback() {
@@ -504,6 +539,7 @@ function highlightPlayback() {
   const t = video.currentTime;
   $("position").textContent = `${clock(t)} / ${clock(doc.source.duration)}`;
   $("seek").value = t;
+  $("timeline-playhead").style.left = (t / doc.source.duration) * 100 + "%";
   for (const node of $("transcript").children)
     if (node.dataset.start)
       node.classList.toggle(
@@ -725,18 +761,26 @@ function endReview(result) {
   video.pause();
   lockReview(true);
   $("export-result").hidden = false;
-  $("export-result").textContent = result.status === "completed"
-    ? "Review saved. You can return to your agent."
-    : "Review cancelled. Your saved draft is preserved.";
+  $("export-result").textContent =
+    result.status === "completed"
+      ? "Review saved. You can return to your agent."
+      : "Review cancelled. Your saved draft is preserved.";
 }
 if (host.session) {
   const done = element("button", "", "Done");
   done.id = "review-done";
   done.title = "Save review and return to your agent";
   document.querySelector(".action-bar").append(done);
-  const bridge = createReviewBridge({ request: host.request, flush,
-    getIdentity: () => ({ sessionId: host.session.sessionId, revision: doc.revision, sourceSha256: doc.source.sha256 }),
-    notify: host.notify });
+  const bridge = createReviewBridge({
+    request: host.request,
+    flush,
+    getIdentity: () => ({
+      sessionId: host.session.sessionId,
+      revision: doc.revision,
+      sourceSha256: doc.source.sha256,
+    }),
+    notify: host.notify,
+  });
   done.onclick = async () => {
     if (busy || !doc || completing || ended) return;
     closeComment();
@@ -747,11 +791,16 @@ if (host.session) {
       const result = await bridge.done();
       endReview(result);
       if (result.continuation === "unavailable")
-        $("export-result").textContent = "Review saved. Ask your agent to read session " + result.sessionId + ".";
+        $("export-result").textContent =
+          "Review saved. Ask your agent to read session " +
+          result.sessionId +
+          ".";
     } catch (failure) {
       lockReview(false);
       error(failure.message);
-    } finally { completing = false; }
+    } finally {
+      completing = false;
+    }
   };
 }
 async function loop() {

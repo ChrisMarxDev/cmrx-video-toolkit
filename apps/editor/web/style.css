@@ -545,3 +545,129 @@ summary {
     margin-bottom: 8px;
   }
 }
+
+/* One time axis for scrubbing, comments and the continuous playhead. */
+.viewer-panel {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.timeline-panel {
+  min-width: 0;
+}
+.video-meta {
+  align-items: center;
+  margin: 0;
+  min-height: 44px;
+}
+#source-name {
+  flex: 1;
+}
+#expand-timeline {
+  width: 44px;
+  height: 44px;
+  padding: 12px;
+}
+#expand-timeline svg {
+  width: 20px;
+  height: 20px;
+}
+.collapse-glyph,
+#expand-timeline[aria-expanded="true"] .expand-glyph {
+  display: none;
+}
+#expand-timeline[aria-expanded="true"] .collapse-glyph {
+  display: initial;
+}
+.timeline-surface {
+  position: relative;
+  height: 124px;
+}
+#seek {
+  appearance: none;
+  height: 20px;
+  position: relative;
+  z-index: 3;
+  background: transparent;
+}
+#seek::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--line);
+}
+#seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 20px;
+  margin-top: -9px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 3px;
+}
+#seek::-moz-range-track {
+  height: 2px;
+  background: var(--line);
+}
+#seek::-moz-range-thumb {
+  width: 12px;
+  height: 20px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 3px;
+}
+#timeline-scroll {
+  height: calc(100% - 20px);
+  padding: 0 6px;
+  border: 0;
+}
+#timeline {
+  min-height: 104px;
+}
+.playhead-track {
+  position: absolute;
+  top: 10px;
+  bottom: 0;
+  left: 6px;
+  right: 6px;
+  pointer-events: none;
+  z-index: 4;
+}
+#timeline-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+}
+#editor.timeline-expanded {
+  height: max(100dvh, calc(var(--timeline-content-height) + 360px));
+}
+.timeline-expanded .timeline-surface {
+  height: calc(var(--timeline-content-height) + 20px);
+}
+.timeline-expanded #timeline-scroll {
+  overflow: visible;
+}
+body:has(.timeline-expanded) {
+  overflow-y: auto;
+}
+.timeline-expanded aside {
+  max-height: calc(100dvh - 120px);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bar-text {
+  min-width: 0;
+}
+.bar > svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}

@@ -38,11 +38,14 @@ class ContractTests(unittest.TestCase):
         doc=document();doc['marks']=[mark('bad',2,4),mark('bad',3,6,'other'),mark('comment',8,9,'note')]
         self.assertEqual(review.retained_ranges(doc),[dict(source_start=0,source_end=2),dict(source_start=6,source_end=10)])
 
-    def test_keep_cut_conflict_not_silently_resolved(self):
+    def test_overlapping_guidance_preserved(self):
         doc=document();doc['marks']=[mark('good',1,3),mark('bad',2,4,'other')]
-        with self.assertRaisesRegex(ValueError,'overlap'):review.validate(doc)
-        doc['marks'][1]['source_start']=3
+        original=copy.deepcopy(doc)
         review.validate(doc)
+        self.assertEqual(review.retained_ranges(doc),[dict(source_start=0,source_end=3),dict(source_start=4,source_end=10)])
+        self.assertEqual(doc,original)
+        doc['marks'].append(mark('good',3,5,'second-keep'))
+        self.assertEqual(review.retained_ranges(doc),[dict(source_start=0,source_end=10)])
 
     def test_reject_malformed_ranges_rectangles_and_ids(self):
         for field,value in [('source_start',float('nan')),('source_end',11),('source_end',0)]:

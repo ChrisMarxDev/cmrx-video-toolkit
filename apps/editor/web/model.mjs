@@ -45,26 +45,27 @@ export function drawRect(x1, y1, x2, y2) {
     [y, bottom] = range(y1, y2, 1);
   return { x, y, width: right - x, height: bottom - y };
 }
-export function conflict(marks) {
-  return marks.some(
-    (a) =>
-      a.kind === "good" &&
-      marks.some(
-        (b) =>
-          b.kind === "bad" &&
-          Math.max(a.source_start, b.source_start) <
-            Math.min(a.source_end, b.source_end),
-      ),
-  );
-}
 export function retained(marks, duration) {
   const result = [];
   let cursor = 0;
-  for (const item of marks
-    .filter((m) => m.kind === "bad")
-    .sort((a, b) => a.source_start - b.source_start)) {
-    if (item.source_start > cursor) result.push([cursor, item.source_start]);
-    cursor = Math.max(cursor, item.source_end);
+  const cuts = [];
+  for (const bad of marks.filter((m) => m.kind === "bad")) {
+    let pieces = [[bad.source_start, bad.source_end]];
+    for (const good of marks.filter((m) => m.kind === "good")) {
+      pieces = pieces.flatMap(([start, end]) => {
+        if (good.source_end <= start || good.source_start >= end)
+          return [[start, end]];
+        const rest = [];
+        if (start < good.source_start) rest.push([start, good.source_start]);
+        if (good.source_end < end) rest.push([good.source_end, end]);
+        return rest;
+      });
+    }
+    cuts.push(...pieces);
+  }
+  for (const [start, end] of cuts.sort((a, b) => a[0] - b[0])) {
+    if (start > cursor) result.push([cursor, start]);
+    cursor = Math.max(cursor, end);
   }
   if (cursor < duration) result.push([cursor, duration]);
   return result;

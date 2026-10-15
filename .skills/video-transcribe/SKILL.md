@@ -25,7 +25,15 @@ Review text corrections before editing decisions. Existing annotations stay
 anchored to source time if a transcript is revisited.
 
 The review file contains good/bad/comment time ranges with free-text instructions.
-Their intent is authoritative; timing is an approximate guide the composing agent
-can refine. Export uses existing version-2
+Good/bad marks are overlapping suggestions; preserve both sides for the composing
+agent to reconcile. Legacy visual requests retain required intent. Timing and
+legacy geometry remain approximate guides. Export uses existing version-2
 retainedRanges and the pipeline's source/output map; do not cast segments to words.
 See flow/02-transcribe/README.md for the preparation workflow.
+
+For mixed German/English, use a multilingual model, not a `.en` model. The engine
+uses `-l auto` without translation, but whisper.cpp initially selects one language;
+this is not reliable per-segment language switching. Report recognition limits
+rather than claiming bilingual accuracy. Ready transcripts are cached: model
+changes do not replace them. Preserve source-time annotations when preparing or
+importing corrected recognition. See the editor README's mixed-language notes.

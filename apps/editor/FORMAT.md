@@ -4,7 +4,7 @@
 Both `review.py` and the browser app produce and consume this contract.
 Machine schema: `schemas/video-review.schema.json` at toolkit root. The Python
 `review.validate` function additionally checks ranges, identity uniqueness,
-legacy rectangle bounds, chronological transcripts and keep/cut conflicts.
+legacy rectangle bounds and chronological transcripts. Opposite annotations may overlap.
 
 ```json
 {
@@ -50,15 +50,16 @@ IDs remain stable during review. `pending` means recognition has not succeeded;
 is preserved separately. Correcting or regenerating a transcript must not invent
 word alignment or silently renumber annotations; annotations are source-timed.
 
-Mark kinds: `good` is must-keep, `bad` is must-cut, `comment` is context. Mark text
-may be empty. Object text must be nonempty. IDs are unique across marks and objects.
-Good/bad overlaps are invalid, but comments and objects can overlap anything.
-Same-kind mark overlaps are allowed; cut intervals are unioned for rough exports.
-Only bad ranges are cut; untouched silence and unmarked footage stay available.
+Mark kinds: `good` is keep guidance, `bad` is cut guidance, `comment` is context.
+All marks can overlap, including good/bad. Text may be empty; object text must be
+nonempty. IDs are unique across marks and objects. The optional rough cut removes
+the union of bad ranges except portions also marked good. Contradictory spans stay
+available for the composing agent to reconcile; both original annotations survive.
+Untouched silence and unmarked footage stay available.
 
-Intent is authoritative; exact timing and placement are approximate. There is no
-hard-coded tolerance or suggestion mode in v1. Export preserves source intent and
-adds explicit `timing: "approximate"`, `placement: "approximate"` and authority to
+Marks are suggestions, exported with `authority: "comment"`; legacy visual objects
+retain required intent. Exact timing and placement are approximate. Export adds
+explicit `timing: "approximate"`, `placement: "approximate"` and authority to
 pipeline annotations. The source-to-output map describes the actual rough cut,
 not hypothetical agent adjustments. Any later timing refinement must regenerate
 that map and resolve annotations again.

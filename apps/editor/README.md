@@ -76,12 +76,15 @@ editor launch path.
 ## Review
 
 The workspace stays within one screen: video and scrubber on the left, transcript
-on the right, a compact comment lane below the scrubber, and a floating action bar.
+on the right, a comment lane joined to the scrubber by a continuous playhead, and a floating action bar.
+The expand button reveals all annotation rows without scrolling inside the timeline;
+for very many rows the page grows vertically. Collapse restores the fixed workspace.
 
-- Drag on empty timeline space to select a range and open its comment popover.
-  Type a comment, choose green **+** (keep), or red **−** (cut). Text is optional
-  for keep/cut. Click an active sign again to return to neutral. Opposite decisions
-  cannot overlap; a conflicting change is rejected without losing the saved range.
+- Click empty timeline space to seek. Double-click creates a two-second comment
+  range (clamped at the end); drag to select a custom range without a click flash.
+  Type a comment, choose green **thumbs-up** (keep), or red **thumbs-down** (cut). Text is optional
+  for keep/cut. Click the active thumb again to return to neutral. All comments
+  can overlap, including opposite suggestions. Both survive save and export.
 - Click a transcript passage to seek and comment; Shift-click extends the range.
   Search filters the transcript without changing annotations.
 - Click a comment bar to edit. Drag its middle to move the range or its visible
@@ -93,11 +96,12 @@ on the right, a compact comment lane below the scrubber, and a floating action b
   Space plays/pauses outside text fields. Ctrl/Cmd+Z undoes; add Shift to redo.
 - The current UI creates only time-range comments. Existing rectangle requests
   remain visible as comments and retain their geometry in saved/exported files.
-  Their text and timing can be edited; +/− are disabled for these legacy objects.
+  Their text and timing can be edited; thumb controls are disabled for these legacy objects.
   No large inspector, on-video rectangle editing or zoom/timing form is shown.
 
 Comments express human intent for the composing agent. Keep/cut choices still
-produce the corresponding rough-cut export; their boundaries are approximate
+produce a rough-cut preview of unopposed cut suggestions; overlapping keep/cut
+spans remain for the agent to reconcile. Their boundaries are approximate
 guidance for later creative work. Generator integration and final graphics
 rendering remain downstream. The shared file format is unchanged.
 
@@ -164,3 +168,15 @@ undo/redo, autosave/reload, stable layout, overlap handling, legacy preservation
 and rendered export. Screenshots at desktop and narrow widths and
 `ui-evidence.json` are saved under the fixtures' `browser-tests/` directory.
 These environment variables are test-runner inputs, not app configuration.
+
+### Mixed-language recordings
+
+The recognizer runs locally with `-l auto`, without the translate flag. Use a
+multilingual Whisper model (for example `ggml-base.bin`, not `ggml-base.en.bin`)
+for German/English speech. Auto-detection selects a language at the beginning of
+the file; it does not guarantee recognition when languages switch mid-recording.
+Larger multilingual models may improve accuracy, but mixed-language recognition
+still needs review. Existing ready transcripts are reused, so changing the model
+alone does not regenerate a saved review. Preserve annotations and source timing
+when importing corrected transcription; never delete the review to retry speech.
+Reference: [whisper.cpp language detection](https://github.com/ggml-org/whisper.cpp/blob/master/src/whisper.cpp).

@@ -105,6 +105,25 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
       assert.equal(await page.locator(".passage").count(), 0);
       await page.locator("#search").fill("");
       assert((await page.locator(".passage").count()) > 0);
+      const axis = await page.locator("#timeline").boundingBox();
+      await page.mouse.click(axis.x + axis.width / 2, axis.y + 80);
+      assert.equal(await page.locator(".bar").count(), 0);
+      assert(!(await page.locator("#comment-popover").isVisible()));
+      assert(
+        Math.abs(
+          (await page.locator("video").evaluate((v) => v.currentTime)) -
+            read().source.duration / 2,
+        ) < 0.15,
+      );
+      await page.mouse.dblclick(axis.x + axis.width / 2, axis.y + 80);
+      await page.locator("#comment-popover").waitFor({ state: "visible" });
+      assert.equal(await page.locator(".bar.draft").count(), 1);
+      await dismiss();
+      const seek = await page.locator("#seek").boundingBox();
+      const lane = await page.locator("#timeline-scroll").boundingBox();
+      assert(Math.abs(seek.y + seek.height - lane.y) < 1);
+      const line = await page.locator("#timeline-playhead").boundingBox();
+      assert(Math.abs(line.y + line.height - lane.y - lane.height) < 1);
       await draw(0.3, 1);
       await dismiss();
       assert.equal(await page.locator(".bar").count(), 0);
@@ -188,12 +207,13 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
       );
       await page.locator("#redo").click();
       await saved();
-      // Opposite decisions are rejected without leaving the project unsavable.
+      // Opposite guidance is allowed and survives save/reload/export.
       await draw(0.5, 1.5);
       await page.locator("#negative").click();
-      assert(await page.locator("#error").isVisible());
+      assert(!(await page.locator("#error").isVisible()));
       await dismiss();
-      assert.equal(read().marks.length, 3);
+      await saved();
+      assert.equal(read().marks.length, 4);
       await draw(1, 3);
       await page.locator("#item-text").fill("Overlapping neutral direction");
       await page.locator("#item-text").press("Enter");
@@ -204,8 +224,20 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
             .locator(".bar")
             .evaluateAll((nodes) => nodes.map((n) => n.style.top)),
         ).size,
-        2,
+        3,
       );
+      await page.locator("#expand-timeline").click();
+      assert.equal(
+        await page.locator("#expand-timeline").getAttribute("aria-expanded"),
+        "true",
+      );
+      assert(
+        await page
+          .locator("#timeline-scroll")
+          .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+      );
+      await page.locator("#expand-timeline").click();
+      assert.deepEqual(await geometry(), initialGeometry);
       // Transcript click opens the same range editor; an empty selection is discarded.
       await page.locator(".passage").first().click();
       await page.locator("#comment-popover").waitFor({ state: "visible" });
@@ -233,7 +265,7 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
       await dismiss();
       await page.reload();
       await page.waitForSelector(".bar");
-      assert.equal(await page.locator(".bar").count(), 4);
+      assert.equal(await page.locator(".bar").count(), 5);
       await page.setViewportSize({ width: 800, height: 700 });
       await page.locator(".bar.good").click();
       assert(
@@ -268,6 +300,29 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
         await page.locator("#error").isVisible(),
         false,
         await page.locator("#error").textContent(),
+      );
+      const exported = (
+        await page.locator("#export-result").textContent()
+      ).replace("Handoff saved to ", "");
+      const exportedReview = JSON.parse(
+        fs.readFileSync(exported + "/review.json"),
+      );
+      assert.deepEqual(exportedReview.marks, read().marks);
+      const notes = JSON.parse(
+        fs.readFileSync(exported + "/annotations.json"),
+      ).notes;
+      assert(
+        notes
+          .filter((n) => n.kind === "good" || n.kind === "bad")
+          .every((n) => n.authority === "comment"),
+      );
+      const preview = JSON.parse(
+        fs.readFileSync(exported + "/edit/decisions.json"),
+      );
+      assert(
+        preview.retainedRanges.some(
+          (r) => r.source_start <= 0.5 && r.source_end >= 1.5,
+        ),
       );
       results.push({
         video: i,

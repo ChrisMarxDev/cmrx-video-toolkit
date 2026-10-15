@@ -93,11 +93,7 @@ def validate(document):
                 raise ValueError('Rectangle coordinates must be normalized to the video')
         if min(rect['width'], rect['height']) <= 0 or rect['x'] + rect['width'] > 1.000001 or rect['y'] + rect['height'] > 1.000001:
             raise ValueError('Rectangle must fit inside the video')
-    # Conflicting keep/cut intent needs explicit human resolution, never silent precedence.
-    for good in (m for m in document['marks'] if m['kind'] == 'good'):
-        for bad in (m for m in document['marks'] if m['kind'] == 'bad'):
-            if max(good['source_start'], bad['source_start']) < min(good['source_end'], bad['source_end']):
-                raise ValueError('Must-keep and must-cut overlap. Adjust or remove the conflicting mark.')
+    # Opposite annotations may overlap; preserve both for downstream interpretation.
     return document
 
 
@@ -240,7 +236,24 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
 
 
 def retained_ranges(doc):
-    cuts = sorted((m['source_start'], m['source_end']) for m in doc['marks'] if m['kind'] == 'bad')
+    # Treat annotations as guidance. Preserve contradictory spans in the rough
+    # preview; the composing agent receives both original notes for reconciliation.
+    cuts = []
+    for bad in (m for m in doc['marks'] if m['kind'] == 'bad'):
+        pieces = [(bad['source_start'], bad['source_end'])]
+        for good in (m for m in doc['marks'] if m['kind'] == 'good'):
+            remaining = []
+            for start, end in pieces:
+                if good['source_end'] <= start or good['source_start'] >= end:
+                    remaining.append((start, end))
+                else:
+                    if start < good['source_start']:
+                        remaining.append((start, good['source_start']))
+                    if good['source_end'] < end:
+                        remaining.append((good['source_end'], end))
+            pieces = remaining
+        cuts.extend(pieces)
+    cuts.sort()
     result, cursor = [], 0.0
     for start, end in cuts:
         if start > cursor:
@@ -267,9 +280,9 @@ def export(doc, workspace, render=False, progress=lambda text: None, cancel=None
     notes = []
     for item in doc['marks'] + doc['objects']:
         note = dict(id=item['id'], source_start=item['source_start'], source_end=item['source_end'],
-                    intent=item['text'] or {'good': 'Must keep', 'bad': 'Must cut', 'comment': 'Comment'}.get(item.get('kind'), 'Visual request'),
+                    intent=item['text'] or {'good': 'Keep suggestion', 'bad': 'Cut suggestion', 'comment': 'Comment'}.get(item.get('kind'), 'Visual request'),
                     component='', presentation='overlay', timing='approximate',
-                    kind=item.get('kind', 'visual'), authority='required' if item.get('kind') != 'comment' else 'comment')
+                    kind=item.get('kind', 'visual'), authority='required' if 'rect' in item else 'comment')
         if 'rect' in item:
             note['rect'] = item['rect']
             note['placement'] = 'approximate'
@@ -304,7 +317,9 @@ def export(doc, workspace, render=False, progress=lambda text: None, cancel=None
     (target / 'HANDOFF.md').write_text('''# Single-video review handoff
 
 Read review.json and storyboard/annotations.resolved.json before composing.
-Good means must keep; bad means must cut; comments provide context.
+Good and bad are keep/cut suggestions, not binding decisions. They may overlap.
+Preserve both notes and reconcile their intent when composing. The optional rough
+cut retains good/bad overlaps and removes only unopposed bad ranges.
 Visual requests are required intent. Coordinates and source-time ranges are
 approximate guidance: creatively refine placement and timing, preserve the wish.
 Add your own visuals where useful. Do not limit the composition to these requests.

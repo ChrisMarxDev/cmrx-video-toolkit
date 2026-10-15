@@ -5,7 +5,6 @@ import {
   moveInterval,
   moveRect,
   drawRect,
-  conflict,
   retained,
   annotationRows,
 } from "../web/model.mjs";
@@ -44,21 +43,16 @@ test("rectangle dragging and resizing respect video bounds", () => {
     height: 0.6,
   });
 });
-test("keep/cut conflict and adjacency", () => {
-  assert.equal(
-    conflict([
-      { kind: "good", source_start: 0, source_end: 2 },
-      { kind: "bad", source_start: 1, source_end: 3 },
-    ]),
-    true,
-  );
-  assert.equal(
-    conflict([
-      { kind: "good", source_start: 0, source_end: 2 },
-      { kind: "bad", source_start: 2, source_end: 3 },
-    ]),
-    false,
-  );
+test("opposite guidance overlaps and stays in the rough preview", () => {
+  const marks = [
+    { kind: "good", source_start: 1, source_end: 3 },
+    { kind: "bad", source_start: 2, source_end: 4 },
+  ];
+  assert.equal(annotationRows(marks).count, 2);
+  assert.deepEqual(retained(marks, 10), [
+    [0, 3],
+    [4, 10],
+  ]);
 });
 test("cut preview unions overlapping deletions", () => {
   assert.deepEqual(
