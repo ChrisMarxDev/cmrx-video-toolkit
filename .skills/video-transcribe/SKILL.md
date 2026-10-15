@@ -6,8 +6,10 @@ description: Prepare local video transcripts in the shared review format with ex
 # Video Transcribe
 
 Use apps/editor/review.py for standalone transcription and apps/editor/server.py
-for interactive review. Both write the same versioned review.json document;
-read apps/editor/FORMAT.md for the contract. Do not create an incompatible agent-only
+for interactive review. Both write the same versioned review.json document.
+For agent-launched human review, use the MCP App/browser flow in
+`.skills/video-review/SKILL.md`; the agent-session launcher uses this same engine.
+Read apps/editor/FORMAT.md for the contract. Do not create an incompatible agent-only
 transcript. The browser must be able to reopen the CLI-produced review directly.
 
 Run `python3 apps/editor/review.py VIDEO --workspace WORKSPACE --model MODEL`.

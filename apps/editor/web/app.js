@@ -6,13 +6,25 @@ import {
   clock,
   annotationRows,
 } from "./model.mjs";
+import { createHost } from "./agent.mjs";
+import { createReviewBridge } from "../../review-agent/bridge.mjs";
 const $ = (id) => document.getElementById(id);
 const token =
-  new URLSearchParams(location.hash.slice(1)).get("token") ||
+  globalThis.__VIDEO_REVIEW_MCP__ ? "" : new URLSearchParams(location.hash.slice(1)).get("token") ||
   sessionStorage.getItem("review-token") ||
   "";
-sessionStorage.setItem("review-token", token);
-history.replaceState(null, "", location.pathname);
+if (!globalThis.__VIDEO_REVIEW_MCP__) {
+  sessionStorage.setItem("review-token", token);
+  history.replaceState(null, "", location.pathname);
+}
+let host;
+try {
+  host = await createHost(token);
+} catch (failure) {
+  $("error").hidden = false;
+  $("error").textContent = failure.message;
+  throw failure;
+}
 const video = $("video");
 let doc = null,
   workspace = null,
@@ -21,6 +33,7 @@ let doc = null,
   selection = [0, 0],
   undo = [],
   redo = [];
+let completing = false, ended = false;
 let busy = false,
   dirty = false,
   saving = null,
@@ -43,19 +56,7 @@ function element(tag, cls, text) {
   return el;
 }
 async function api(path, data) {
-  const response = await fetch("/api/" + path, {
-    method: data === undefined ? "GET" : "POST",
-    headers: { "X-Review-Token": token, "Content-Type": "application/json" },
-    body: data === undefined ? undefined : JSON.stringify(data),
-  });
-  if (!response.ok) {
-    let message = `Request failed (${response.status})`;
-    try {
-      message = (await response.json()).error || message;
-    } catch {}
-    throw Error(message);
-  }
-  return response.json();
+  return host.request(path, data);
 }
 function snapshot() {
   return structuredClone({ marks: doc.marks, objects: doc.objects });
@@ -107,6 +108,11 @@ function controls() {
   $("redo").disabled = busy || !redo.length;
   $("play").disabled = busy || !doc;
   $("export-button").disabled = busy || !doc;
+  if (host.session) {
+    $("open-button").hidden = true;
+    $("begin").hidden = true;
+    $("review-done").disabled = busy || !doc || completing || ended;
+  }
 }
 function render() {
   if (!doc) {
@@ -550,6 +556,7 @@ $("redo").onclick = () => {
   changed();
 };
 window.addEventListener("keydown", (e) => {
+  if (completing || ended) return;
   if (e.key === "Escape") {
     closeComment();
     return;
@@ -649,7 +656,9 @@ $("export-form").onsubmit = async (e) => {
   }
 };
 async function poll() {
+  if (completing || ended) return;
   const state = await api("state");
+  if (completing || ended) return;
   const wasBusy = busy;
   busy = state.job.busy;
   $("retry").hidden = busy || !state.job.error || !state.last_open;
@@ -690,11 +699,7 @@ async function poll() {
     redo = [];
     dirty = false;
     selection = [0, 0];
-    video.src =
-      "/media?token=" +
-      encodeURIComponent(token) +
-      "&revision=" +
-      encodeURIComponent(doc.source.sha256);
+    video.src = host.mediaUrl(doc.source.sha256);
     $("seek").max = doc.source.duration;
     $("path").value = workspace + "/review.json";
     $("workspace-path").value = "";
@@ -706,6 +711,48 @@ async function poll() {
   $("redo").disabled = busy || !redo.length;
   controls();
   if (item()) updatePopover();
+  if (host.session) {
+    const status = await api("session");
+    if (["completed", "cancelled"].includes(status.status)) endReview(status);
+  }
+}
+function lockReview(value) {
+  for (const selector of ["#editor", ".action-bar", "#comment-popover"])
+    document.querySelector(selector).inert = value;
+}
+function endReview(result) {
+  ended = true;
+  video.pause();
+  lockReview(true);
+  $("export-result").hidden = false;
+  $("export-result").textContent = result.status === "completed"
+    ? "Review saved. You can return to your agent."
+    : "Review cancelled. Your saved draft is preserved.";
+}
+if (host.session) {
+  const done = element("button", "", "Done");
+  done.id = "review-done";
+  done.title = "Save review and return to your agent";
+  document.querySelector(".action-bar").append(done);
+  const bridge = createReviewBridge({ request: host.request, flush,
+    getIdentity: () => ({ sessionId: host.session.sessionId, revision: doc.revision, sourceSha256: doc.source.sha256 }),
+    notify: host.notify });
+  done.onclick = async () => {
+    if (busy || !doc || completing || ended) return;
+    closeComment();
+    completing = true;
+    lockReview(true);
+    video.pause();
+    try {
+      const result = await bridge.done();
+      endReview(result);
+      if (result.continuation === "unavailable")
+        $("export-result").textContent = "Review saved. Ask your agent to read session " + result.sessionId + ".";
+    } catch (failure) {
+      lockReview(false);
+      error(failure.message);
+    } finally { completing = false; }
+  };
 }
 async function loop() {
   try {
@@ -716,6 +763,6 @@ async function loop() {
         " — check that the local server is running and open its printed URL.",
     );
   }
-  setTimeout(loop, 800);
+  if (!ended) setTimeout(loop, 800);
 }
 loop();

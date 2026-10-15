@@ -8,6 +8,7 @@ import sys
 import threading
 import urllib.parse
 import uuid
+import webbrowser
 
 import review
 import server
@@ -89,7 +90,7 @@ class AgentHandler(server.Handler):
 
     def do_POST(self):
         path = urllib.parse.urlsplit(self.path).path
-        if path not in ('/api/finish', '/api/abandon'):
+        if path not in ('/api/finish', '/api/abandon', '/api/shutdown'):
             return super().do_POST()
         if not self.headers_ok(True):
             return
@@ -104,17 +105,19 @@ class AgentHandler(server.Handler):
                 raise ValueError('Wrong review session')
             result = self.server.session.finish(data) if path == '/api/finish' else self.server.session.abandon()
             self.json(result)
+            if path == '/api/shutdown':
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
         except (ValueError, KeyError, TypeError, OSError) as exc:
             self.json({'error': str(exc)}, 400)
 
 
-def make_server(port=0, home=None, model=None):
-    instance = server.make_server(port, home, model, AgentHandler)
+def make_server(port=0, home=None, model=None, handler=AgentHandler):
+    instance = server.make_server(port, home, model, handler)
     instance.session = AgentSession(instance.session.home, model)
     return instance
 
 
-def main():
+def main(handler=AgentHandler):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('video', nargs='?', help='Recording or existing review.json')
     parser.add_argument('--workspace')
@@ -123,8 +126,9 @@ def main():
     parser.add_argument('--home')
     parser.add_argument('--port', type=int, default=0)
     parser.add_argument('--wait', action='store_true', help='Exit with a JSON result after explicit Done/cancel')
+    parser.add_argument('--open', action='store_true', help='Open the normal browser automatically')
     args = parser.parse_args()
-    instance = make_server(args.port, args.home, args.model)
+    instance = make_server(args.port, args.home, args.model, handler)
     thread = threading.Thread(target=instance.serve_forever, daemon=True)
     thread.start()
     try:
@@ -133,6 +137,8 @@ def main():
         origin = f'http://127.0.0.1:{instance.server_address[1]}'
         print(json.dumps(dict(event='started', sessionId=instance.session.session_id, origin=origin,
                               browserUrl=f'{origin}/#token={instance.token}', token=instance.token)), flush=True)
+        if args.open:
+            webbrowser.open(f'{origin}/#token={instance.token}')
         if args.wait:
             instance.session.finished.wait()
         else:

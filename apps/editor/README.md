@@ -7,6 +7,12 @@ or Flutter installation is needed for the editor.
 
 ## Run
 
+For agent-driven review, see the [MCP App and browser workflow](../review-agent/README.md).
+It uses this same editor, adds Done and a local completion receipt, and offers
+`agent_session.py VIDEO --workspace WORKSPACE --open --wait` for agents without
+MCP. The ordinary manual launcher below remains supported. See the
+[external requirements inventory](../../docs/EXTERNAL-REQUIREMENTS.md) for dependencies by feature.
+
 Install Python **3.10+**, FFmpeg/ffprobe, and (for new transcription)
 [whisper.cpp](https://github.com/ggml-org/whisper.cpp) with a GGML model.
 Put `ffmpeg`, `ffprobe`, and `whisper-cli` on PATH. `WHISPER_CLI` can instead point

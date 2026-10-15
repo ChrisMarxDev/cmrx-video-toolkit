@@ -24,12 +24,22 @@ test('real MCP → Python → FFmpeg → canonical review → approved artifact'
     await writeFile(join(root, 'transcript.json'), JSON.stringify({ transcription: [] }));
     await server.connect(a);
     await client.connect(b);
+    const listed = await client.listTools();
+    const resourceUri = listed.tools.find(tool => tool.name === 'open_review')._meta.ui.resourceUri;
+    // Hosts can prefetch/cache the resource before a session starts. Its media
+    // origin remains stable across every Python child in this service.
+    const resource = (await client.readResource({ uri: resourceUri })).contents[0];
+    assert.equal(resource.mimeType, 'text/html;profile=mcp-app');
+    assert.match(resource.text, /__VIDEO_REVIEW_MCP__=true/);
+    assert.match(resource.text, /review-done/);
+    assert.ok(!resource.text.includes('src="/app.js"'));
     await assert.rejects(runtime.scoped('../outside.mp4'), /ENOENT|outside/);
-    await symlink(tmpdir(), join(root, 'escape'));
+    await symlink(tmpdir(), join(root, 'escape'), 'junction');
     await assert.rejects(runtime.scoped('escape/external.review', { missing: true }), /outside/);
     const opened = await tool('open_review', { path: clip, transcript: 'transcript.json' });
     assert.ok(!opened.isError, JSON.stringify(opened));
-    const { sessionId, browserUrl } = opened.structuredContent;
+    const { sessionId, browserUrl, mediaUrl } = opened.structuredContent;
+    assert.deepEqual(resource._meta.ui.csp.resourceDomains, [new URL(mediaUrl).origin]);
     assert.equal((await fetch(browserUrl)).status, 200);
     assert.equal((await tool('open_review', { path: clip })).isError, true);
     let status;
@@ -41,9 +51,13 @@ test('real MCP → Python → FFmpeg → canonical review → approved artifact'
     } while (Date.now() < deadline);
     assert.equal(status.status, 'reviewing', JSON.stringify(status));
     const session = runtime.session(sessionId);
-    const media = await fetch(`${session.started.origin}/media?token=${session.started.token}`, { headers: { Range: 'bytes=0-31' } });
+    const media = await fetch(mediaUrl, { headers: { Range: 'bytes=0-31' } });
     assert.equal(media.status, 206);
     assert.equal((await media.arrayBuffer()).byteLength, 32);
+    assert.equal((await fetch(mediaUrl + 'wrong')).status, 404);
+    for (const path of ['/app.js', '/agent.mjs', '/review-agent/bridge.mjs']) {
+      assert.equal((await fetch(session.started.origin + path)).status, 200);
+    }
     const state = await runtime.request(sessionId, 'state');
     const doc = state.document;
     const saved = await runtime.request(sessionId, 'save', { revision: doc.revision, source_sha256: doc.source.sha256,

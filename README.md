@@ -28,6 +28,10 @@ Local-first · Python + FFmpeg + Flutter · MIT licensed
 
 ## Get started
 
+See the [external requirements inventory](docs/EXTERNAL-REQUIREMENTS.md) for the
+minimum dependencies by workflow. Browser review does not need Flutter or Node;
+the [MCP App / browser agent flow](apps/review-agent/README.md) adds agent handoff.
+
 Install **Python 3**, **FFmpeg/ffprobe** and **Flutter** (tested with Flutter 3.47.2 /
 Dart 3.13.2). Transcription requires a separate Whisper installation and model.
 

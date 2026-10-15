@@ -2,9 +2,9 @@ name: Local video review
 on:
   push:
     branches: [main]
-    paths: ['apps/editor/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
+    paths: ['apps/editor/**', 'apps/review-agent/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
   pull_request:
-    paths: ['apps/editor/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
+    paths: ['apps/editor/**', 'apps/review-agent/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,3 +30,13 @@ jobs:
         run: python -m unittest discover -s apps/editor/tests -v
       - name: Check timeline and rectangle interactions
         run: node --test apps/editor/tests/model.test.mjs
+      - name: Install review MCP dependencies
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Restore review MCP dependencies
+        run: npm --prefix apps/review-agent ci
+      - name: Check shared browser and MCP review lifecycle
+        run: npm --prefix apps/review-agent test
+        env:
+          PYTHON: python

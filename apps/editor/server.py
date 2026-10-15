@@ -165,7 +165,9 @@ class Handler(BaseHTTPRequestHandler):
             if media is None or not media.is_file():
                 return self.send_error(404)
             return self.file(media, ranges=True)
-        files = {'/': 'index.html', '/app.js': 'app.js', '/model.mjs': 'model.mjs', '/style.css': 'style.css'}
+        if path == '/review-agent/bridge.mjs':
+            return self.file(WEB.parent.parent / 'review-agent/bridge.mjs')
+        files = {'/': 'index.html', '/app.js': 'app.js', '/agent.mjs': 'agent.mjs', '/model.mjs': 'model.mjs', '/style.css': 'style.css'}
         if path not in files:
             return self.send_error(404)
         self.file(WEB / files[path])

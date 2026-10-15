@@ -4,17 +4,49 @@ import { realpath, readFile } from 'node:fs/promises';
 import { dirname, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createServer, request as httpRequest } from 'node:http';
 import { browserRequest } from './bridge.mjs';
 
 const launcher = fileURLToPath(new URL('../editor/agent_session.py', import.meta.url));
 
 export class ReviewRuntime {
-  constructor({ root, python = process.env.PYTHON || 'python3', model = process.env.WHISPER_MODEL } = {}) {
+  constructor({ root, python = process.env.PYTHON || 'python3', model = process.env.WHISPER_MODEL,
+    engine = process.env.REVIEW_ENGINE || launcher } = {}) {
     this.root = resolve(root || process.cwd());
     this.python = python;
     this.model = model;
+    this.engine = engine;
     this.sessions = new Map();
     this.workspaces = new Set();
+  }
+
+  async mediaOrigin() {
+    if (!this.mediaReady) this.mediaReady = new Promise((resolve, reject) => {
+      this.mediaServer = createServer((req, res) => {
+        const origin = `127.0.0.1:${this.mediaServer.address().port}`;
+        if (req.headers.host !== origin || !['GET', 'HEAD'].includes(req.method)) {
+          res.writeHead(403).end(); return;
+        }
+        const [, prefix, id, capability] = new URL(req.url, `http://${origin}`).pathname.split('/');
+        const session = this.sessions.get(id);
+        if (prefix !== 'media' || !session || capability !== session.started.token) {
+          res.writeHead(404).end(); return;
+        }
+        const headers = { 'X-Review-Token': session.started.token };
+        if (req.headers.range) headers.Range = req.headers.range;
+        const upstream = httpRequest(`${session.started.origin}/media`, { method: 'GET', headers }, response => {
+          res.writeHead(response.statusCode, response.headers);
+          if (req.method === 'HEAD') { response.destroy(); res.end(); }
+          else response.pipe(res);
+        });
+        upstream.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });
+        res.on('close', () => upstream.destroy());
+        upstream.end();
+      });
+      this.mediaServer.once('error', reject);
+      this.mediaServer.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${this.mediaServer.address().port}`));
+    });
+    return this.mediaReady;
   }
 
   async scoped(path, { missing = false } = {}) {
@@ -47,7 +79,7 @@ export class ReviewRuntime {
     const imported = transcript ? await this.scoped(transcript) : undefined;
     if (this.workspaces.has(target)) throw Error('This workspace already has an active review session.');
     this.workspaces.add(target);
-    const args = [launcher, source, '--workspace', target, '--home', resolve(target, '.agent')];
+    const args = [this.engine, source, '--workspace', target];
     if (this.model) args.push('--model', this.model);
     if (imported) args.push('--transcript', imported);
     const child = spawn(this.python, args, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -68,8 +100,9 @@ export class ReviewRuntime {
       const request = browserRequest({ origin: started.origin, token: started.token });
       this.sessions.set(started.sessionId, { child, request, started, target });
       child.once('exit', () => { this.workspaces.delete(target); });
-      return { ...await request('session'), browserUrl: started.browserUrl, presentation: 'browser',
-        message: 'Open browserUrl to review. The embedded redesigned UI is not wired yet. Never mark Done on the user’s behalf.' };
+      return { ...await request('session'), browserUrl: started.browserUrl,
+        mediaUrl: `${await this.mediaOrigin()}/media/${started.sessionId}/${started.token}`,
+        message: 'The review is open. Ask the user to review and click Done. If this host has no MCP Apps view, open browserUrl. Never infer missing UI from this tool response or mark Done on the user’s behalf.' };
     } catch (error) {
       child.kill('SIGINT');
       this.workspaces.delete(target);
@@ -85,7 +118,7 @@ export class ReviewRuntime {
   }
 
   async request(id, operation, body) {
-    if (!['state', 'session', 'save', 'finish', 'abandon'].includes(operation)) throw Error('Unsupported review operation.');
+    if (!['state', 'session', 'save', 'finish', 'abandon', 'export', 'retry', 'cancel'].includes(operation)) throw Error('Unsupported review operation.');
     if (['state', 'session'].includes(operation) && body !== undefined) throw Error('Read operations do not accept a body.');
     if (!['state', 'session'].includes(operation) && (!body || typeof body !== 'object')) throw Error('A request body is required.');
     return this.session(id).request(operation, body);
@@ -102,13 +135,21 @@ export class ReviewRuntime {
   }
 
   async close() {
-    await Promise.all([...this.sessions.values()].map(({ child }) => new Promise(resolve => {
+    await Promise.all([...this.sessions.values()].map(({ child, request, started }) => new Promise(resolve => {
       if (child.exitCode !== null || child.signalCode !== null) return resolve();
       const timer = setTimeout(() => child.kill('SIGKILL'), 7000);
       child.once('exit', () => { clearTimeout(timer); resolve(); });
-      child.kill('SIGINT');
+      // HTTP shutdown lets Python cancel subprocess jobs on Windows as well as
+      // POSIX, before a hard process termination is necessary.
+      request('shutdown', { sessionId: started.sessionId }).catch(() => child.kill('SIGINT'));
     })));
     this.sessions.clear();
     this.workspaces.clear();
+    if (this.mediaServer) {
+      this.mediaServer.closeAllConnections();
+      await new Promise(resolve => this.mediaServer.close(resolve));
+      this.mediaServer = undefined;
+      this.mediaReady = undefined;
+    }
   }
 }
