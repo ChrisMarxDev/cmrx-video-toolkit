@@ -114,14 +114,22 @@ class ServerTests(unittest.TestCase):
     def test_model_default_is_used_and_remembered(self):
         state=self.server.session
         state.default_model='model chosen at startup.bin'
+        state.default_language='de'
         with patch.object(review,'prepare',return_value=document()) as prepare:
             state.open({'path':str(Path(self.temp.name)/'video.mp4')})
             state.worker.join(2)
             self.assertFalse(state.job['busy'])
             self.assertIsNone(state.job['error'])
             self.assertEqual(prepare.call_args.args[2],'model chosen at startup.bin')
+            self.assertEqual(prepare.call_args.kwargs['language'],'de')
         reopened=server.Session(self.temp.name)
         self.assertEqual(reopened.default_model,'model chosen at startup.bin')
+        self.assertEqual(reopened.default_language,'de')
+        with patch.object(review,'prepare',return_value=document()) as prepare:
+            reopened.open({'path':str(Path(self.temp.name)/'video.mp4'), 'language':'en'})
+            reopened.worker.join(2)
+            self.assertEqual(prepare.call_args.kwargs['language'],'en')
+        self.assertEqual(server.Session(self.temp.name).default_language,'en')
 
     def test_range_serving(self):
         state=self.server.session;state.workspace=Path(self.temp.name);(state.workspace/'source').mkdir()

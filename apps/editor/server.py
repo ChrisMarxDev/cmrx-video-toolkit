@@ -23,9 +23,12 @@ class Session:
         self.home.mkdir(parents=True, exist_ok=True)
         self.default_model = model or os.environ.get('WHISPER_MODEL')
         settings = self.home / 'settings.json'
-        if not self.default_model and settings.exists():
+        self.default_language = os.environ.get('WHISPER_LANGUAGE') or 'auto'
+        if settings.exists():
             try:
-                self.default_model = review.read(settings).get('model')
+                saved = review.read(settings)
+                self.default_model = self.default_model or saved.get('model')
+                self.default_language = os.environ.get('WHISPER_LANGUAGE') or saved.get('language') or 'auto'
             except (ValueError, OSError):
                 pass
         self.lock = threading.RLock()
@@ -80,12 +83,14 @@ class Session:
         def operation():
             # Keep the previous session until this one has passed source validation.
             chosen_model = data.get('model') or self.default_model
-            document = review.prepare(source, workspace, chosen_model, data.get('transcript'), self.progress, self.cancel)
+            chosen_language = data.get('language') or self.default_language
+            document = review.prepare(source, workspace, chosen_model, data.get('transcript'), self.progress, self.cancel, language=chosen_language)
             with self.lock:
                 self.workspace, self.document = workspace, document
+                self.default_language = chosen_language
                 if chosen_model:
                     self.default_model = chosen_model
-                    review.write(self.home / 'settings.json', {'model': chosen_model})
+                review.write(self.home / 'settings.json', {'model': self.default_model, 'language': chosen_language})
         self.start(operation)
         self.last_open = dict(data)
 

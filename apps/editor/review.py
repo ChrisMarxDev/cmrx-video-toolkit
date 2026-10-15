@@ -141,7 +141,7 @@ def run(args, cancel=None):
         raise ValueError('Cancelled')
 
 
-def prepare(source, workspace, model=None, transcript=None, progress=lambda text: None, cancel=None):
+def prepare(source, workspace, model=None, transcript=None, progress=lambda text: None, cancel=None, language="auto"):
     source, workspace = Path(source).expanduser().resolve(), Path(workspace).expanduser().resolve()
     if not source.is_file():
         raise ValueError(f'Video not found: {source}')
@@ -223,7 +223,7 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
             raw_path.parent.mkdir(exist_ok=True)
             if not raw_path.exists():
                 pending_base = raw_path.parent / 'whisper.pending'
-                run([cli, '-m', Path(model).expanduser(), '-f', media / 'transcription.wav', '-l', 'auto', '-oj', '-of', pending_base], cancel)
+                run([cli, '-m', Path(model).expanduser(), '-f', media / 'transcription.wav', '-l', language, '-oj', '-of', pending_base], cancel)
                 Path(str(pending_base) + '.json').replace(raw_path)
             doc['transcript'] = normalize_whisper(read(raw_path), doc['source']['duration'])
         validate(doc)
@@ -358,10 +358,11 @@ def main():
     parser.add_argument('video')
     parser.add_argument('--workspace', required=True)
     parser.add_argument('--model')
+    parser.add_argument('--language', default='auto', help='Whisper decoding language, e.g. auto, de or en; never enables translation')
     parser.add_argument('--transcript', help='Existing whisper.cpp JSON or video-review document')
     args = parser.parse_args()
     try:
-        prepare(args.video, args.workspace, args.model, args.transcript, progress=print)
+        prepare(args.video, args.workspace, args.model, args.transcript, progress=print, language=args.language)
         print(Path(args.workspace).resolve() / 'review.json')
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         parser.exit(1, f'{exc}\n')

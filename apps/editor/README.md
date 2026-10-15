@@ -171,7 +171,7 @@ These environment variables are test-runner inputs, not app configuration.
 
 ### Mixed-language recordings
 
-The recognizer runs locally with `-l auto`, without the translate flag. Use a
+The recognizer runs locally without the translate flag; the default language is `auto`. Use a
 multilingual Whisper model (for example `ggml-base.bin`, not `ggml-base.en.bin`)
 for German/English speech. Auto-detection selects a language at the beginning of
 the file; it does not guarantee recognition when languages switch mid-recording.
@@ -180,3 +180,16 @@ still needs review. Existing ready transcripts are reused, so changing the model
 alone does not regenerate a saved review. Preserve annotations and source timing
 when importing corrected transcription; never delete the review to retry speech.
 Reference: [whisper.cpp language detection](https://github.com/ggml-org/whisper.cpp/blob/master/src/whisper.cpp).
+
+Agents can set a decoding-language preference with `WHISPER_LANGUAGE`, or the
+`language` field beside `model` in the review home settings.json (normally
+~/VideoReviews/settings.json). `/api/open` accepts a `language` override and
+remembers it after successful preparation. The standalone preparation CLI accepts
+`--language`. Browser and MCP sessions share the saved preference unless their
+process environment overrides it. Restart existing sessions to load changed settings.
+
+For German-led recordings with English passages, `de` can avoid an incorrect
+initial English detection while still preserving English speech. This is a decoding
+bias, not reliable per-segment language detection. Validate against representative
+speech; mixed-language and recognition errors remain possible. Leave translation
+disabled. Settings affect new recognition, never silently replace ready transcripts.

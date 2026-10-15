@@ -32,8 +32,15 @@ retainedRanges and the pipeline's source/output map; do not cast segments to wor
 See flow/02-transcribe/README.md for the preparation workflow.
 
 For mixed German/English, use a multilingual model, not a `.en` model. The engine
-uses `-l auto` without translation, but whisper.cpp initially selects one language;
+defaults to `-l auto` without translation, but whisper.cpp initially selects one language;
 this is not reliable per-segment language switching. Report recognition limits
 rather than claiming bilingual accuracy. Ready transcripts are cached: model
 changes do not replace them. Preserve source-time annotations when preparing or
 importing corrected recognition. See the editor README's mixed-language notes.
+
+The agent may configure `language` alongside `model` in the local review home's
+settings.json, or use WHISPER_LANGUAGE for app sessions. The preparation CLI has
+--language. For German-led mixed speech, a `de` decoding bias can preserve both
+languages better than an incorrect English auto-detection; verify on actual audio.
+This is not a promise of per-segment auto-detection or error-free transcription.
+Do not expose setup commands to the user when an agent can configure them.
