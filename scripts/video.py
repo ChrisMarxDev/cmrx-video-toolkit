@@ -163,7 +163,7 @@ def init(args):
     source = Path(args.source).resolve()
     if not source.is_file():
         raise ValueError(f'Missing recording: {source}')
-    p = Path(os.environ.get('CMRX_WORKSPACE', str(ROOT))) / 'projects' / args.name
+    p = Path(os.environ.get('CMRX_WORKSPACE', str(ROOT))) / os.environ.get('CMRX_VIDEO_DIR', 'projects') / args.name
     p.mkdir(parents=True, exist_ok=False)
     for folder in ['source', 'transcript', 'edit', 'storyboard', 'composition/lib', 'composition/assets', 'renders', 'review']:
         (p / folder).mkdir(parents=True, exist_ok=True)

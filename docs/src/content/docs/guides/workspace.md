@@ -22,6 +22,9 @@ current styling contract and migration guidance.
 ## Connect the pipeline
 
 Set `CMRX_WORKSPACE` to your private project root when invoking `scripts/video.py`.
+Set `CMRX_VIDEO_DIR` to choose the production folder beneath that root (default:
+`projects`). For example, `CMRX_VIDEO_DIR=videos` creates new workspaces in
+`<workspace>/videos/<name>/`.
 The following optional environment variables select your Flutter design package
 for generated baseline compositions:
 
