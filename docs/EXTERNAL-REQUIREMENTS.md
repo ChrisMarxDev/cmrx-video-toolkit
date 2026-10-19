@@ -1,10 +1,28 @@
 # External requirements inventory
 
-Baseline: 2026-10-15. This is the inventory of what must be present on a user's
+Baseline: 2026-10-15; dependency roadmap added 2026-10-19. This is the inventory of what must be present on a user's
 computer for the current source-distributed toolkit, not a request to install
 everything. Choose the workflow first. The product goal is to systematically
 reduce user-managed prerequisites while preserving local files and browser use.
 No dependency removal or bundled installer is claimed by this inventory.
+
+## Reduction tracker
+
+The [README dependency table and checklist](../README.md#dependencies-and-reduction-roadmap)
+provide the public overview and ordered reduction candidates. This inventory owns
+exact requirements and evidence for completed reductions. Keep both updated when
+requirements change. No reduction checklist item is completed yet. Existing shared
+Whisper model resolution/download is already implemented, as recorded below.
+
+A Flutter/Dart core with managed native helpers is a candidate consolidation path,
+not an implemented replacement for Python/Node. Keep prebuilt app usage separate
+from compiling new agent-authored Dart. The latter still needs a compiler/toolchain
+somewhere. Preserve browser access and local artifact contracts during any port.
+
+For each completed item, record: checklist item, shipped release/commit, workflow,
+manual installations removed, remaining/bundled dependencies, tested OS/architecture,
+and clean-machine evidence. Do not mark packaging complete from developer-machine
+tests alone. Bundled binaries retain their own licensing obligations.
 
 ## Minimum by workflow
 
@@ -17,7 +35,8 @@ No dependency removal or bundled installer is claimed by this inventory.
 | Component catalog MCP / optional embedded browser | Node 22+ and adapter npm packages for catalog tools; Flutter/Python/FFmpeg for a cold browser build; MCP Apps and local frames for inline display |
 | Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe |
 | Standalone dither studio | Browser only; open the already-built tools/dither/index.html locally |
-| Flutter composition / component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
+| Viewing an already-built component browser | Browser plus a static host; the current MCP static host uses Node. No Flutter SDK for viewing; prebuilt release distribution is not yet implemented. |
+| Flutter composition / building the component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
 | Fluvie preview/final render | Composition requirements + `fluvie` CLI on PATH and runtime/capture support for the selected platform |
 | Optional person/background cutout | Media tools + Python venv/pip + NumPy + ONNX Runtime + RVM model |
 | Optional native Flutter Scene capture | Flutter/Dart + native macOS build toolchain + Metal/Impeller-capable environment + Scene packages/assets |
