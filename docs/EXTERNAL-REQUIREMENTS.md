@@ -14,6 +14,7 @@ No dependency removal or bundled installer is claimed by this inventory.
 | Review with new local transcription | Above + whisper.cpp CLI + compatible Whisper model |
 | Agent launches browser and waits for Done | Same as browser review + the user's existing agent/terminal; no Node/MCP required |
 | Local MCP tools / embedded MCP App | Review requirements + Node.js 22+, npm dependencies, local MCP-capable host; inline display needs MCP Apps support |
+| Component catalog MCP / optional embedded browser | Node 22+ and adapter npm packages for catalog tools; Flutter/Python/FFmpeg for a cold browser build; MCP Apps and local frames for inline display |
 | Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe |
 | Standalone dither studio | Browser only; open the already-built tools/dither/index.html locally |
 | Flutter composition / component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
@@ -56,6 +57,7 @@ and contribute to the footprint. Full transitive dependencies belong in lockfile
 | Package / asset | Feature and source of truth |
 | --- | --- |
 | `@modelcontextprotocol/sdk`, `zod`, `esbuild` (including its platform binary) | Full MCP adapter and shared-UI bundling; `apps/review-agent/package.json` and package-lock.json |
+| `@modelcontextprotocol/sdk`, `zod` | Component browser MCP adapter; `apps/component-browser-agent/package.json` and package-lock.json; no bundler or transcription dependencies |
 | `express` plus MCP SDK and Zod | Synthetic MCP feasibility sample only; `apps/mcp-review-sample/package.json`; not required by full stdio adapter |
 | Flutter Pub dependencies, including `fluvie: 0.3.1` | Composition/component packages; pubspec.yaml and lockfiles; `flutter pub get` restores them |
 | `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets | Optional native GPU scene path; `.skills/flutter-scene/references/native-capture.md` |

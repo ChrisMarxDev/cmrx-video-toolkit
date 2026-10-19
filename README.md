@@ -45,7 +45,8 @@ python3 scripts/doctor.py
 make components
 ```
 
-Open **http://localhost:8090** to explore the component browser.
+Open **http://localhost:8090** to explore the component browser. For agent catalog
+search and an optional inline MCP App, use the [component MCP adapter](apps/component-browser-agent/README.md).
 
 For the local Linux/macOS/Windows review app, follow its [setup instructions](apps/editor/README.md), then:
 
@@ -84,6 +85,7 @@ workflow, or choose a focused skill below.
 | [video-compose](.skills/video-compose/SKILL.md) | Build editable Fluvie compositions with toolkit components. |
 | [video-review](.skills/video-review/SKILL.md) | Review and revise a video at the relevant stage while preserving prior work. |
 | [video-render](.skills/video-render/SKILL.md) | Render and verify edited videos with Fluvie and FFmpeg. |
+| [video-components](.skills/video-components/SKILL.md) | Run the browser, discover components through MCP, and add and validate widgets and presets. |
 | [component-authoring](.skills/component-authoring/SKILL.md) | Create SVG explainers, editable Flutter diagrams and reusable components. |
 | [video-dithering](.skills/video-dithering/SKILL.md) | Apply deterministic ordered texture to graphics or backgrounds. |
 | [video-shaders](.skills/video-shaders/SKILL.md) | Create deterministic Flutter shaders and capture their output. |

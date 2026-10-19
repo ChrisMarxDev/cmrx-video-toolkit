@@ -24,6 +24,7 @@ editor:
 .PHONY: setup-dev hooks check-local
 setup-dev:
 	npm --prefix apps/review-agent ci
+	npm --prefix apps/component-browser-agent ci
 	npm --prefix docs ci
 	python3 scripts/install-hooks.py
 
@@ -36,4 +37,5 @@ check-local:
 	python3 -m unittest discover -s apps/editor/tests -q
 	node --test apps/editor/tests/model.test.mjs tools/dither/core.test.mjs
 	npm --prefix apps/review-agent test
+	npm --prefix apps/component-browser-agent test
 	npm --prefix docs run build

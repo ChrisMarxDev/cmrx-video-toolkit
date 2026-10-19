@@ -36,7 +36,7 @@ workspaces are never included.
 
 ## Local checks and CI storage
 
-Run `make setup-dev` once per clone to install locked review/docs dependencies and
+Run `make setup-dev` once per clone to install locked review/component-MCP/docs dependencies and
 activate the tracked pre-push hook. Python 3, Node 22.12+, FFmpeg and Make must be
 available. The installer preserves custom hook configurations by refusing to
 replace them. Hooks are local Git configuration and do not install with a clone.

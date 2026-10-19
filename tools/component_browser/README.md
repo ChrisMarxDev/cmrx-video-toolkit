@@ -14,6 +14,17 @@ and serves it on loopback; it does not launch or automate a browser. Stop with C
 Demo assets are generated locally by `scripts/demo_media.py` using Python and FFmpeg.
 For hot reload, generate them first, then run `flutter run -d web-server --web-port 8090` in this directory.
 
+## Agent skill and MCP extension
+
+Use [video-components](../../.skills/video-components/SKILL.md) for setup, choosing
+components, adding widgets/presets and validation.
+
+The [local MCP adapter](../../apps/component-browser-agent/README.md) exposes
+`list_components`, `get_component` and `open_component_browser`. Catalog queries
+need no Flutter build. Opening serves this same Flutter application and returns a
+browser URL plus an MCP App for hosts allowing local embedded frames. Custom prop
+changes are shared through Copy flow reference, not an automatic agent callback.
+
 ## Browse and refer
 
 Search by friendly name, stable ID, widget class or purpose; filter by category.

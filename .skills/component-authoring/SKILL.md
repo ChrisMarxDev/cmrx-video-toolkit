@@ -10,6 +10,9 @@ belong to [video-compose](../video-compose/SKILL.md); the consuming workspace
 supplies editorial and visual direction. Code paths below are relative to the
 toolkit root.
 
+For running the browser, selecting components, MCP setup and the end-to-end
+component workflow, use [video-components](../video-components/SKILL.md).
+
 ## Vector explainers and flows
 
 Read [Vector explainers](references/vector-explainers.md) when designing or revising

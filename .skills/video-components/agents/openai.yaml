@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Components"
+  short_description: "Browse, add and validate reusable video components"
+  default_prompt: "Use $video-components to find or add the right components and run the component browser."
