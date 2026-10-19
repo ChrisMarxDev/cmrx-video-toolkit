@@ -89,6 +89,9 @@ class ComponentBrowser extends StatelessWidget {
           programs: programs,
           componentId: id,
           initialVariant: uri.queryParameters['variant'],
+          initialSidebarOffset: settings.arguments is double
+              ? settings.arguments as double
+              : 0,
         ),
       );
     },
@@ -102,11 +105,13 @@ class BrowserPage extends StatefulWidget {
     this.programs,
     this.componentId = '',
     this.initialVariant,
+    this.initialSidebarOffset = 0,
   });
   final List<ComponentSpec> catalog;
   final DitherPrograms? programs;
   final String componentId;
   final String? initialVariant;
+  final double initialSidebarOffset;
   @override
   State<BrowserPage> createState() => _BrowserPageState();
 }
@@ -115,6 +120,7 @@ class _BrowserPageState extends State<BrowserPage>
     with SingleTickerProviderStateMixin {
   String query = '', category = 'All', format = '16:9';
   late final AnimationController clock;
+  late final ScrollController sidebarController;
   ComponentSpec? selected;
   late String variant;
   Map<String, dynamic> props = {};
@@ -123,6 +129,9 @@ class _BrowserPageState extends State<BrowserPage>
   @override
   void initState() {
     super.initState();
+    sidebarController = ScrollController(
+      initialScrollOffset: widget.initialSidebarOffset,
+    );
     for (final entry in widget.catalog) {
       if (entry.id == widget.componentId) selected = entry;
     }
@@ -161,6 +170,7 @@ class _BrowserPageState extends State<BrowserPage>
 
   @override
   void dispose() {
+    sidebarController.dispose();
     clock.dispose();
     super.dispose();
   }
@@ -173,6 +183,9 @@ class _BrowserPageState extends State<BrowserPage>
         path: '/$id',
         queryParameters: variant == null ? null : {'variant': variant},
       ).toString(),
+      arguments: sidebarController.hasClients
+          ? sidebarController.offset
+          : widget.initialSidebarOffset,
     );
   }
 
@@ -239,6 +252,8 @@ class _BrowserPageState extends State<BrowserPage>
       border: Border(right: BorderSide(color: DemoPalette.rule)),
     ),
     child: ListView(
+      key: const ValueKey('component-sidebar'),
+      controller: sidebarController,
       padding: const EdgeInsets.symmetric(vertical: 20),
       children: [
         ListTile(
@@ -682,6 +697,7 @@ class _BrowserPageState extends State<BrowserPage>
       DropdownButtonFormField<String>(
         key: ValueKey('${spec.id}:$variant'),
         initialValue: variant,
+        isExpanded: true,
         decoration: const InputDecoration(labelText: 'Variant'),
         items: [
           for (final v in spec.variants)

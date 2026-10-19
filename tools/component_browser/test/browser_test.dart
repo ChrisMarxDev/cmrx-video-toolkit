@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,42 @@ void main() {
   tearDown(
     () => binding.platformDispatcher.clearAccessibilityFeaturesTestValue(),
   );
+
+  testWidgets('Sidebar keeps its scroll position when selecting components', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ComponentBrowser(catalog: (await tester.runAsync(loadCatalog))!),
+    );
+    await tester.pumpAndSettle();
+    final sidebar = find.byKey(const ValueKey('component-sidebar'));
+    double offset() => tester.widget<ListView>(sidebar).controller!.offset;
+    await tester.drag(sidebar, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    final originalOffset = offset();
+    expect(originalOffset, greaterThan(0));
+    for (var i = 0; i < 2; i++) {
+      final tiles = find.descendant(
+        of: sidebar,
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(tiles.hitTestable().at(i));
+      await tester.pumpAndSettle();
+      expect(offset(), closeTo(originalOffset, .01));
+      expect(
+        tester.widgetList<ListTile>(tiles).where((tile) => tile.selected),
+        hasLength(1),
+      );
+    }
+    Navigator.of(tester.element(sidebar)).pop();
+    await tester.pumpAndSettle();
+    expect(offset(), closeTo(originalOffset, .01));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'Every registered variant renders actual widgets in landscape and portrait',
