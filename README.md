@@ -68,6 +68,28 @@ review cuts and visual notes; compose the video in Flutter. Native Scene GPU
 capture currently uses a separate macOS path. Check the rendered video before
 publishing.
 
+## Skill overview
+
+Ask your coding agent to use a skill by name. Start with `video-flow` for the full
+workflow, or choose a focused skill below.
+
+| Skill | What it helps you do |
+| --- | --- |
+| [video-flow](.skills/video-flow/SKILL.md) | Coordinate the full workflow from recording to reviewed render. |
+| [video-style](.skills/video-style/SKILL.md) | Define your video identity through an interview and references; create a reusable design folder. |
+| [video-ingest](.skills/video-ingest/SKILL.md) | Prepare a recording workspace while preserving original media. |
+| [video-transcribe](.skills/video-transcribe/SKILL.md) | Prepare local transcripts for review with explicit timing precision. |
+| [video-edit](.skills/video-edit/SKILL.md) | Turn reviewed edits and audio analysis into source-to-output timelines. |
+| [video-storyboard](.skills/video-storyboard/SKILL.md) | Plan explanatory visuals against the edited timeline. |
+| [video-compose](.skills/video-compose/SKILL.md) | Build editable Fluvie compositions with toolkit components. |
+| [video-review](.skills/video-review/SKILL.md) | Review and revise a video at the relevant stage while preserving prior work. |
+| [video-render](.skills/video-render/SKILL.md) | Render and verify edited videos with Fluvie and FFmpeg. |
+| [component-authoring](.skills/component-authoring/SKILL.md) | Create SVG explainers, editable Flutter diagrams and reusable components. |
+| [video-dithering](.skills/video-dithering/SKILL.md) | Apply deterministic ordered texture to graphics or backgrounds. |
+| [video-shaders](.skills/video-shaders/SKILL.md) | Create deterministic Flutter shaders and capture their output. |
+| [flutter-scene](.skills/flutter-scene/SKILL.md) | Render procedural or imported 3D geometry with Flutter Scene. |
+| [git-sync](.skills/git-sync/SKILL.md) | Commit, rebase, push and verify synchronization on the current branch. |
+
 ## Set your video style
 
 Use [video-style](.skills/video-style/SKILL.md) to define your direction through a
