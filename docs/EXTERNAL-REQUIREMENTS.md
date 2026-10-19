@@ -1,32 +1,23 @@
 # External requirements inventory
 
-Baseline: 2026-10-15; dependency roadmap added 2026-10-19. This is the inventory of what must be present on a user's
+Baseline: 2026-10-15; README summary updated 2026-10-19.
+This is the inventory of what must be present on a user's
 computer for the current source-distributed toolkit, not a request to install
 everything. Choose the workflow first. The product goal is to systematically
 reduce user-managed prerequisites while preserving local files and browser use.
 No dependency removal or bundled installer is claimed by this inventory.
 
-## Reduction tracker
+## README summary and decision status
 
-The [README dependency table and checklist](../README.md#dependencies-and-reduction-roadmap)
-provide the public overview and ordered reduction candidates. This inventory owns
-exact requirements and evidence for completed reductions. Keep both updated when
-requirements change. No reduction checklist item is completed yet. Existing shared
-Whisper model resolution/download is already implemented, as recorded below.
+The [README dependency table](../README.md#current-dependencies) summarizes the
+current requirements. This inventory owns exact workflow/package details; keep
+both updated when requirements change.
 
-Flutter/Dart is the accepted development baseline: the app and new components must
-be built locally. The reduction goal is fewer additional development tools around
-that SDK, not avoiding Flutter installation or distributing a prebuilt substitute.
-Dart ports of the Python engine and Node MCP adapters are candidates, not shipped
-replacements. Preserve browser access and local artifact contracts during any port.
-Keep required target build tools and native media/recognition helpers distinct
-from additional general-purpose runtimes and optional docs tooling.
-
-For each completed item, record: checklist item, release/commit, affected workflow,
-additional tools removed, setup steps automated, remaining dependencies, tested
-OS/architecture, and clean-machine evidence with Flutter installed. Verify local
-component creation/build, editing, rendering and MCP before claiming parity.
-Automated binary provisioning does not remove that binary or its license obligations.
+Local app/component builds require Flutter. Node is currently required by the MCP
+adapters, JavaScript tests and docs tooling, not by Flutter itself. Avoiding Node
+is an open consideration, not an agreed migration. No Python-to-Dart port, Dart
+MCP replacement, tooling rewrite or prebuilt-distribution roadmap has been chosen.
+Reduction candidates elsewhere in this inventory are possibilities, not commitments.
 
 ## Minimum by workflow
 
