@@ -25,8 +25,8 @@ the recording path and workspace (or an existing review.json). The same editor
 is an MCP App in supporting hosts and a normal web app through `browserUrl`.
 When the user supplies a local video, pass its path to `open_review`. When they
 ask to start without a file, call `open_review` with no path. The user chooses
-Open video in the local browser editor; the embedded app opens that same session's
-browser page for file selection. If the host blocks the link, provide browserUrl.
+Open video and selects a file directly in the embedded or browser editor. Do not
+open another app or tab automatically; browserUrl is a manual fallback.
 The file is copied to the local engine, not attached to chat or sent through MCP.
 Do not pass workspace/transcript without a path. Both routes wait for human Done.
 

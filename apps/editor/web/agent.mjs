@@ -1,11 +1,11 @@
-import { browserRequest, embeddedRequest, continuationMessage } from '../../review-agent/bridge.mjs';
+import { browserRequest, continuationMessage } from '../../review-agent/bridge.mjs';
 
 export async function createHost(token) {
   if (!globalThis.__VIDEO_REVIEW_MCP__) {
     const request = browserRequest({ token });
     const response = await fetch('/api/session', { headers: { 'X-Review-Token': token } });
     if (!response.ok && response.status !== 404) throw Error('Cannot connect to the review session.');
-    return { request, session: response.ok ? await response.json() : null,
+    return { request, upload: file => uploadVideo('', token, file), session: response.ok ? await response.json() : null,
       mediaUrl: sha => `/media?token=${encodeURIComponent(token)}&revision=${encodeURIComponent(sha)}` };
   }
   let sequence = 0;
@@ -41,8 +41,20 @@ export async function createHost(token) {
     timer = setTimeout(() => reject(Error('The host did not supply a review session. Reopen the review.')), 30000);
   })]).finally(() => clearTimeout(timer));
   new ResizeObserver(() => post({ method: 'ui/notifications/size-changed', params: { height: document.documentElement.scrollHeight } })).observe(document.body);
-  return { session, request: embeddedRequest({ sessionId: session.sessionId, callServerTool: params => rpc('tools/call', params) }),
+  if (!session.apiUrl) throw Error('This review uses an older connection. Ask your agent to restart the review service; saved work is preserved.');
+  return { session, request: browserRequest({ origin: session.apiUrl, token: '' }),
+    upload: file => uploadVideo(session.apiUrl, '', file),
     mediaUrl: () => session.mediaUrl,
-    openBrowser: () => rpc('ui/open-link', { url: session.browserUrl }).catch(() => ({ isError: true })),
     notify: result => rpc('ui/message', { role: 'user', content: [{ type: 'text', text: continuationMessage(result) }] }) };
+}
+
+async function uploadVideo(origin, token, file) {
+  const response = await fetch(`${origin}/api/upload`, {
+    method: 'POST', headers: { 'X-Review-Token': token,
+      'X-Filename': encodeURIComponent(file.name), 'Content-Type': 'application/octet-stream' },
+    body: file,
+  });
+  const result = await response.json();
+  if (!response.ok) throw Error(result.error || 'Could not copy the selected video.');
+  return result;
 }

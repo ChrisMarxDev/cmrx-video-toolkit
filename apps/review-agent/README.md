@@ -37,18 +37,28 @@ In a fresh agent session, ask:
 
 `open_review` accepts an optional `path`. With a path, optional `workspace` and
 `transcript` are supported. With no path, it starts a waiting session: choose
-**Open video** in the local browser editor and select a file. The embedded app's
-Open video button requests that same session's browser page through `ui/open-link`;
-if the host declines, use the returned `browserUrl`. The embedded view can then
-show the prepared video too. No video bytes travel through chat or MCP.
+**Open video** and select a file in either the embedded editor or browser.
+The embedded editor uploads directly to the local engine and does not open a
+second app or tab. File bytes never travel through chat or MCP.
+
+Editing uses a session-capability-protected loopback HTTP relay, including
+uploads, progress, saves and Done. It does not depend on host tools/call or an
+active agent turn. The resource declares the relay as its connect/media origin.
+The host must allow loopback connections; browserUrl is a manual fallback if it
+does not. Only Done requests host conversation continuation, after durable save;
+if the host rejects it, the editor reports the saved session for manual continuation.
+The relay allows CORS for clients holding the unguessable session capability,
+limits methods/operations, and never exposes the shutdown endpoint.
 
 Selected files are streamed to the local engine under a unique
 `<root>/.video-reviews/<session>/` home. Keep this generated media outside Git.
 Do not supply workspace or transcript without a path; preparation options are
-available in the browser picker. The CLI also accepts no VIDEO argument for this
-flow. Both entry paths use the same Done and get_review completion contract.
+available in the picker. Both entry paths use the same Done/get_review contract.
+
 The configured root scopes source/transcript/workspace selection, including
-existing symlinks. Models use `WHISPER_MODEL`; `WHISPER_CLI` selects the recognizer.
+existing symlinks. Models are resolved automatically from saved settings or a shared cache; if absent,
+a verified multilingual base model is downloaded once. `WHISPER_MODEL` overrides
+that selection; `WHISPER_CLI` selects the installed recognizer.
 This is a trusted local integration, not an OS sandbox.
 
 The host may render the UI while the model only receives session data. Never

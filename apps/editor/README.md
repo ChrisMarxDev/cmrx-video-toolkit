@@ -193,3 +193,19 @@ initial English detection while still preserving English speech. This is a decod
 bias, not reliable per-segment language detection. Validate against representative
 speech; mixed-language and recognition errors remain possible. Leave translation
 disabled. Settings affect new recognition, never silently replace ready transcripts.
+
+## Automatic transcription model setup
+
+New transcription reuses a valid model from `WHISPER_MODEL`, the session's model
+override/settings, or `~/VideoReviews/settings.json`. Without one, it checks the
+shared cache and legacy installation locations, then downloads multilingual
+`ggml-base.bin` (148 MB) from the whisper.cpp model repository. The download is
+size/SHA-256 verified, atomically installed, cancellable, and reused across
+sessions. Progress appears in the editor; interrupted downloads leave no installed
+partial model. No model path entry is required. The shared cache is
+`$XDG_CACHE_HOME/cmrx-video-toolkit/models` (default `~/.cache`).
+
+whisper.cpp itself and FFmpeg remain prerequisites. Ready transcripts are retained.
+A supplied model override is respected; invalid explicit overrides report an error
+rather than silently selecting a different model. Saved global language preferences
+are not imported into a new isolated session; recognition defaults to auto.

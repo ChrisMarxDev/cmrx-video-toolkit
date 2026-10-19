@@ -34,7 +34,8 @@ transcript. The browser must be able to reopen the CLI-produced review directly.
 Run `python3 apps/editor/review.py VIDEO --workspace WORKSPACE --model MODEL`.
 Use `--transcript WHISPER_JSON` to import existing source-timed whisper.cpp output.
 Windows uses `py -3` instead of `python3`. FFmpeg/ffprobe and local whisper.cpp are
-external prerequisites; WHISPER_CLI and WHISPER_MODEL can specify their locations.
+external requirements; the editor automatically discovers or downloads a verified
+multilingual base model. WHISPER_CLI and WHISPER_MODEL override their locations.
 Preserve original recordings and raw recognition output. Keep media outside Git.
 
 Whisper segments are not word alignment. Never manufacture word timestamps from

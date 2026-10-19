@@ -624,11 +624,6 @@ window.addEventListener("resize", () => {
 });
 for (const id of ["begin", "open-button"])
   $(id).onclick = async () => {
-    if (globalThis.__VIDEO_REVIEW_MCP__ && host.session) {
-      const result = await host.openBrowser();
-      if (result?.isError) error("Open the session's browserUrl to choose your video.");
-      return;
-    }
     $("open-dialog").showModal();
   };
 $("close-open").onclick = () => $("open-dialog").close();
@@ -643,17 +638,7 @@ $("open-form").onsubmit = async (e) => {
     if (file) {
       $("job-text").textContent =
         "Copying selected video into local review folder…";
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "X-Review-Token": token,
-          "X-Filename": encodeURIComponent(file.name),
-          "Content-Type": "application/octet-stream",
-        },
-        body: file,
-      });
-      const result = await response.json();
-      if (!response.ok) throw Error(result.error);
+      const result = await host.upload(file);
       path = result.path;
       folder = result.workspace;
       $("path").value = path;
@@ -808,15 +793,15 @@ if (host.session) {
     }
   };
 }
+let connectionFailures = 0;
 async function loop() {
   try {
     await poll();
+    connectionFailures = 0;
   } catch (e) {
-    error(
-      e.message +
-        " — check that the local server is running and open its printed URL.",
-    );
+    connectionFailures++;
+    error("Review connection interrupted. Saved changes are preserved; retrying locally. " + e.message);
   }
-  if (!ended) setTimeout(loop, 800);
+  if (!ended) setTimeout(loop, Math.min(15000, 800 * 2 ** Math.min(connectionFailures, 5)));
 }
 loop();

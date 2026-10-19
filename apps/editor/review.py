@@ -11,6 +11,8 @@ import subprocess
 import sys
 import uuid
 
+from models import resolve_model
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import video
@@ -215,11 +217,11 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
                 doc['transcript'] = normalize_whisper(imported, doc['source']['duration'])
             write(raw_path, imported)
         else:
-            progress('Transcribing locally with whisper.cpp')
             cli = os.environ.get('WHISPER_CLI', 'whisper-cli')
-            model = model or os.environ.get('WHISPER_MODEL')
-            if not model or not Path(model).expanduser().is_file():
-                raise ValueError('Audio is ready. Set WHISPER_MODEL or choose a whisper.cpp model path, then Retry. You can also import an existing Whisper JSON or review.json transcript.')
+            if not shutil.which(cli):
+                raise ValueError('Local transcription needs whisper.cpp. Ask your agent to install it, then Retry; your recording is preserved.')
+            model = resolve_model(model, progress, cancel)
+            progress('Transcribing locally with whisper.cpp')
             raw_path.parent.mkdir(exist_ok=True)
             if not raw_path.exists():
                 pending_base = raw_path.parent / 'whisper.pending'

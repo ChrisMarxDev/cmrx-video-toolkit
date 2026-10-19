@@ -38,16 +38,33 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
     await assert.rejects(runtime.scoped('escape/external.review', { missing: true }), /outside/);
     const opened = await tool('open_review', chooseLater ? {} : { path: clip, transcript: 'transcript.json' });
     assert.ok(!opened.isError, JSON.stringify(opened));
-    const { sessionId, browserUrl, mediaUrl } = opened.structuredContent;
+    const { sessionId, browserUrl, mediaUrl, apiUrl } = opened.structuredContent;
     assert.deepEqual(resource._meta.ui.csp.resourceDomains, [new URL(mediaUrl).origin]);
     assert.equal((await fetch(browserUrl)).status, 200);
+    assert.deepEqual(resource._meta.ui.csp.connectDomains, [new URL(apiUrl).origin]);
+    assert.ok(!resource.text.includes('ui/open-link'));
+    const direct = async (operation, body) => {
+      const response = await fetch(`${apiUrl}/api/${operation}`, {
+        method: body === undefined ? 'GET' : 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'null' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      assert.equal(response.headers.get('access-control-allow-origin'), '*');
+      const value = await response.json();
+      if (!response.ok) throw Error(value.error);
+      return value;
+    };
+    assert.equal((await fetch(`${apiUrl}/api/state`, { method: 'OPTIONS', headers: { Origin: 'null' } })).status, 204);
+    assert.equal((await fetch(`${apiUrl}wrong/api/state`)).status, 404);
+    assert.equal((await fetch(`${apiUrl}/api/shutdown`, { method: 'POST' })).status, 404);
+    assert.equal((await fetch(`${apiUrl}/api/finish`)).status, 405);
     if (chooseLater) {
       assert.equal(opened.structuredContent.status, 'waiting');
       assert.equal(opened.structuredContent.artifactPath, null);
       const session = runtime.session(sessionId);
       await assert.rejects(runtime.request(sessionId, 'finish', { sessionId }), /prepared/);
       assert.equal((await tool('open_review', { transcript: 'transcript.json' })).isError, true);
-      const response = await fetch(`${session.started.origin}/api/upload`, {
+      const response = await fetch(`${apiUrl}/api/upload`, {
         method: 'POST', headers: { 'X-Review-Token': session.started.token,
           'X-Filename': 'chosen.mp4', 'Content-Type': 'application/octet-stream' },
         body: await readFile(clip),
@@ -55,7 +72,7 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
       assert.equal(response.status, 200);
       const selected = await response.json();
       assert.equal(await runtime.scoped(selected.path), selected.path);
-      await session.request('open', { ...selected, transcript: join(root, 'transcript.json') });
+      await direct('open', { ...selected, transcript: join(root, 'transcript.json') });
     } else {
       assert.equal((await tool('open_review', { path: clip })).isError, true);
     }
@@ -75,12 +92,13 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
     for (const path of ['/app.js', '/agent.mjs', '/review-agent/bridge.mjs']) {
       assert.equal((await fetch(session.started.origin + path)).status, 200);
     }
-    const state = await runtime.request(sessionId, 'state');
+    // All editing below bypasses host tools: it must work with no active agent turn.
+    const state = await direct('state');
     const doc = state.document;
-    const saved = await runtime.request(sessionId, 'save', { revision: doc.revision, source_sha256: doc.source.sha256,
+    const saved = await direct('save', { revision: doc.revision, source_sha256: doc.source.sha256,
       marks: [{ id: 'note', kind: 'comment', text: 'Keep this moment', source_start: 0, source_end: .5 }], objects: [] });
     await assert.rejects(runtime.request(sessionId, 'finish', { sessionId, revision: doc.revision, sourceSha256: doc.source.sha256 }), /changed/);
-    await runtime.request(sessionId, 'finish', { sessionId, revision: saved.revision, sourceSha256: doc.source.sha256 });
+    await direct('finish', { sessionId, revision: saved.revision, sourceSha256: doc.source.sha256 });
     const completed = (await tool('get_review', { sessionId })).structuredContent;
     assert.equal(completed.status, 'completed');
     assert.equal(completed.review.marks[0].text, 'Keep this moment');

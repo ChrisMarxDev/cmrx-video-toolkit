@@ -24,14 +24,48 @@ export class ReviewRuntime {
     if (!this.mediaReady) this.mediaReady = new Promise((resolve, reject) => {
       this.mediaServer = createServer((req, res) => {
         const origin = `127.0.0.1:${this.mediaServer.address().port}`;
-        if (req.headers.host !== origin || !['GET', 'HEAD'].includes(req.method)) {
+        if (req.headers.host !== origin) {
           res.writeHead(403).end(); return;
         }
-        const [, prefix, id, capability] = new URL(req.url, `http://${origin}`).pathname.split('/');
+        const [, prefix, id, capability, api, operation] = new URL(req.url, `http://${origin}`).pathname.split('/');
         const session = this.sessions.get(id);
-        if (prefix !== 'media' || !session || capability !== session.started.token) {
+        if (!['media', 'session'].includes(prefix) || !session || capability !== session.started.token) {
           res.writeHead(404).end(); return;
         }
+        // Capability-scoped local HTTP transport keeps the editor usable while
+        // its agent turn is idle. No host tools/call or ui/open-link is involved.
+        if (prefix === 'session') {
+          const reads = ['state', 'session'];
+          const writes = ['open', 'upload', 'save', 'finish', 'abandon', 'export', 'retry', 'cancel'];
+          if (api !== 'api' || ![...reads, ...writes].includes(operation)) {
+            res.writeHead(404).end(); return;
+          }
+          const cors = { 'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Filename, X-Review-Token',
+            'Cache-Control': 'no-store' };
+          if (req.method === 'OPTIONS') { res.writeHead(204, cors).end(); return; }
+          if (!(reads.includes(operation) ? req.method === 'GET' : req.method === 'POST')) {
+            res.writeHead(405, cors).end(); return;
+          }
+          const headers = { 'X-Review-Token': session.started.token };
+          for (const name of ['content-type', 'content-length', 'x-filename']) {
+            if (req.headers[name]) headers[name] = req.headers[name];
+          }
+          const upstream = httpRequest(`${session.started.origin}/api/${operation}`, { method: req.method, headers }, response => {
+            res.writeHead(response.statusCode, { ...response.headers, ...cors });
+            response.pipe(res);
+          });
+          upstream.on('error', () => {
+            if (!res.headersSent) res.writeHead(502, { ...cors, 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'The local review service stopped. Your saved review remains on disk.' }));
+          });
+          req.on('aborted', () => upstream.destroy());
+          res.on('close', () => upstream.destroy());
+          req.pipe(upstream);
+          return;
+        }
+        if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
         const headers = { 'X-Review-Token': session.started.token };
         if (req.headers.range) headers.Range = req.headers.range;
         const upstream = httpRequest(`${session.started.origin}/media`, { method: 'GET', headers }, response => {
@@ -103,7 +137,8 @@ export class ReviewRuntime {
       child.once('exit', () => { this.workspaces.delete(target); });
       return { ...await request('session'), browserUrl: started.browserUrl,
         mediaUrl: `${await this.mediaOrigin()}/media/${started.sessionId}/${started.token}`,
-        message: 'The review is open. Ask the user to review and click Done. If this host has no MCP Apps view, open browserUrl. Never infer missing UI from this tool response or mark Done on the user’s behalf.' };
+        apiUrl: `${await this.mediaOrigin()}/session/${started.sessionId}/${started.token}`,
+        message: 'The review is open. Ask the user to select a video, review and click Done. Do not automatically open another app or tab. browserUrl is a manual fallback. Never mark Done on the user’s behalf.' };
     } catch (error) {
       child.kill('SIGINT');
       this.workspaces.delete(target);
