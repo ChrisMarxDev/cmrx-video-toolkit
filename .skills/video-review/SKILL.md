@@ -60,6 +60,13 @@ requirements are listed in `docs/EXTERNAL-REQUIREMENTS.md`.
 
 ## Reviewing an existing composition
 
+After rendering a draft, open that MP4 in the same review editor using
+`open_review` (or the CLI flow above), with a separate review workspace for that
+render revision. Let the user highlight ranges and comment, then wait for Done
+and retrieve the saved feedback. Comments refer to times in that rendered video;
+use them to revise the original composition, not as source-recording cut ranges.
+Render the revision and repeat as needed before final approval and rendering.
+
 Read flow/06-review/README.md. Preserve prior reviewed exports. Visual changes
 reuse timing/audio; cut changes rebuild the timeline and resolve cues again. Record
 feedback and artifact versions. Validate against the selected workspace direction;
