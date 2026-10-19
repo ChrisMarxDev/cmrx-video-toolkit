@@ -26,6 +26,8 @@ explain the missing capability instead of claiming installation succeeded.
 ## Human recording review
 
 Read `.skills/video-review/SKILL.md` for the shared MCP App/browser review flow.
+Use `open_review` with a local path when supplied, or without a path so the user
+can select a video in the editor. Do not require a chat video upload.
 Prefer the configured `open_review` MCP tool: supporting hosts show the editor
 inline; other hosts open its `browserUrl`. Without MCP, launch
 `python3 apps/editor/agent_session.py VIDEO --workspace WORKSPACE --open --wait`.

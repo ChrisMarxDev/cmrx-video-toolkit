@@ -103,7 +103,7 @@ function controls() {
   $("export-button").disabled = busy || !doc;
   if (host.session) {
     $("open-button").hidden = true;
-    $("begin").hidden = true;
+    $("begin").hidden = !!doc || busy || ended;
     $("review-done").disabled = busy || !doc || completing || ended;
   }
 }
@@ -623,7 +623,12 @@ window.addEventListener("resize", () => {
   positionPopover();
 });
 for (const id of ["begin", "open-button"])
-  $(id).onclick = () => {
+  $(id).onclick = async () => {
+    if (globalThis.__VIDEO_REVIEW_MCP__ && host.session) {
+      const result = await host.openBrowser();
+      if (result?.isError) error("Open the session's browserUrl to choose your video.");
+      return;
+    }
     $("open-dialog").showModal();
   };
 $("close-open").onclick = () => $("open-dialog").close();

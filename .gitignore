@@ -66,3 +66,6 @@ __pycache__/
 
 # Local video-review projects contain private transcripts and source media.
 *.review/
+
+# Local agent sessions started before a video is selected
+.video-reviews/

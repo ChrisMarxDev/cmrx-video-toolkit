@@ -35,7 +35,18 @@ In a fresh agent session, ask:
 > open its browserUrl. Wait for me to click Done, then call get_review and read
 > my saved instructions. Do not render yet.
 
-`open_review` accepts `path`, optional `workspace`, and optional `transcript`.
+`open_review` accepts an optional `path`. With a path, optional `workspace` and
+`transcript` are supported. With no path, it starts a waiting session: choose
+**Open video** in the local browser editor and select a file. The embedded app's
+Open video button requests that same session's browser page through `ui/open-link`;
+if the host declines, use the returned `browserUrl`. The embedded view can then
+show the prepared video too. No video bytes travel through chat or MCP.
+
+Selected files are streamed to the local engine under a unique
+`<root>/.video-reviews/<session>/` home. Keep this generated media outside Git.
+Do not supply workspace or transcript without a path; preparation options are
+available in the browser picker. The CLI also accepts no VIDEO argument for this
+flow. Both entry paths use the same Done and get_review completion contract.
 The configured root scopes source/transcript/workspace selection, including
 existing symlinks. Models use `WHISPER_MODEL`; `WHISPER_CLI` selects the recognizer.
 This is a trusted local integration, not an OS sandbox.

@@ -43,5 +43,6 @@ export async function createHost(token) {
   new ResizeObserver(() => post({ method: 'ui/notifications/size-changed', params: { height: document.documentElement.scrollHeight } })).observe(document.body);
   return { session, request: embeddedRequest({ sessionId: session.sessionId, callServerTool: params => rpc('tools/call', params) }),
     mediaUrl: () => session.mediaUrl,
+    openBrowser: () => rpc('ui/open-link', { url: session.browserUrl }).catch(() => ({ isError: true })),
     notify: result => rpc('ui/message', { role: 'user', content: [{ type: 'text', text: continuationMessage(result) }] }) };
 }

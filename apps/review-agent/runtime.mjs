@@ -3,7 +3,7 @@ import { createInterface } from 'node:readline';
 import { realpath, readFile } from 'node:fs/promises';
 import { dirname, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { createServer, request as httpRequest } from 'node:http';
 import { browserRequest } from './bridge.mjs';
 
@@ -67,10 +67,11 @@ export class ReviewRuntime {
   }
 
   async open({ path, workspace, transcript } = {}) {
-    const source = await this.scoped(path);
-    const target = await this.scoped(workspace || (source.endsWith('review.json') ? dirname(source) : `${source}.review`), { missing: true });
+    if (!path && (workspace || transcript)) throw Error('Choose a video path before supplying workspace or transcript.');
+    const source = path ? await this.scoped(path) : undefined;
+    const target = await this.scoped(workspace || (source ? (source.endsWith('review.json') ? dirname(source) : `${source}.review`) : `.video-reviews/${randomUUID()}`), { missing: true });
     // Opening an existing review must not bypass the configured source boundary.
-    if (source.endsWith('.json')) {
+    if (source?.endsWith('.json')) {
       if (!source.endsWith('/review.json') && !source.endsWith('\\review.json')) throw Error('Only review.json is supported.');
       const document = JSON.parse(await readFile(source, 'utf8'));
       await this.scoped(resolve(dirname(source), document.source.path));
@@ -79,7 +80,7 @@ export class ReviewRuntime {
     const imported = transcript ? await this.scoped(transcript) : undefined;
     if (this.workspaces.has(target)) throw Error('This workspace already has an active review session.');
     this.workspaces.add(target);
-    const args = [this.engine, source, '--workspace', target];
+    const args = source ? [this.engine, source, '--workspace', target] : [this.engine, '--home', target];
     if (this.model) args.push('--model', this.model);
     if (imported) args.push('--transcript', imported);
     const child = spawn(this.python, args, { stdio: ['ignore', 'pipe', 'pipe'] });

@@ -9,7 +9,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { ReviewRuntime } from './runtime.mjs';
 import { createServer } from './mcp.mjs';
 
-test('real MCP → Python → FFmpeg → canonical review → approved artifact', { timeout: 60000 }, async () => {
+for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg → approved artifact (choose later: ${chooseLater})`, { timeout: 60000 }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'review-agent-'));
   const runtime = new ReviewRuntime({ root });
   const server = createServer(runtime);
@@ -36,12 +36,29 @@ test('real MCP → Python → FFmpeg → canonical review → approved artifact'
     await assert.rejects(runtime.scoped('../outside.mp4'), /ENOENT|outside/);
     await symlink(tmpdir(), join(root, 'escape'), 'junction');
     await assert.rejects(runtime.scoped('escape/external.review', { missing: true }), /outside/);
-    const opened = await tool('open_review', { path: clip, transcript: 'transcript.json' });
+    const opened = await tool('open_review', chooseLater ? {} : { path: clip, transcript: 'transcript.json' });
     assert.ok(!opened.isError, JSON.stringify(opened));
     const { sessionId, browserUrl, mediaUrl } = opened.structuredContent;
     assert.deepEqual(resource._meta.ui.csp.resourceDomains, [new URL(mediaUrl).origin]);
     assert.equal((await fetch(browserUrl)).status, 200);
-    assert.equal((await tool('open_review', { path: clip })).isError, true);
+    if (chooseLater) {
+      assert.equal(opened.structuredContent.status, 'waiting');
+      assert.equal(opened.structuredContent.artifactPath, null);
+      const session = runtime.session(sessionId);
+      await assert.rejects(runtime.request(sessionId, 'finish', { sessionId }), /prepared/);
+      assert.equal((await tool('open_review', { transcript: 'transcript.json' })).isError, true);
+      const response = await fetch(`${session.started.origin}/api/upload`, {
+        method: 'POST', headers: { 'X-Review-Token': session.started.token,
+          'X-Filename': 'chosen.mp4', 'Content-Type': 'application/octet-stream' },
+        body: await readFile(clip),
+      });
+      assert.equal(response.status, 200);
+      const selected = await response.json();
+      assert.equal(await runtime.scoped(selected.path), selected.path);
+      await session.request('open', { ...selected, transcript: join(root, 'transcript.json') });
+    } else {
+      assert.equal((await tool('open_review', { path: clip })).isError, true);
+    }
     let status;
     const deadline = Date.now() + 20000;
     do {

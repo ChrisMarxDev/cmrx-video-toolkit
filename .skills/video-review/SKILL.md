@@ -23,6 +23,13 @@ and explicit user instructions determine recognition settings.
 Read `apps/review-agent/README.md`. Use a configured `open_review` MCP tool with
 the recording path and workspace (or an existing review.json). The same editor
 is an MCP App in supporting hosts and a normal web app through `browserUrl`.
+When the user supplies a local video, pass its path to `open_review`. When they
+ask to start without a file, call `open_review` with no path. The user chooses
+Open video in the local browser editor; the embedded app opens that same session's
+browser page for file selection. If the host blocks the link, provide browserUrl.
+The file is copied to the local engine, not attached to chat or sent through MCP.
+Do not pass workspace/transcript without a path. Both routes wait for human Done.
+
 Do not infer lack of UI support from session data in a tool response. If the
 host cannot render MCP Apps, open the returned URL in the user's browser.
 
@@ -31,6 +38,8 @@ Without MCP, run from the toolkit root:
 ```sh
 python3 apps/editor/agent_session.py VIDEO --workspace WORKSPACE --open --wait
 ```
+
+Omit VIDEO to start the CLI with its file picker instead.
 
 Leave the execution session alive while the human reviews. Use `--model MODEL`
 or `WHISPER_MODEL` for new local transcription, or `--transcript JSON` to import
