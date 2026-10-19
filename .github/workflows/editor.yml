@@ -1,10 +1,6 @@
 name: Local video review
+# Cross-platform acceptance is run explicitly before releases.
 on:
-  push:
-    branches: [main]
-    paths: ['apps/editor/**', 'apps/review-agent/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
-  pull_request:
-    paths: ['apps/editor/**', 'apps/review-agent/**', 'scripts/video.py', 'schemas/**', '.github/workflows/editor.yml']
   workflow_dispatch:
 permissions:
   contents: read

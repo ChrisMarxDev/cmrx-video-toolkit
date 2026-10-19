@@ -20,3 +20,20 @@ components:
 
 editor:
 	python3 apps/editor/server.py
+
+.PHONY: setup-dev hooks check-local
+setup-dev:
+	npm --prefix apps/review-agent ci
+	npm --prefix docs ci
+	python3 scripts/install-hooks.py
+
+hooks:
+	python3 scripts/install-hooks.py
+
+# Routine checks run locally; Flutter checks remain available through make test.
+check-local:
+	python3 -m unittest discover -s tests -q
+	python3 -m unittest discover -s apps/editor/tests -q
+	node --test apps/editor/tests/model.test.mjs tools/dither/core.test.mjs
+	npm --prefix apps/review-agent test
+	npm --prefix docs run build

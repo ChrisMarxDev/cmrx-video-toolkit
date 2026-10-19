@@ -33,3 +33,23 @@ The Documentation GitHub Actions workflow builds PRs and deploys main to
 https://chrismarxdev.github.io/cmrx-video-toolkit/. GitHub Pages uses Actions as its
 source. Only docs output is uploaded; media, Flutter build artifacts and local
 workspaces are never included.
+
+## Local checks and CI storage
+
+Run `make setup-dev` once per clone to install locked review/docs dependencies and
+activate the tracked pre-push hook. Python 3, Node 22.12+, FFmpeg and Make must be
+available. The installer preserves custom hook configurations by refusing to
+replace them. Hooks are local Git configuration and do not install with a clone.
+Studio bootstrap also installs these dependencies and the toolkit hook.
+
+Every toolkit push runs `make check-local`: Python pipeline/editor tests, JavaScript
+model/dither tests, MCP integration tests and the docs build. Failures block the
+push. Run `make test` separately for Flutter changes. Local hooks can be bypassed
+and only test the current checkout/platform; they are not server enforcement.
+
+The three-platform editor workflow is manual (`workflow_dispatch`), intended for
+compatibility checks before releases. Existing Windows/macOS integration failures
+still need diagnosis; moving checks local does not fix those failures.
+Documentation still builds on relevant PRs and deploys main automatically. It uses
+no Actions dependency cache and uploads only a one-day Pages deployment artifact
+on deployments, never on PRs. Do not add build/media uploads or caching by default.

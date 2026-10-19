@@ -16,11 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: withastro/action@3eafd002e65cc31b4f0eae0bb05450d521562247 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          path: docs
           node-version: 24
-          package-manager: npm
+          package-manager-cache: false
+      - run: npm --prefix docs ci
+      - run: npm --prefix docs run build
+      - name: Upload deployment artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: docs/dist
+          retention-days: 1
   deploy:
     if: github.event_name != 'pull_request'
     needs: build
