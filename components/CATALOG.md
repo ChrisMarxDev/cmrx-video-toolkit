@@ -30,6 +30,10 @@ and text styles, pass `style: yourStyle` to styled widgets, and rename the old
 
 ## Technical drawings, diagrams and charts
 
+For authoring SVG assets or explanatory vector graphics, follow
+[component-authoring](../.skills/component-authoring/SKILL.md) and its focused
+reference. Use this catalog to select existing geometry and check API limits.
+
 The catalog now has 24 entries, including 12 technical entries. These are Flutter
 widgets/custom vector painters, so the same instances work in video compositions,
 Flutter Deck slides and the browser. They have no brand palette or bundled fonts.

@@ -11,3 +11,8 @@ requested. Preload programs/fonts/media, then use frame-derived motion and immut
 props. Keep the audio-bearing clip mounted throughout. Use private design-package
 environment settings when generating a branded workspace. Check actual rendered
 pixels, not just compilation. Component availability is not editorial permission.
+
+For creating or refining SVG assets, vector explainers or diagrams, use
+[component-authoring](../component-authoring/SKILL.md). It owns graphic structure
+and geometry; this skill owns placement and timing in the composition. Reuse an
+existing graphic when only its timing or placement needs to change.
