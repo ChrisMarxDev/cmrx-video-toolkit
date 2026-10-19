@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Style"
+  short_description: "Interview creators and build a video design system"
+  default_prompt: "Use $video-style to interview me about my video style, learn from my references, and create a reusable design folder."

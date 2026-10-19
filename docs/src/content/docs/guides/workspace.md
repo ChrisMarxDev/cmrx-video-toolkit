@@ -7,6 +7,18 @@ Pin the toolkit to a reviewed Git commit or release in your own workspace. Keep
 recordings, transcripts, generated previews, models and exports outside Git.
 Do not commit private knowledge or client materials to the public toolkit.
 
+## Define your video identity
+
+Ask your agent to use the `video-style` skill. It interviews you about audience,
+formats, visual character, captions and pacing, and can work from website links,
+images and videos. References are optional; tell it which details you like.
+
+The agent builds a `brand/` folder in your production workspace with the direction,
+reference notes, tokens, video rules and review specimens. A sibling
+`components/CATALOG.md` records recurring component recipes and which ones are
+implemented. Existing folder conventions and approved choices are preserved.
+You can revise a draft before choosing it as your reusable identity.
+
 ## Set colors and typography
 
 The Flutter package is `video_components`, located in `components/`. Styled widgets

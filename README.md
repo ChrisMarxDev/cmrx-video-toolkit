@@ -70,6 +70,11 @@ publishing.
 
 ## Set your video style
 
+Use [video-style](.skills/video-style/SKILL.md) to define your direction through a
+short interview and optional website, image or video references. It creates a
+creator-owned folder with visual tokens, video rules, component recipes and
+specimens for review. It can also refine an existing identity.
+
 `components/` contains the `video_components` Flutter package. Styled widgets
 require your own `VideoStyle`; the toolkit does not impose colors, fonts or
 editorial presets. The CMRX colors on this README and documentation site style

@@ -14,6 +14,14 @@ Resolve source cues through scripts/video.py import-edit; never guess timestamps
 Drafts can be rendered for review. Final approval is a human decision, not a CLI flag.
 Read the matching stage skill below before using a command. Keep media outside Git.
 
+## Establish video style
+
+When a creator wants to define or revise their identity, use
+[video-style](../video-style/SKILL.md) for a short interview, optional reference
+analysis and a workspace-owned design folder. Reuse established direction without
+re-interviewing. Storyboarding and composition consume the chosen specification;
+style selection does not approve edits or final delivery.
+
 ## No-terminal user experience
 
 Run setup and launch commands yourself when your host permits it. Never ask a
