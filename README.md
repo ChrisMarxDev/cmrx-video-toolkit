@@ -60,44 +60,45 @@ python3 apps/editor/server.py
 
 ## Dependencies and reduction roadmap
 
-These are requirements of today's source checkout, not a single install list for
-every user. The [full inventory](docs/EXTERNAL-REQUIREMENTS.md) owns exact workflow,
-version and package details; keep this summary in sync with it.
+**Flutter/Dart is the required development baseline.** We build the app and new
+components locally. The goal is to minimize additional SDKs, runtimes and tools
+installed alongside Flutter, while keeping that authoring/build workflow intact.
+The [full inventory](docs/EXTERNAL-REQUIREMENTS.md) owns exact versions, workflow
+requirements and validation evidence; keep this summary in sync with it.
 
-| Dependency | Needed today for | Reduction candidate |
+| Dependency | Needed today for | Keep or reduce |
 | --- | --- | --- |
-| Flutter SDK, including Dart | Building/changing components and compositions, browser builds and current render workflow | Ship prebuilt browsing/review tools; retain a managed SDK for compiling new agent-written Dart. |
-| Fluvie package and CLI | Composition playback/capture and pipeline preview/render commands | Pin and provision the CLI with the render toolchain instead of separate manual activation. |
-| Python 3 | Review engine, pipeline/media scripts and synthetic browser media generation | Evaluate a compiled Dart service/CLI, porting one tested operation at a time. |
-| FFmpeg / ffprobe | Media inspection, audio extraction, cuts, encoding and exports | Bundle or provision compatible binaries; Flutter alone does not replace these operations. |
-| Node.js + npm packages | Local MCP adapters; also docs development and JavaScript tests | Evaluate a Dart MCP adapter to remove Node from creator runtime; keep web/docs tooling developer-only. |
-| whisper.cpp + model | New local transcription; not needed with an existing transcript | Provision the recognizer on demand. Shared model lookup/download already exists; recognizer setup remains separate. |
-| Browser / MCP host | Browser review and component previews; MCP host only for agent integration | Use existing applications; preserve browser fallback. Neither implies installing the Flutter SDK. |
-| Native platform tools and libraries | Platform-specific desktop builds/capture; optional native Scene path | Build releases centrally where possible; verify remaining OS/GPU requirements per platform. |
-| NumPy, ONNX Runtime + RVM model | Optional person/background cutout | Keep isolated and install only when requested; evaluate a packaged native backend later. |
-| Git, Make and development packages | Source setup, checks, docs and contribution | Release packaged tools/assets so ordinary use does not require a developer checkout. |
+| Flutter SDK, including Dart and Pub | Building components, compositions and the browser; current rendering workflow | Keep as the core toolchain. Use its included Dart tooling for supporting commands where practical. |
+| Fluvie package and CLI | Composition playback/capture and pipeline preview/render commands | Keep the rendering dependency; automate pinned CLI setup through the existing Dart toolchain. |
+| Python 3 | Review engine, pipeline/media scripts and synthetic browser media generation | Candidate for removal by porting these operations to Dart incrementally. |
+| Node.js + npm packages | Local MCP adapters; docs development and JavaScript tests | Candidate for removal from the video development workflow through a Dart MCP service; isolate docs tooling. |
+| FFmpeg / ffprobe | Media inspection, audio extraction, cuts, encoding and exports | Retain media capabilities; automate compatible binary setup rather than introduce another runtime. |
+| whisper.cpp + model | New local transcription; not needed with an existing transcript | Keep optional; automate recognizer setup. Shared model lookup/download already exists. |
+| Browser / MCP host | Browser review/previews and agent integration | Use existing applications; keep host requirements separate from build tooling. |
+| Native platform build tools and libraries | Desktop compilation/capture; optional native Scene path | Keep only those required by the chosen target; avoid installing toolchains for unused platforms. |
+| NumPy, ONNX Runtime + RVM model | Optional person/background cutout | Keep isolated; evaluate a Dart/native integration to avoid a separate Python environment. |
+| Git, Make and development packages | Source setup, checks, docs and contribution | Keep Git for source work; consider Dart task commands to remove Make/shell helpers as extra prerequisites. |
 
-The direction to evaluate is a **Flutter/Dart application with managed native
-helpers**. A packaged Flutter app can run without a user-installed Flutter SDK;
-Dart can also compile a standalone CLI. However, an agent adding arbitrary Dart
-widgets still needs compilation somewhere. A prebuilt app does not automatically
-execute new source code. Media encoding and recognition remain separate engines
-unless deliberately replaced. See [Flutter distribution](https://docs.flutter.dev/platform-integration/linux/building)
-and [Dart executables](https://dart.dev/tools/dart-compile).
+Dart orchestration and MCP implementations are candidates for reducing Python and
+Node installations. They are not implemented replacements yet. Flutter alone does
+not replace video codecs or speech recognition: track native helpers separately
+from general-purpose development runtimes. Prebuilt app distribution is outside
+this reduction roadmap; the local Flutter build remains part of the workflow.
 
 Track each reduction separately; the items below are planned, not shipped:
 
-- [ ] Distribute the prebuilt component browser with its demo assets, removing Flutter/Python/FFmpeg setup for browsing only.
-- [ ] Add workflow-specific dependency checks and one agent-operated setup command; reuse the existing model cache/download path.
-- [ ] Provision pinned render/media helpers, beginning with Fluvie and FFmpeg/ffprobe, with supported-platform and license checks.
-- [ ] Prototype a compiled Dart MCP service against the existing catalog and review contracts; remove Node from creator setup only after parity checks.
-- [ ] Consolidate Python orchestration into Dart incrementally, preserving edit timing, review receipts, media handling and failure behavior.
-- [ ] Package and test the creator workflow on clean supported machines; distinguish prebuilt use from authoring new Dart components.
+- [ ] Add a workflow-specific dependency check/setup command using the installed Dart toolchain; distinguish core, target-specific and optional tools.
+- [ ] Automate pinned Fluvie CLI and FFmpeg/ffprobe setup, with supported-platform and license checks.
+- [ ] Prototype a Dart MCP service against the existing catalog and review contracts; remove Node from the video workflow only after parity checks.
+- [ ] Port Python orchestration and demo-media generation to Dart incrementally, preserving timing, review receipts, media handling and failures.
+- [ ] Replace Make/shell entrypoints with Dart commands where practical and keep docs/test-only tooling separate from video authoring requirements.
+- [ ] Automate optional recognition/cutout setup without adding those dependencies to every installation.
+- [ ] Verify the complete edit/build/render/MCP workflow on clean supported machines with Flutter installed, recording every additional tool still needed.
 
-For each checked item, record the release/commit, affected workflow, remaining
-prerequisites and clean-machine evidence in the full inventory. Bundling a tool
-reduces manual installation; it does not remove the dependency or its license.
-No runtime has been replaced by this roadmap.
+For each checked item, record the release/commit, affected workflow, installations
+removed, remaining prerequisites and clean-machine evidence in the full inventory.
+Automatically installing a binary reduces setup work; eliminating a runtime
+reduces the toolchain itself. Track both without conflating them.
 
 ## From recording to finished video
 

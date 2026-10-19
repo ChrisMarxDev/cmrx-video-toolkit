@@ -14,15 +14,19 @@ exact requirements and evidence for completed reductions. Keep both updated when
 requirements change. No reduction checklist item is completed yet. Existing shared
 Whisper model resolution/download is already implemented, as recorded below.
 
-A Flutter/Dart core with managed native helpers is a candidate consolidation path,
-not an implemented replacement for Python/Node. Keep prebuilt app usage separate
-from compiling new agent-authored Dart. The latter still needs a compiler/toolchain
-somewhere. Preserve browser access and local artifact contracts during any port.
+Flutter/Dart is the accepted development baseline: the app and new components must
+be built locally. The reduction goal is fewer additional development tools around
+that SDK, not avoiding Flutter installation or distributing a prebuilt substitute.
+Dart ports of the Python engine and Node MCP adapters are candidates, not shipped
+replacements. Preserve browser access and local artifact contracts during any port.
+Keep required target build tools and native media/recognition helpers distinct
+from additional general-purpose runtimes and optional docs tooling.
 
-For each completed item, record: checklist item, shipped release/commit, workflow,
-manual installations removed, remaining/bundled dependencies, tested OS/architecture,
-and clean-machine evidence. Do not mark packaging complete from developer-machine
-tests alone. Bundled binaries retain their own licensing obligations.
+For each completed item, record: checklist item, release/commit, affected workflow,
+additional tools removed, setup steps automated, remaining dependencies, tested
+OS/architecture, and clean-machine evidence with Flutter installed. Verify local
+component creation/build, editing, rendering and MCP before claiming parity.
+Automated binary provisioning does not remove that binary or its license obligations.
 
 ## Minimum by workflow
 
