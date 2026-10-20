@@ -361,12 +361,20 @@ class _BrowserPageState extends State<BrowserPage>
     final results = widget.catalog
         .where(
           (s) =>
-              (category == 'All' || s.category == category) &&
+              (category == 'All' ||
+                  (category == 'New components' &&
+                      s.data['expanded'] == true) ||
+                  s.category == category) &&
               '${s.name} ${s.id} ${s.widget} ${s.description}'
                   .toLowerCase()
                   .contains(query.toLowerCase()),
         )
         .toList();
+    // Stable ordering keeps the new families discoverable without changing IDs.
+    final ordered = [
+      ...results.where((s) => s.data['expanded'] == true),
+      ...results.where((s) => s.data['expanded'] != true),
+    ];
     return ListView(
       padding: const EdgeInsets.all(28),
       children: [
@@ -398,25 +406,30 @@ class _BrowserPageState extends State<BrowserPage>
           onChanged: (v) => setState(() => query = v),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final group in [
-              'All',
-              ...widget.catalog.map((e) => e.category).toSet(),
-            ])
-              TextButton(
-                onPressed: () => setState(() => category = group),
-                style: TextButton.styleFrom(
-                  backgroundColor: category == group
-                      ? DemoPalette.surface
-                      : null,
-                  shape: const RoundedRectangleBorder(),
-                ),
-                child: Text(group),
-              ),
-          ],
+        SizedBox(
+          height: 48,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final group in [
+                  'All',
+                  'New components',
+                  ...widget.catalog.map((e) => e.category).toSet(),
+                ])
+                  TextButton(
+                    onPressed: () => setState(() => category = group),
+                    style: TextButton.styleFrom(
+                      backgroundColor: category == group
+                          ? DemoPalette.surface
+                          : null,
+                      shape: const RoundedRectangleBorder(),
+                    ),
+                    child: Text(group),
+                  ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -456,7 +469,7 @@ class _BrowserPageState extends State<BrowserPage>
               spacing: 16,
               runSpacing: 16,
               children: [
-                for (final spec in results)
+                for (final spec in ordered)
                   SizedBox(
                     width:
                         (constraints.maxWidth - (columns - 1) * 16) / columns,
@@ -477,11 +490,20 @@ class _BrowserPageState extends State<BrowserPage>
                                 child: SpecimenFrame(
                                   spec: spec,
                                   props: spec.props(spec.variants.first['id']),
-                                  progress:
-                                      (spec.id == 'video.texture' ||
-                                          spec.id ==
-                                              'video.dither-background' ||
-                                          spec.id == 'video.gif')
+                                  progress: spec.data['expanded'] == true
+                                      ? (playing
+                                            ? clock.value
+                                            : (spec.category == 'Transitions' ||
+                                                      spec.id ==
+                                                          'video.credits-roll' ||
+                                                      spec.id ==
+                                                          'video.timed-word-captions'
+                                                  ? .5
+                                                  : 1))
+                                      : (spec.id == 'video.texture' ||
+                                            spec.id ==
+                                                'video.dither-background' ||
+                                            spec.id == 'video.gif')
                                       ? clock.value
                                       : .65,
                                   programs: widget.programs,

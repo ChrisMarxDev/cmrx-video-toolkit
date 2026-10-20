@@ -1,3 +1,4 @@
+import 'package:video_components/expanded_samples.dart';
 import 'technical_specimens.dart';
 import 'demo_style.dart';
 import 'package:flutter/widgets.dart';
@@ -14,6 +15,15 @@ Widget specimen(
   bool videoControls = false,
   VideoStyle style = demoStyle,
 }) {
+  if (spec.data['expanded'] == true) {
+    return VideoThemeScope(
+      style: style,
+      child: ColoredBox(
+        color: style.background,
+        child: ExpandedSpecimen(id: spec.id, props: p, progress: progress),
+      ),
+    );
+  }
   if (isTechnical(spec))
     return technicalSpecimen(spec, p, progress, style: style);
   double number(String key) => (p[key] as num).toDouble();

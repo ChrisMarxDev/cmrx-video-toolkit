@@ -5,7 +5,7 @@ Import `package:video_components/video_components.dart`. The package lives in
 reusable layout/media widgets, deterministic motion, shader surfaces and shaders.
 There is no toolkit brand palette, font bundle or typography system.
 
-Styled widgets require an explicit `VideoStyle` from the caller. Supply all colors
+Styled widgets require a caller-owned `VideoStyle`, explicitly or through a parent scope. Supply all colors
 and text styles; client identity belongs in the consuming workspace. The browser's
 `lib/demo_style.dart` is an application-local grayscale demonstration, not a library
 export. Low-level `DitherStyle` uses black/white technical defaults and accepts
@@ -34,7 +34,7 @@ For authoring SVG assets or explanatory vector graphics, follow
 [component-authoring](../.skills/component-authoring/SKILL.md) and its focused
 reference. Use this catalog to select existing geometry and check API limits.
 
-The catalog now has 24 entries, including 12 technical entries. These are Flutter
+The catalog now has 72 entries, including 12 technical entries. These are Flutter
 widgets/custom vector painters, so the same instances work in video compositions,
 Flutter Deck slides and the browser. They have no brand palette or bundled fonts.
 SVG remains appropriate for a fixed illustration; use these widgets when labels,
@@ -112,3 +112,10 @@ invalid data instead of silently altering it.
 All styled widgets accept an optional explicit `style:` or resolve the nearest
 `VideoThemeScope`. `VideoStage` installs its resolved style for descendants. See
 [the theme contract](THEMING.md) for token roles, precedence and examples.
+
+## Titles, end cards, overlays, developer demos and more
+
+The [expanded component reference](EXPANDED.md) documents 48 additional reusable
+widgets, all registered with editable presets and constructor examples. Filter
+**New components** in the browser to view them. They use the same parent theme
+as the original components; no second style system or external runtime is needed.

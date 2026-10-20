@@ -15,3 +15,4 @@ export 'src/diagrams/diagram.dart'
         diagramEdgePoints;
 export 'src/diagrams/technical.dart';
 export 'src/charts.dart';
+export 'expanded.dart';

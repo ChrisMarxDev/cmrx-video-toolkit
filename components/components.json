@@ -1096,6 +1096,1888 @@
           "variant": "comparison"
         }
       ]
+    },
+    {
+      "id": "video.editorial-title",
+      "name": "Editorial title reveal",
+      "widget": "EditorialTitle",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "title": {
+          "type": "text",
+          "default": "Ideas deserve\na clear story.",
+          "label": "Title"
+        },
+        "kicker": {
+          "type": "text",
+          "default": "FIELD NOTES / 001",
+          "label": "Kicker"
+        },
+        "alignRight": {
+          "type": "bool",
+          "default": false,
+          "label": "Align Right"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "alignRight": true,
+            "title": "Make room\nfor the idea."
+          }
+        }
+      ],
+      "description": "Large editorial headline with a frame-derived reveal and rule.",
+      "expanded": true
+    },
+    {
+      "id": "video.episode-title",
+      "name": "Episode title card",
+      "widget": "EpisodeTitle",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "title": {
+          "type": "text",
+          "default": "Inside the process",
+          "label": "Title"
+        },
+        "episode": {
+          "type": "text",
+          "default": "EPISODE 07",
+          "label": "Episode"
+        },
+        "host": {
+          "type": "text",
+          "default": "With Alex Morgan",
+          "label": "Host"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "episode": "SEASON 02",
+            "title": "A new perspective"
+          }
+        }
+      ],
+      "description": "Episode opener with a host credit and caller-owned logo slot.",
+      "expanded": true
+    },
+    {
+      "id": "video.interview-opener",
+      "name": "Interview split opener",
+      "widget": "InterviewOpener",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "name": {
+          "type": "text",
+          "default": "Alex Morgan",
+          "label": "Name"
+        },
+        "role": {
+          "type": "text",
+          "default": "Designer & maker",
+          "label": "Role"
+        },
+        "topic": {
+          "type": "text",
+          "default": "Building with intent",
+          "label": "Topic"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "topic": "What comes next?",
+            "role": "Research lead"
+          }
+        }
+      ],
+      "description": "Split portrait and interview topic with independent editable credits.",
+      "expanded": true
+    },
+    {
+      "id": "video.word-headline",
+      "name": "Word-by-word headline",
+      "widget": "WordHeadline",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "words": {
+          "type": "text",
+          "default": "One\nidea.\nMany\npossibilities.",
+          "label": "Words"
+        },
+        "emphasis": {
+          "type": "number",
+          "default": 1,
+          "min": -1,
+          "max": 8,
+          "label": "Emphasis"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "emphasis": 2,
+            "words": "Build\nwith\nintention."
+          }
+        }
+      ],
+      "description": "Word-by-word reveal; API also accepts explicit normalized start times.",
+      "expanded": true
+    },
+    {
+      "id": "video.selection-title",
+      "name": "Selection-box title",
+      "widget": "SelectionTitle",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "title": {
+          "type": "text",
+          "default": "Select your next idea",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "title": "Designed to adapt"
+          }
+        }
+      ],
+      "description": "Selection rectangle, corner handles and moving cursor around editable type.",
+      "expanded": true
+    },
+    {
+      "id": "video.typography-specimen",
+      "name": "Typography specimen",
+      "widget": "TypographySpecimen",
+      "category": "Titles",
+      "source": "components/lib/src/expanded/titles.dart",
+      "motion": true,
+      "parameters": {
+        "sample": {
+          "type": "text",
+          "default": "Aa / 0123",
+          "label": "Sample"
+        },
+        "labelText": {
+          "type": "text",
+          "default": "TYPE SYSTEM / 01",
+          "label": "Label Text"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "sample": "Form & function",
+            "labelText": "THREE VOICES"
+          }
+        }
+      ],
+      "description": "Body, mono and caption roles compared using the inherited font tokens.",
+      "expanded": true
+    },
+    {
+      "id": "video.next-video-choices",
+      "name": "Next-video choices",
+      "widget": "NextVideoChoices",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "firstTitle": {
+          "type": "text",
+          "default": "Start with the basics",
+          "label": "First Title"
+        },
+        "secondTitle": {
+          "type": "text",
+          "default": "Go behind the scenes",
+          "label": "Second Title"
+        },
+        "action": {
+          "type": "text",
+          "default": "WATCH NEXT",
+          "label": "Action"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "action": "KEEP EXPLORING",
+            "firstTitle": "The full workflow"
+          }
+        }
+      ],
+      "description": "Two independent thumbnail and title slots for a usable end screen.",
+      "expanded": true
+    },
+    {
+      "id": "video.credits-roll",
+      "name": "Credits roll",
+      "widget": "CreditsRoll",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "credits": {
+          "type": "text",
+          "default": "Direction | Alex Morgan\nDesign | Sam Taylor\nSound | Jordan Lee\nProduction | Studio Example",
+          "label": "Credits"
+        },
+        "closing": {
+          "type": "text",
+          "default": "Thank you for watching",
+          "label": "Closing"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "credits": "Created by | Example Team\nWith support from | Our community",
+            "closing": "Until next time"
+          }
+        }
+      ],
+      "description": "Continuous clipped credit roll; progress controls the entire travel distance.",
+      "expanded": true
+    },
+    {
+      "id": "video.next-episode",
+      "name": "Next-episode teaser",
+      "widget": "NextEpisode",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "title": {
+          "type": "text",
+          "default": "The next chapter",
+          "label": "Title"
+        },
+        "episode": {
+          "type": "text",
+          "default": "UP NEXT / 08",
+          "label": "Episode"
+        },
+        "date": {
+          "type": "text",
+          "default": "Friday \u00b7 18:00",
+          "label": "Date"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "title": "Meet the makers",
+            "date": "Coming soon"
+          }
+        }
+      ],
+      "description": "Artwork teaser with separate episode and release-date fields.",
+      "expanded": true
+    },
+    {
+      "id": "video.subscribe-interaction",
+      "name": "Subscribe interaction",
+      "widget": "SubscribeInteraction",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "labelText": {
+          "type": "text",
+          "default": "Subscribe",
+          "label": "Label Text"
+        },
+        "confirmedLabel": {
+          "type": "text",
+          "default": "Subscribed",
+          "label": "Confirmed Label"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "labelText": "Follow along",
+            "confirmedLabel": "Following"
+          }
+        }
+      ],
+      "description": "Deterministic cursor approach, pressed button and confirmed state. Visual only.",
+      "expanded": true
+    },
+    {
+      "id": "video.product-sign-off",
+      "name": "Product sign-off",
+      "widget": "ProductSignOff",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "headline": {
+          "type": "text",
+          "default": "Make something\nworth sharing.",
+          "label": "Headline"
+        },
+        "url": {
+          "type": "text",
+          "default": "example.com",
+          "label": "Url"
+        },
+        "availability": {
+          "type": "text",
+          "default": "AVAILABLE NOW",
+          "label": "Availability"
+        },
+        "action": {
+          "type": "text",
+          "default": "Explore the toolkit",
+          "label": "Action"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "headline": "Your next chapter.",
+            "action": "Learn more"
+          }
+        }
+      ],
+      "description": "Product slot, availability, URL and call to action.",
+      "expanded": true
+    },
+    {
+      "id": "video.event-closing",
+      "name": "Event closing card",
+      "widget": "EventClosing",
+      "category": "End cards",
+      "source": "components/lib/src/expanded/endings.dart",
+      "motion": true,
+      "parameters": {
+        "thanks": {
+          "type": "text",
+          "default": "See you\nnext time.",
+          "label": "Thanks"
+        },
+        "date": {
+          "type": "text",
+          "default": "24 October \u00b7 18:30",
+          "label": "Date"
+        },
+        "venue": {
+          "type": "text",
+          "default": "Example Hall / Online",
+          "label": "Venue"
+        },
+        "ticket": {
+          "type": "text",
+          "default": "SAVE YOUR SEAT",
+          "label": "Ticket"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "thanks": "Thanks for joining.",
+            "ticket": "SEE YOU THERE"
+          }
+        }
+      ],
+      "description": "Closing statement above a date, venue and ticket stub.",
+      "expanded": true
+    },
+    {
+      "id": "video.portrait-lower-third",
+      "name": "Portrait lower third",
+      "widget": "PortraitLowerThird",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "name": {
+          "type": "text",
+          "default": "Alex Morgan",
+          "label": "Name"
+        },
+        "role": {
+          "type": "text",
+          "default": "Design researcher",
+          "label": "Role"
+        },
+        "alignRight": {
+          "type": "bool",
+          "default": false,
+          "label": "Align Right"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "alignRight": true,
+            "name": "Sam Taylor",
+            "role": "Engineering lead"
+          }
+        }
+      ],
+      "description": "Portrait and identity overlay anchored to either lower corner.",
+      "expanded": true
+    },
+    {
+      "id": "video.rule-lower-third",
+      "name": "Rule-only lower third",
+      "widget": "RuleLowerThird",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "name": {
+          "type": "text",
+          "default": "Alex Morgan",
+          "label": "Name"
+        },
+        "role": {
+          "type": "text",
+          "default": "Independent designer",
+          "label": "Role"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "name": "Jordan Lee",
+            "role": "Producer"
+          }
+        }
+      ],
+      "description": "Quiet lower third with an animated rule and no backplate.",
+      "expanded": true
+    },
+    {
+      "id": "video.profile-chip",
+      "name": "Profile chip",
+      "widget": "ProfileChip",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "name": {
+          "type": "text",
+          "default": "Alex Morgan",
+          "label": "Name"
+        },
+        "handle": {
+          "type": "text",
+          "default": "@alex.example",
+          "label": "Handle"
+        },
+        "badge": {
+          "type": "text",
+          "default": "GUEST",
+          "label": "Badge"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "badge": "",
+            "handle": "example.com/alex"
+          }
+        }
+      ],
+      "description": "Compact avatar, name, handle and optional badge.",
+      "expanded": true
+    },
+    {
+      "id": "video.timed-word-captions",
+      "name": "Timed word captions",
+      "widget": "TimedWordCaptions",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "words": {
+          "type": "text",
+          "default": "Every | 0 | 1\nword | 1 | 2\nhas | 2 | 3\na | 3 | 4\nmoment. | 4 | 5",
+          "label": "Words"
+        },
+        "duration": {
+          "type": "number",
+          "default": 5,
+          "min": 1,
+          "max": 20,
+          "label": "Duration"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "words": "Build | 0 | 1\nwith | 1.2 | 2\ncare. | 2 | 4",
+            "duration": 4
+          }
+        }
+      ],
+      "description": "Exact half-open timestamp intervals highlight only the currently spoken word.",
+      "expanded": true
+    },
+    {
+      "id": "video.chapter-ticket",
+      "name": "Chapter ticket",
+      "widget": "ChapterTicket",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "chapter": {
+          "type": "text",
+          "default": "03",
+          "label": "Chapter"
+        },
+        "title": {
+          "type": "text",
+          "default": "From sketch to screen",
+          "label": "Title"
+        },
+        "metadata": {
+          "type": "text",
+          "default": "PART THREE / THE PROCESS",
+          "label": "Metadata"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "chapter": "01",
+            "title": "Where we begin"
+          }
+        }
+      ],
+      "description": "Numbered chapter divider with a separate metadata line.",
+      "expanded": true
+    },
+    {
+      "id": "video.information-rows",
+      "name": "Stacked information rows",
+      "widget": "InformationRows",
+      "category": "Presenter overlays",
+      "source": "components/lib/src/expanded/overlays.dart",
+      "motion": true,
+      "parameters": {
+        "rows": {
+          "type": "text",
+          "default": "WHEN | Friday, 18:00 | \u25f7\nWHERE | Example Studio | \u2197\nFORMAT | Live workshop | +",
+          "label": "Rows"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "rows": "TOPIC | Design systems | +\nDURATION | 30 minutes | \u25f7"
+          }
+        }
+      ],
+      "description": "One to three staggered label, value and symbol rows.",
+      "expanded": true
+    },
+    {
+      "id": "video.terminal-playback",
+      "name": "Terminal playback",
+      "widget": "TerminalPlayback",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": true,
+      "parameters": {
+        "lines": {
+          "type": "text",
+          "default": "$ toolkit build\nResolving components\u2026\n48 widgets loaded\n\u2713 Ready to render",
+          "label": "Lines"
+        },
+        "title": {
+          "type": "text",
+          "default": "BUILD / TERMINAL",
+          "label": "Title"
+        },
+        "cursor": {
+          "type": "bool",
+          "default": true,
+          "label": "Cursor"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "lines": "$ toolkit test\nAll checks passed.",
+            "cursor": false
+          }
+        }
+      ],
+      "description": "Character-by-character terminal playback with a deterministic blinking cursor.",
+      "expanded": true
+    },
+    {
+      "id": "video.code-diff",
+      "name": "Code diff",
+      "widget": "CodeDiff",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": true,
+      "parameters": {
+        "before": {
+          "type": "text",
+          "default": "final radius = 0;\nfinal theme = light;\nrender(scene);",
+          "label": "Before"
+        },
+        "after": {
+          "type": "text",
+          "default": "final radius = 16;\nfinal theme = inherited;\nrender(scene);",
+          "label": "After"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "after": "final radius = 24;\nfinal theme = custom;\nrender(scene);"
+          }
+        }
+      ],
+      "description": "Aligned before/after code, changed-line backplates and explicit +/\u2212 markers.",
+      "expanded": true
+    },
+    {
+      "id": "video.request-response",
+      "name": "Request and response",
+      "widget": "RequestResponse",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": true,
+      "parameters": {
+        "method": {
+          "type": "choice",
+          "default": "GET",
+          "options": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "label": "Method"
+        },
+        "endpoint": {
+          "type": "text",
+          "default": "/api/components",
+          "label": "Endpoint"
+        },
+        "status": {
+          "type": "text",
+          "default": "200 OK",
+          "label": "Status"
+        },
+        "payload": {
+          "type": "text",
+          "default": "{\n  \"count\": 48,\n  \"theme\": \"inherited\"\n}",
+          "label": "Payload"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "method": "POST",
+            "endpoint": "/api/render",
+            "status": "202 Accepted",
+            "payload": "{ \"job\": \"queued\" }"
+          }
+        }
+      ],
+      "description": "Request bar, transfer indicator and delayed response payload.",
+      "expanded": true
+    },
+    {
+      "id": "video.code-walkthrough",
+      "name": "Code walkthrough",
+      "widget": "CodeWalkthrough",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": true,
+      "parameters": {
+        "lines": {
+          "type": "text",
+          "default": "final theme = VideoStyle(\n  background: canvas,\n  foreground: ink,\n  surface: panel,\n  accent: highlight,\n);\nrender(theme);",
+          "label": "Lines"
+        },
+        "note": {
+          "type": "text",
+          "default": "One parent controls the whole composition.",
+          "label": "Note"
+        },
+        "focusStart": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 6,
+          "label": "Focus Start"
+        },
+        "focusEnd": {
+          "type": "number",
+          "default": 4,
+          "min": 0,
+          "max": 6,
+          "label": "Focus End"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "focusStart": 6,
+            "focusEnd": 6,
+            "note": "Render with inherited style."
+          }
+        }
+      ],
+      "description": "Numbered code viewport, focused line range and explanation; progress pans to focus.",
+      "expanded": true
+    },
+    {
+      "id": "video.pipeline-status",
+      "name": "Pipeline status",
+      "widget": "PipelineStatus",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": true,
+      "parameters": {
+        "stages": {
+          "type": "text",
+          "default": "Load | done | 00:01\nCompose | done | 00:02\nRender | running | 00:03\nExport | waiting | \u2014",
+          "label": "Stages"
+        },
+        "log": {
+          "type": "text",
+          "default": "Rendering frame 120 / 300",
+          "label": "Log"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "stages": "Load | done | 00:01\nRender | failed | 00:02\nExport | waiting | \u2014",
+            "log": "Missing asset: supply an image before rendering."
+          }
+        }
+      ],
+      "description": "Explicit waiting/running/done/failed states with timestamps and a log line.",
+      "expanded": true
+    },
+    {
+      "id": "video.specification-table",
+      "name": "Specification table",
+      "widget": "SpecificationTable",
+      "category": "Developer demos",
+      "source": "components/lib/src/expanded/developer.dart",
+      "motion": false,
+      "parameters": {
+        "rows": {
+          "type": "text",
+          "default": "Resolution | 1920 \u00d7 1080 | px\nFrame rate | 30 | fps\nDuration | 10 | sec\nComponents | 48 | items",
+          "label": "Rows"
+        },
+        "title": {
+          "type": "text",
+          "default": "Output specifications",
+          "label": "Title"
+        },
+        "activeRow": {
+          "type": "number",
+          "default": 1,
+          "min": -1,
+          "max": 3,
+          "label": "Active Row"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "activeRow": 0,
+            "title": "Delivery format"
+          }
+        }
+      ],
+      "description": "Label, value and unit columns with optional active-row emphasis.",
+      "expanded": true
+    },
+    {
+      "id": "video.screenshot-rail",
+      "name": "Screenshot rail",
+      "widget": "ScreenshotRail",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "position": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 3,
+          "label": "Position"
+        },
+        "perspective": {
+          "type": "number",
+          "default": 0.15,
+          "min": -0.5,
+          "max": 0.5,
+          "label": "Perspective"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "position": 3,
+            "perspective": -0.2
+          }
+        }
+      ],
+      "description": "Horizontally traversed screenshot rail with caller-controlled perspective.",
+      "expanded": true
+    },
+    {
+      "id": "video.screenshot-stack",
+      "name": "Screenshot stack",
+      "widget": "ScreenshotStack",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "activeIndex": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 3,
+          "label": "Active Index"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "activeIndex": 3
+          }
+        }
+      ],
+      "description": "Layered screenshots with an explicit foreground image and reversible stagger.",
+      "expanded": true
+    },
+    {
+      "id": "video.screenshot-fan",
+      "name": "Fan of screenshots",
+      "widget": "ScreenshotFan",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "spread": {
+          "type": "number",
+          "default": 0.25,
+          "min": 0,
+          "max": 0.6,
+          "label": "Spread"
+        },
+        "focus": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 3,
+          "label": "Focus"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "spread": 0.45,
+            "focus": 2
+          }
+        }
+      ],
+      "description": "Rotated screenshot fan with an independent focused image.",
+      "expanded": true
+    },
+    {
+      "id": "video.device-screen-swap",
+      "name": "Device screen swap",
+      "widget": "DeviceScreenSwap",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "portrait": {
+          "type": "bool",
+          "default": true,
+          "label": "Portrait"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "portrait": false
+          }
+        }
+      ],
+      "description": "Generic portrait or landscape device frame with a scrubbed screen dissolve.",
+      "expanded": true
+    },
+    {
+      "id": "video.editorial-image-grid",
+      "name": "Editorial image grid",
+      "widget": "EditorialImageGrid",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "activeTile": {
+          "type": "number",
+          "default": 0,
+          "min": -1,
+          "max": 3,
+          "label": "Active Tile"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "activeTile": 2
+          }
+        }
+      ],
+      "description": "Asymmetric hero-and-supporting-image grid with staggered entries.",
+      "expanded": true
+    },
+    {
+      "id": "video.focus-carousel",
+      "name": "Focus carousel",
+      "widget": "FocusCarousel",
+      "category": "Media layouts",
+      "source": "components/lib/src/expanded/media_layouts.dart",
+      "motion": true,
+      "parameters": {
+        "position": {
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 3,
+          "label": "Position"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "position": 3
+          }
+        }
+      ],
+      "description": "Continuous carousel position controls depth scale, opacity and stacking order.",
+      "expanded": true
+    },
+    {
+      "id": "video.waterfall-chart",
+      "name": "Waterfall chart",
+      "widget": "WaterfallChart",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "data": {
+          "type": "text",
+          "default": "Start | 40\nAdded | 30\nLost | -15\nGrowth | 25",
+          "label": "Data"
+        },
+        "baseline": {
+          "type": "number",
+          "default": 0,
+          "min": -100,
+          "max": 100,
+          "label": "Baseline"
+        },
+        "title": {
+          "type": "text",
+          "default": "How the total changed",
+          "label": "Title"
+        },
+        "unitLabel": {
+          "type": "text",
+          "default": "Illustrative data \u00b7 units",
+          "label": "Unit Label"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "data": "Opening | 60\nCosts | -35\nIncome | 20",
+            "title": "Running balance"
+          }
+        }
+      ],
+      "description": "Signed deltas with cumulative positions, connectors and a zero baseline.",
+      "expanded": true
+    },
+    {
+      "id": "video.conversion-funnel",
+      "name": "Conversion funnel",
+      "widget": "ConversionFunnel",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "stages": {
+          "type": "text",
+          "default": "Visits | 1000\nStarted | 650\nCompleted | 380\nReturned | 160",
+          "label": "Stages"
+        },
+        "title": {
+          "type": "text",
+          "default": "A journey in four steps",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "stages": "Invited | 300\nRegistered | 180\nAttended | 120",
+            "title": "Event participation"
+          }
+        }
+      ],
+      "description": "Proportional stage widths, absolute counts and per-stage conversion rates.",
+      "expanded": true
+    },
+    {
+      "id": "video.calendar-heatmap",
+      "name": "Calendar heatmap",
+      "widget": "CalendarHeatmap",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "values": {
+          "type": "text",
+          "default": "2026-01-05 | 3\n2026-01-06 | 8\n2026-01-08 | 4\n2026-01-12 | 10\n2026-01-14 | 6\n2026-01-19 | 9\n2026-02-03 | 7",
+          "label": "Values"
+        },
+        "start": {
+          "type": "text",
+          "default": "2026-01-05",
+          "label": "Start"
+        },
+        "weeks": {
+          "type": "number",
+          "default": 8,
+          "min": 1,
+          "max": 24,
+          "label": "Weeks"
+        },
+        "title": {
+          "type": "text",
+          "default": "Activity by day",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "weeks": 4,
+            "title": "Four-week activity"
+          }
+        }
+      ],
+      "description": "Date-addressed daily cells with a shared normalized intensity scale.",
+      "expanded": true
+    },
+    {
+      "id": "video.radar-comparison",
+      "name": "Radar comparison",
+      "widget": "RadarComparison",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "axes": {
+          "type": "text",
+          "default": "Speed\nClarity\nReach\nQuality\nCost",
+          "label": "Axes"
+        },
+        "series": {
+          "type": "text",
+          "default": "Before | 0.4,0.8,0.5,0.6,0.3\nAfter | 0.8,0.6,0.7,0.9,0.7",
+          "label": "Series"
+        },
+        "title": {
+          "type": "text",
+          "default": "Two profiles, five dimensions",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "series": "Profile A | 0.9,0.3,0.8,0.4,0.7",
+            "title": "Capability profile"
+          }
+        }
+      ],
+      "description": "Normalized radial polygons on labeled axes with multiple series.",
+      "expanded": true
+    },
+    {
+      "id": "video.scatter-plot",
+      "name": "Scatter plot",
+      "widget": "ScatterPlot",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "points": {
+          "type": "text",
+          "default": "A | 20 | 35\nB | 45 | 60\nC | 75 | 80\nD | 60 | 25",
+          "label": "Points"
+        },
+        "xLabel": {
+          "type": "text",
+          "default": "Effort",
+          "label": "X Label"
+        },
+        "yLabel": {
+          "type": "text",
+          "default": "Impact",
+          "label": "Y Label"
+        },
+        "title": {
+          "type": "text",
+          "default": "Where to focus",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "points": "One | 10 | 80\nTwo | 80 | 20\nThree | 50 | 50",
+            "title": "Three approaches"
+          }
+        }
+      ],
+      "description": "Labeled numeric coordinates with a visible grid and numeric axis ticks.",
+      "expanded": true
+    },
+    {
+      "id": "video.target-gauge",
+      "name": "Target gauge",
+      "widget": "TargetGauge",
+      "category": "Data graphics",
+      "source": "components/lib/src/expanded/data.dart",
+      "motion": true,
+      "parameters": {
+        "value": {
+          "type": "number",
+          "default": 72,
+          "min": 0,
+          "max": 100,
+          "label": "Value"
+        },
+        "target": {
+          "type": "number",
+          "default": 85,
+          "min": 0,
+          "max": 100,
+          "label": "Target"
+        },
+        "unitLabel": {
+          "type": "text",
+          "default": "%",
+          "label": "Unit Label"
+        },
+        "title": {
+          "type": "text",
+          "default": "Progress toward the goal",
+          "label": "Title"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "value": 95,
+            "target": 80,
+            "title": "Target exceeded"
+          }
+        }
+      ],
+      "description": "Semicircular gauge, animated value and an independent target marker.",
+      "expanded": true
+    },
+    {
+      "id": "video.stripe-wipe",
+      "name": "Directional stripe wipe",
+      "widget": "StripeWipe",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "count": {
+          "type": "number",
+          "default": 8,
+          "min": 1,
+          "max": 20,
+          "label": "Count"
+        },
+        "direction": {
+          "type": "choice",
+          "default": "right",
+          "options": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "label": "Direction"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "direction": "up",
+            "count": 12
+          }
+        }
+      ],
+      "description": "Staggered directional strips reveal one real child over another.",
+      "expanded": true
+    },
+    {
+      "id": "video.dot-iris",
+      "name": "Dot iris",
+      "widget": "DotIris",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "columns": {
+          "type": "number",
+          "default": 12,
+          "min": 2,
+          "max": 24,
+          "label": "Columns"
+        },
+        "rows": {
+          "type": "number",
+          "default": 8,
+          "min": 2,
+          "max": 16,
+          "label": "Rows"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "columns": 6,
+            "rows": 4
+          }
+        }
+      ],
+      "description": "Expanding circles propagate from a configurable center to cover the frame.",
+      "expanded": true
+    },
+    {
+      "id": "video.tile-wave",
+      "name": "Tile wave transition",
+      "widget": "TileWave",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "columns": {
+          "type": "number",
+          "default": 8,
+          "min": 2,
+          "max": 20,
+          "label": "Columns"
+        },
+        "rows": {
+          "type": "number",
+          "default": 5,
+          "min": 2,
+          "max": 12,
+          "label": "Rows"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "columns": 4,
+            "rows": 8
+          }
+        }
+      ],
+      "description": "Diagonal staggered tile growth clips the destination scene.",
+      "expanded": true
+    },
+    {
+      "id": "video.alternating-panels",
+      "name": "Alternating panel wipe",
+      "widget": "AlternatingPanels",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "count": {
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 20,
+          "label": "Count"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "count": 12
+          }
+        }
+      ],
+      "description": "Adjacent vertical panels enter from alternating top and bottom edges.",
+      "expanded": true
+    },
+    {
+      "id": "video.frame-push-through",
+      "name": "Frame push-through",
+      "widget": "FramePushThrough",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "reverse": {
+          "type": "bool",
+          "label": "Reverse scenes",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "reverse": true
+          }
+        }
+      ],
+      "description": "A framed destination grows from the center to replace the source scene.",
+      "expanded": true
+    },
+    {
+      "id": "video.letterbox-reveal",
+      "name": "Letterbox reveal",
+      "widget": "LetterboxReveal",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "parameters": {
+        "reverse": {
+          "type": "bool",
+          "label": "Reverse scenes",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "reverse": true
+          }
+        }
+      ],
+      "description": "A central horizontal aperture opens vertically onto the destination scene.",
+      "expanded": true
+    },
+    {
+      "id": "video.quote-card",
+      "name": "Attributed quote card",
+      "widget": "QuoteCard",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "quote": {
+          "type": "text",
+          "default": "A useful system makes the next decision easier.",
+          "label": "Quote"
+        },
+        "attribution": {
+          "type": "text",
+          "default": "Alex Morgan \u00b7 Illustrative quote",
+          "label": "Attribution"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "quote": "Start with the story. Let the design support it.",
+            "attribution": "Sam Taylor \u00b7 Illustrative quote"
+          }
+        }
+      ],
+      "description": "Attributed quotation with an optional portrait slot; supply verified quotations.",
+      "expanded": true
+    },
+    {
+      "id": "video.testimonial-stack",
+      "name": "Testimonial stack",
+      "widget": "TestimonialStack",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "quotes": {
+          "type": "text",
+          "default": "Clear ideas, thoughtfully presented. | Alex \u00b7 Demo\nA useful starting point for our workflow. | Sam \u00b7 Demo\nEasy to adapt to a new story. | Jordan \u00b7 Demo",
+          "label": "Quotes"
+        },
+        "activeIndex": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 2,
+          "label": "Active Index"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "activeIndex": 2
+          }
+        }
+      ],
+      "description": "Indexed quotation cards with visible layered depth; sample claims are fictional.",
+      "expanded": true
+    },
+    {
+      "id": "video.countdown-counter",
+      "name": "Countdown counter",
+      "widget": "CountdownCounter",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "start": {
+          "type": "number",
+          "default": 10,
+          "min": 0,
+          "max": 3600,
+          "label": "Start"
+        },
+        "end": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 3600,
+          "label": "End"
+        },
+        "labelText": {
+          "type": "text",
+          "default": "STARTING IN",
+          "label": "Label Text"
+        },
+        "pad": {
+          "type": "number",
+          "default": 2,
+          "min": 1,
+          "max": 6,
+          "label": "Pad"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "start": 0,
+            "end": 100,
+            "labelText": "COUNTING UP",
+            "pad": 3
+          }
+        }
+      ],
+      "description": "Integer counter derived solely from progress, with configurable direction and padding.",
+      "expanded": true
+    },
+    {
+      "id": "video.metric-comparison",
+      "name": "Metric comparison",
+      "widget": "MetricComparison",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "first": {
+          "type": "number",
+          "default": 32,
+          "min": -1000,
+          "max": 1000,
+          "label": "First"
+        },
+        "second": {
+          "type": "number",
+          "default": 78,
+          "min": -1000,
+          "max": 1000,
+          "label": "Second"
+        },
+        "firstLabel": {
+          "type": "text",
+          "default": "Before",
+          "label": "First Label"
+        },
+        "secondLabel": {
+          "type": "text",
+          "default": "After",
+          "label": "Second Label"
+        },
+        "unitLabel": {
+          "type": "text",
+          "default": "%",
+          "label": "Unit Label"
+        },
+        "source": {
+          "type": "text",
+          "default": "Illustrative measurement",
+          "label": "Source"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "first": 120,
+            "second": 45,
+            "unitLabel": " ms",
+            "firstLabel": "Previous",
+            "secondLabel": "Current"
+          }
+        }
+      ],
+      "description": "Two independently labeled values, a signed difference and a source credit.",
+      "expanded": true
+    },
+    {
+      "id": "video.route-trace",
+      "name": "Route trace",
+      "widget": "RouteTrace",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "points": {
+          "type": "text",
+          "default": "0.15 | 0.75\n0.3 | 0.3\n0.65 | 0.5\n0.85 | 0.2",
+          "label": "Points"
+        },
+        "labels": {
+          "type": "text",
+          "default": "Start\nStop A\nStop B\nFinish",
+          "label": "Labels"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "points": "0.1 | 0.2\n0.5 | 0.8\n0.9 | 0.4",
+            "labels": "Origin\nVia\nDestination"
+          }
+        }
+      ],
+      "description": "Arc-length route reveal on a caller-owned map, with normalized waypoints.",
+      "expanded": true
+    },
+    {
+      "id": "video.location-card",
+      "name": "Location card",
+      "widget": "LocationCard",
+      "category": "Social and spatial",
+      "source": "components/lib/src/expanded/social.dart",
+      "motion": true,
+      "parameters": {
+        "address": {
+          "type": "text",
+          "default": "42 Example Street",
+          "label": "Address"
+        },
+        "details": {
+          "type": "text",
+          "default": "Workshop \u00b7 Doors open 18:00",
+          "label": "Details"
+        },
+        "pinX": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "label": "Pin X"
+        },
+        "pinY": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "label": "Pin Y"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "alternate",
+          "props": {
+            "address": "The Riverside Studio",
+            "pinX": 0.7,
+            "pinY": 0.3
+          }
+        }
+      ],
+      "description": "Caller-owned map slot with a normalized pin, address and event details.",
+      "expanded": true
     }
   ]
 }

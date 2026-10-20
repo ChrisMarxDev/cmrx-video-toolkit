@@ -1,3 +1,4 @@
+import 'package:video_components/expanded_samples.dart';
 import 'technical_specimens.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -48,6 +49,7 @@ String flowReference(
 String literal(Object? value) => jsonEncode(value).replaceAll(r'$', r'\$');
 
 String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
+  if (spec.data['expanded'] == true) return expandedExample(spec.id, p);
   if (isTechnical(spec)) return technicalDartExample(spec, p);
   final text = literal(p['text']);
   return switch (spec.id) {
@@ -61,8 +63,7 @@ String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
       'VideoStage(theme: VideoTheme.${p['theme']}, child: content)',
     'video.block' =>
       'VideoBlock(active: ${p['active']}, padding: ${p['padding']},\n  child: Text($text))',
-    'video.caption' =>
-      'VideoCaption($text, fontSize: ${p['fontSize']})',
+    'video.caption' => 'VideoCaption($text, fontSize: ${p['fontSize']})',
     'video.code' =>
       'VideoCode(lines: ${literal((p['text'] as String).split('\n'))},\n  focusLine: ${effectiveFocus(p)})',
     'video.layers' =>
@@ -71,7 +72,8 @@ String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
       'VideoTexture(programs: programs, seconds: outputSeconds,\n  animated: ${p['animated']}, strong: ${p['strong']}, accentPalette: ${p['accentPalette']})',
     'video.dither-background' =>
       'VideoDitherBackground(programs: programs, seconds: outputSeconds,\n  speed: ${p['speed']}, pixelSize: ${p['pixelSize']}, accentPalette: ${p['accentPalette']}, child: content)',
-    'video.type' => 'Text($text, style: VideoThemeScope.of(context).${p['role']})',
+    'video.type' =>
+      'Text($text, style: VideoThemeScope.of(context).${p['role']})',
     'video.reveal' =>
       'Reveal(progress: progress, child: VideoBlock(child: Text($text)))',
     _ => throw StateError('Missing example: ${spec.id}'),
