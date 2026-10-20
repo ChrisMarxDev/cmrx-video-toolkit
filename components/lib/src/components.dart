@@ -70,9 +70,14 @@ class VideoBlock extends StatelessWidget {
         borderRadius: BorderRadius.circular(style.radius),
       ),
       child: DefaultTextStyle(
-        style: style.body.copyWith(color: style.foreground),
+        style: style.body.copyWith(
+          color: active ? style.onAccent : style.foreground,
+        ),
         child: IconTheme(
-          data: IconThemeData(color: style.foreground, size: 32),
+          data: IconThemeData(
+            color: active ? style.onAccent : style.foreground,
+            size: 32,
+          ),
           child: child,
         ),
       ),
@@ -142,7 +147,7 @@ class VideoCode extends StatelessWidget {
                   lines[i],
                   style: style.mono.copyWith(
                     color: i == focusLine
-                        ? style.foreground
+                        ? style.onAccent
                         : style.darkForeground,
                   ),
                 ),

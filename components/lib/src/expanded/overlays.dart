@@ -121,7 +121,12 @@ class ProfileChip extends StatelessWidget {
                 ),
               ),
               if (badge.isNotEmpty)
-                panel(s, label(s, badge, size: 14), accent: true, padding: 10),
+                panel(
+                  s,
+                  label(s, badge, size: 14, color: s.onAccent),
+                  accent: true,
+                  padding: 10,
+                ),
             ],
           ),
         ),
@@ -183,7 +188,14 @@ class TimedWordCaptions extends StatelessWidget {
                   color: seconds >= w.start && seconds < w.end
                       ? s.accent
                       : null,
-                  child: label(s, w.text, size: 36),
+                  child: label(
+                    s,
+                    w.text,
+                    size: 36,
+                    color: seconds >= w.start && seconds < w.end
+                        ? s.onAccent
+                        : s.foreground,
+                  ),
                 ),
             ],
           ),

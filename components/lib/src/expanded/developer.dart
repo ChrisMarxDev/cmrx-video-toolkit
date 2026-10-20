@@ -128,9 +128,11 @@ class CodeDiff extends StatelessWidget {
                                         mono: true,
                                         size: 17,
                                         lines: 1,
-                                        color: side == 1 && unit(progress) < .5
-                                            ? s.muted
-                                            : s.foreground,
+                                        color: changed && side == 1
+                                            ? s.onAccent
+                                            : (side == 1 && unit(progress) < .5
+                                                  ? s.muted
+                                                  : s.foreground),
                                       ),
                                     );
                                   },
@@ -173,7 +175,12 @@ class RequestResponse extends StatelessWidget {
           s,
           Row(
             children: [
-              panel(s, label(s, method, mono: true), accent: true, padding: 10),
+              panel(
+                s,
+                label(s, method, mono: true, color: s.onAccent),
+                accent: true,
+                padding: 10,
+              ),
               SizedBox(width: s.spacing),
               Expanded(child: label(s, endpoint, mono: true, size: 24)),
             ],
@@ -252,6 +259,9 @@ class CodeWalkthrough extends StatelessWidget {
                       child: label(
                         s,
                         '${(i + 1).toString().padLeft(2)}  ${lines[i]}',
+                        color: i >= focusStart && i <= focusEnd
+                            ? s.onAccent
+                            : s.foreground,
                         mono: true,
                         size: 18,
                         lines: 1,
@@ -404,11 +414,19 @@ class SpecificationTable extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Expanded(child: label(s, rows[i].label, size: 22)),
+                          Expanded(
+                            child: label(
+                              s,
+                              rows[i].label,
+                              size: 22,
+                              color: i == activeRow ? s.onAccent : s.foreground,
+                            ),
+                          ),
                           Expanded(
                             child: label(
                               s,
                               rows[i].value,
+                              color: i == activeRow ? s.onAccent : s.foreground,
                               mono: true,
                               size: 22,
                               align: TextAlign.right,
@@ -419,6 +437,7 @@ class SpecificationTable extends StatelessWidget {
                             child: label(
                               s,
                               rows[i].unit,
+                              color: i == activeRow ? s.onAccent : s.foreground,
                               mono: true,
                               size: 14,
                               align: TextAlign.right,

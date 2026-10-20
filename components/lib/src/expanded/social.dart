@@ -190,11 +190,20 @@ class MetricComparison extends StatelessWidget {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            label(s, item.$2, mono: true),
+                            label(
+                              s,
+                              item.$2,
+                              mono: true,
+                              color: item.$2 == secondLabel
+                                  ? s.onAccent
+                                  : s.foreground,
+                            ),
                             gap(s),
                             FittedBox(
                               child: heading(
-                                s,
+                                item.$2 == secondLabel
+                                    ? s.copyWith(foreground: s.onAccent)
+                                    : s,
                                 '${(item.$1 * unit(progress)).toStringAsFixed(0)}$unitLabel',
                                 size: 72,
                                 lines: 1,

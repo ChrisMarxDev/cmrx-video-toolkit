@@ -16,10 +16,12 @@ class VideoStyle {
     this.borderWidth = 1.5,
     this.radius = 0,
     this.spacing = 20,
+    Color? onAccent,
     Color? muted,
     Color? rule,
     Color? darkMuted,
-  }) : _muted = muted,
+  }) : _onAccent = onAccent,
+       _muted = muted,
        _rule = rule,
        _darkMuted = darkMuted,
        assert(borderWidth >= 0 && borderWidth < double.infinity),
@@ -32,7 +34,10 @@ class VideoStyle {
       darkBackground,
       darkForeground;
   final TextStyle body, mono, caption;
-  final Color? _muted, _rule, _darkMuted;
+  final Color? _onAccent, _muted, _rule, _darkMuted;
+
+  /// Text and icons on accent fills; defaults to foreground for compatibility.
+  Color get onAccent => _onAccent ?? foreground;
   Color get muted => _muted ?? foreground.withValues(alpha: .65);
   Color get rule => _rule ?? foreground.withValues(alpha: .25);
   Color get darkMuted => _darkMuted ?? darkForeground.withValues(alpha: .65);
@@ -50,6 +55,7 @@ class VideoStyle {
     double? borderWidth,
     double? radius,
     double? spacing,
+    Color? onAccent,
     Color? muted,
     Color? rule,
     Color? darkMuted,
@@ -66,6 +72,7 @@ class VideoStyle {
     borderWidth: borderWidth ?? this.borderWidth,
     radius: radius ?? this.radius,
     spacing: spacing ?? this.spacing,
+    onAccent: onAccent ?? _onAccent,
     muted: muted ?? _muted,
     rule: rule ?? _rule,
     darkMuted: darkMuted ?? _darkMuted,

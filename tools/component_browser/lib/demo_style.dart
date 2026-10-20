@@ -27,6 +27,7 @@ const demoStyle = VideoStyle(
   foreground: DemoPalette.ink,
   surface: DemoPalette.surface,
   accent: DemoPalette.accent,
+  onAccent: DemoPalette.white,
   darkBackground: DemoPalette.ink,
   darkForeground: DemoPalette.white,
   body: DemoType.body,

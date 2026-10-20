@@ -26,7 +26,7 @@ a descriptive error. Public components never silently select a brand. Existing
 explicit-style calls remain valid. Fonts must be supplied/preloaded by the host.
 `body`, `mono` and `caption` accept full Flutter `TextStyle` values: family, weight,
 size, line height, letter spacing and decoration. Palette roles include optional
-`muted`, `rule` and `darkMuted`, otherwise derived from the supplied foregrounds.
+`onAccent`, `muted`, `rule` and `darkMuted`, otherwise derived from the supplied foregrounds.
 
 Use `style.copyWith(...)` and a nested scope for local variations. Replacing the
 parent style rebuilds dependent widgets, including const children and painters.
@@ -54,3 +54,16 @@ The component browser's Original, Rounded and Editorial menu applies example tok
 sets to specimens. Those presets live in the demo app, not the public library.
 New candidate designs are not registered until their real constructors, controls,
 variants and tests exist. The current catalogue is an implementation inventory.
+
+## Content on accent surfaces
+
+Set `onAccent` for text and icons painted on `accent` fills (the video equivalent
+of UI `onPrimary`). For example, use `accent: Color(0xFF0C66E4)` with
+`onAccent: Color(0xFFFFFFFF)` for blue surfaces with white labels. It propagates
+through parent themes and `copyWith`, including highlighted code/captions, badges,
+active blocks, table cells and diagram nodes. Normal surfaces use `foreground`.
+
+For compatibility, omitting `onAccent` uses `foreground`, preserving existing
+light-accent themes. When changing an accent palette, supply its matching content
+color too. The browser's blue preset uses white; its light yellow and peach
+alternatives use dark text. Media content is not recolored.

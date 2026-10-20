@@ -209,7 +209,7 @@ class TechnicalNode extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: style.body.copyWith(
-                color: style.foreground,
+                color: active ? style.onAccent : style.foreground,
                 decoration: TextDecoration.none,
               ),
               maxLines: 3,
@@ -233,7 +233,9 @@ class _NodePainter extends CustomPainter {
     final path = Path();
     switch (shape) {
       case DiagramShape.process:
-        path.addRRect(RRect.fromRectAndRadius(r, Radius.circular(style.radius)));
+        path.addRRect(
+          RRect.fromRectAndRadius(r, Radius.circular(style.radius)),
+        );
       case DiagramShape.terminal:
         path.addRRect(
           RRect.fromRectAndRadius(r, Radius.circular(r.height / 2)),

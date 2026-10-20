@@ -63,7 +63,11 @@ class EpisodeTitle extends StatelessWidget {
         children: [
           Row(
             children: [
-              panel(s, label(s, episode, mono: true), accent: true),
+              panel(
+                s,
+                label(s, episode, mono: true, color: s.onAccent),
+                accent: true,
+              ),
               const Spacer(),
               if (logo != null) SizedBox(width: 100, height: 60, child: logo),
             ],
@@ -165,7 +169,12 @@ class WordHeadline extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   color: i == emphasis ? s.accent : null,
-                  child: heading(s, words[i], size: 60, lines: 1),
+                  child: heading(
+                    i == emphasis ? s.copyWith(foreground: s.onAccent) : s,
+                    words[i],
+                    size: 60,
+                    lines: 1,
+                  ),
                 ),
               ),
           ],

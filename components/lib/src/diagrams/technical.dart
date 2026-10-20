@@ -162,7 +162,9 @@ class TechnicalGrid extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: style.mono.copyWith(
                                 fontSize: 20,
-                                color: style.foreground,
+                                color: row == activeRow || col == activeColumn
+                                    ? style.onAccent
+                                    : style.foreground,
                                 decoration: TextDecoration.none,
                               ),
                             ),
