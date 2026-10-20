@@ -4,12 +4,12 @@ import 'package:video_components/video_components.dart';
 // Example application styling, never exported by the component library.
 abstract final class DemoPalette {
   static const white = Color(0xFFFFFFFF);
-  static const ink = Color(0xFF30283F);
-  static const surface = Color(0xFFEDE8F5);
-  static const accent = Color(0xFF7655AB);
-  static const mist = Color(0xFFF8F6FC);
-  static const muted = Color(0xFF756B83);
-  static const rule = Color(0xFFDDD6E8);
+  static const ink = Color(0xFF282D34);
+  static const surface = Color(0xFFEDF0F3);
+  static const accent = Color(0xFF526B87);
+  static const mist = Color(0xFFF7F8FA);
+  static const muted = Color(0xFF69727D);
+  static const rule = Color(0xFFDCE1E6);
 }
 
 abstract final class DemoType {

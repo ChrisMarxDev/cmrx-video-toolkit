@@ -7,7 +7,7 @@ There is no toolkit brand palette, font bundle or typography system.
 
 Styled widgets require a caller-owned `VideoStyle`, explicitly or through a parent scope. Supply all colors
 and text styles; client identity belongs in the consuming workspace. The browser's
-`lib/demo_style.dart` is an application-local purple/lavender demonstration, not a library
+`lib/demo_style.dart` is an application-local gray/blue demonstration, not a library
 export. Low-level `DitherStyle` uses black/white technical defaults and accepts
 arbitrary colors. Load programs/media before frame zero and supply time from the
 imported edited-output timeline. Source and output timestamps are distinct.

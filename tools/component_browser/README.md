@@ -6,7 +6,7 @@ Flutter widgets**. No parallel HTML imitations or Widgetbook dependency.
 [Open the hosted component browser](https://chrismarxdev.github.io/cmrx-video-toolkit/components/)
 — no installation needed. It includes the 60 public component families, live
 previews, editable properties and copy/export selection. The default demonstration
-theme uses purple, light lavender and subtle 6px corners; no lime accents.
+theme uses cool grays, muted blue accents and subtle 6px corners; no lime accents.
 
 ## GitHub Pages
 
@@ -135,7 +135,7 @@ belongs to CMRX Video Toolkit; it does not define another client's creative dire
 Open `video.image`, `video.video` or `video.gif` and compare contain, cover or framed
 variants. Video has native play/pause, seeking and muted playback controls in its
 inspector. GIF follows the shared inspection clock, including pause and reverse
-scrubbing. The demo is an original lavender/purple geometric loop, not a user
+scrubbing. The demo is an original gray/blue geometric loop, not a user
 recording. This version previews bundled samples; it does not upload or select
 personal media. Replace asset paths in the composition when using your footage.
 
@@ -146,7 +146,7 @@ Native widget tests validate GIF timing and shader pixels; they do not certify
 HTML video playback in a browser. The production video component supplies a
 frame around a caller-provided Fluvie Clip, not an HTML player in exported video.
 
-All styled specimens use the browser-local purple/lavender `lib/demo_style.dart`.
+All styled specimens use the browser-local gray/blue `lib/demo_style.dart`.
 Constructor examples assume an application-defined `demoStyle: VideoStyle`;
 provide your own palette and typography (see `components/CATALOG.md`). The public
 library does not bundle brand fonts or export default typography.
