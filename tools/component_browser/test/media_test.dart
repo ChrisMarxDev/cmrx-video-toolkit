@@ -86,7 +86,7 @@ void main() {
       for (var i = 0; i < a.length; i += 4) {
         colors.add(a.sublist(i, i + 4).join(','));
       }
-      expect(colors, equals({'224,224,224,255', '176,176,176,255'}));
+      expect(colors, equals({'237,232,245,255', '118,85,171,255'}));
     },
   );
 }

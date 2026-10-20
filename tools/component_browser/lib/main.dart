@@ -66,8 +66,8 @@ class _ComponentBrowserState extends State<ComponentBrowser> {
     theme: ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: DemoPalette.white,
-      colorScheme: ColorScheme.fromSeed(seedColor: DemoPalette.ink).copyWith(
-        primary: DemoPalette.ink,
+      colorScheme: ColorScheme.fromSeed(seedColor: DemoPalette.accent).copyWith(
+        primary: DemoPalette.accent,
         onPrimary: DemoPalette.white,
         secondary: DemoPalette.accent,
         surface: DemoPalette.white,
@@ -75,20 +75,26 @@ class _ComponentBrowserState extends State<ComponentBrowser> {
         outline: DemoPalette.rule,
       ),
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(6)),
+        ),
         isDense: true,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          shape: const RoundedRectangleBorder(),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(6)),
+          ),
           minimumSize: const Size(44, 44),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: DemoPalette.accent,
-          foregroundColor: DemoPalette.ink,
-          shape: const RoundedRectangleBorder(),
+          foregroundColor: DemoPalette.white,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(6)),
+          ),
           minimumSize: const Size(44, 44),
         ),
       ),
@@ -448,7 +454,11 @@ class _BrowserPageState extends State<BrowserPage>
                                   backgroundColor: category == group
                                       ? DemoPalette.surface
                                       : null,
-                                  shape: const RoundedRectangleBorder(),
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(6),
+                                    ),
+                                  ),
                                 ),
                                 child: Text(group),
                               ),
@@ -526,8 +536,10 @@ class _BrowserPageState extends State<BrowserPage>
     final previewProps = spec.props(spec.variants.first['id']);
     return Material(
       color: DemoPalette.white,
+      clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(
         side: BorderSide(color: DemoPalette.rule),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
       ),
       child: InkWell(
         onTap: () => navigate(spec.id),

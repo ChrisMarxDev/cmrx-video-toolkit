@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/">Documentation</a> ·
   <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/">Quick start</a> ·
-  <a href="components/CATALOG.md">Components</a> ·
+  <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/components/">Component browser</a> ·
   <a href="https://cmrx.dev">Chris Marx Studio</a>
 </p>
 
@@ -35,7 +35,10 @@ See the [external requirements inventory](docs/EXTERNAL-REQUIREMENTS.md) for the
 minimum dependencies by workflow. Browser review does not need Flutter or Node;
 the [MCP App / browser agent flow](apps/review-agent/README.md) adds agent handoff.
 
-For the component-browser build below, install **Python 3**, **FFmpeg/ffprobe** and
+[Open the hosted component browser](https://chrismarxdev.github.io/cmrx-video-toolkit/components/)
+to explore the public widgets without installing anything.
+
+For the local component-browser build below, install **Python 3**, **FFmpeg/ffprobe** and
 **Flutter** (tested with Flutter 3.47.2 / Dart 3.13.2). Other workflows need only
 the relevant dependencies listed below. New transcription also needs Whisper and
 a model.

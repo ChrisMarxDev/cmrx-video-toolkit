@@ -3,7 +3,27 @@
 A small Widgetbook-style workbench that renders the **actual `video_components`
 Flutter widgets**. No parallel HTML imitations or Widgetbook dependency.
 
-From the repository root:
+[Open the hosted component browser](https://chrismarxdev.github.io/cmrx-video-toolkit/components/)
+— no installation needed. It includes the 60 public component families, live
+previews, editable properties and copy/export selection. The default demonstration
+theme uses purple, light lavender and subtle 6px corners; no lime accents.
+
+## GitHub Pages
+
+The documentation workflow builds this app with Flutter 3.47.7 and deploys it at
+`/cmrx-video-toolkit/components/` alongside the docs in a single Pages artifact.
+Changes to the browser or component library on `main` rebuild both. Hash routes
+keep component/preset links refreshable on static hosting. Demo media is synthetic;
+CanvasKit and assets are bundled locally. No server, account or upload is required.
+The Pages browser exposes the public toolkit only.
+
+To reproduce the hosted build after generating media:
+
+```sh
+flutter build web --release --no-web-resources-cdn --base-href /cmrx-video-toolkit/components/
+```
+
+For local development, from the repository root:
 
 ```sh
 make components
@@ -105,7 +125,8 @@ flutter test --dart-define=BROWSER_REVIEW_PNG=/absolute/path/overview.png
 ```
 
 Builds, screenshots and generated previews stay local and ignored. No footage,
-transcripts, telemetry or external font fetches are used by this app. This tool
+transcripts or telemetry are used by this app. Flutter may fetch fallback glyph
+fonts for characters such as emoji. This tool
 belongs to CMRX Video Toolkit; it does not define another client's creative direction.
 
 
@@ -114,7 +135,7 @@ belongs to CMRX Video Toolkit; it does not define another client's creative dire
 Open `video.image`, `video.video` or `video.gif` and compare contain, cover or framed
 variants. Video has native play/pause, seeking and muted playback controls in its
 inspector. GIF follows the shared inspection clock, including pause and reverse
-scrubbing. The demo is an original lavender/ink/lime geometric loop, not a user
+scrubbing. The demo is an original lavender/purple geometric loop, not a user
 recording. This version previews bundled samples; it does not upload or select
 personal media. Replace asset paths in the composition when using your footage.
 
@@ -125,7 +146,7 @@ Native widget tests validate GIF timing and shader pixels; they do not certify
 HTML video playback in a browser. The production video component supplies a
 frame around a caller-provided Fluvie Clip, not an HTML player in exported video.
 
-All styled specimens use the browser-local grayscale `lib/demo_style.dart`.
+All styled specimens use the browser-local purple/lavender `lib/demo_style.dart`.
 Constructor examples assume an application-defined `demoStyle: VideoStyle`;
 provide your own palette and typography (see `components/CATALOG.md`). The public
 library does not bundle brand fonts or export default typography.

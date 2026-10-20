@@ -75,7 +75,7 @@ void main() {
             ? 24
             : name == 'Editorial'
             ? 4
-            : 0,
+            : 6,
       );
       const directory = String.fromEnvironment('THEME_REVIEW_DIR');
       if (directory.isNotEmpty) {

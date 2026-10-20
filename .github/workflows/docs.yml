@@ -1,10 +1,10 @@
-name: Documentation
+name: Documentation and component browser
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'README.md', 'components/CATALOG.md', 'apps/editor/README.md', 'tools/component_browser/README.md', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'README.md', 'components/**', 'apps/editor/README.md', 'tools/component_browser/**', '.github/workflows/docs.yml']
   pull_request:
-    paths: ['docs/**', 'README.md', 'components/CATALOG.md', 'apps/editor/README.md', 'tools/component_browser/README.md', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'README.md', 'components/**', 'apps/editor/README.md', 'tools/component_browser/**', '.github/workflows/docs.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +22,27 @@ jobs:
           package-manager-cache: false
       - run: npm --prefix docs ci
       - run: npm --prefix docs run build
+      - name: Install browser build dependencies
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install pinned Flutter for CI
+        run: |
+          git clone --depth 1 --branch 3.47.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Generate synthetic preview media
+        run: python3 tools/component_browser/scripts/demo_media.py
+      - name: Validate and build component browser
+        working-directory: tools/component_browser
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter build web --release --no-web-resources-cdn --base-href /cmrx-video-toolkit/components/
+      - name: Include browser in the Pages site
+        run: |
+          mkdir -p docs/dist/components
+          cp -R tools/component_browser/build/web/. docs/dist/components/
+          test -f docs/dist/components/main.dart.js
+          test -f docs/dist/components/assets/packages/video_components/components.json
       - name: Upload deployment artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4

@@ -16,6 +16,7 @@ export default defineConfig({
     sidebar: [
       { label: 'Start here', items: [
         { label: 'Overview', slug: '' },
+        { label: 'Open component browser', link: '/cmrx-video-toolkit/components/' },
         { label: 'Quick start', slug: 'guides/quick-start' },
         { label: 'Video workflow', slug: 'guides/workflow' },
         { label: 'Your workspace & style', slug: 'guides/workspace' },
