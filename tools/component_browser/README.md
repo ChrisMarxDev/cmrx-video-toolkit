@@ -216,3 +216,15 @@ The public catalog has 60 entries, down from 72.
 Choose a family, then a Variant to select its layout. Old links continue to work;
 copy/export uses the canonical family and selected presentation. A batch contains
 one selection per family. See [the family contract](../../components/FAMILIES.md) for mappings and catalog schema version 2.
+
+## Startup screen
+
+A lightweight HTML loading screen appears before Flutter starts, using the same
+neutral gray/blue palette. Status follows download, canvas initialization and
+catalog startup; the indicator does not invent a download percentage. It is removed
+on the first Flutter frame. After 20 seconds it offers a connection hint and retry
+while loading continues; bootstrap failures show a retry state. Reduced-motion
+preferences disable the loading animation. JavaScript is required.
+
+Run `node --test test/loading_test.mjs` to check slow-load, failure, retry and
+first-frame cleanup behavior.

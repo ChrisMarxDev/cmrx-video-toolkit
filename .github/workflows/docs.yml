@@ -33,6 +33,7 @@ jobs:
       - name: Validate and build component browser
         working-directory: tools/component_browser
         run: |
+          node --test test/loading_test.mjs
           flutter pub get
           flutter analyze
           flutter test

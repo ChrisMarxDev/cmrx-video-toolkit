@@ -4,15 +4,48 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F7F8FA">
   <meta name="description" content="Browse CMRX Video Toolkit video components, inspect variants and copy stable flow references.">
   <title>CMRX Video Toolkit · Component browser</title>
-  <style>body{margin:0;background:#F7F8FA;color:#282D34}#loading{padding:32px;font:18px sans-serif}</style>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #F7F8FA; color: #282D34; }
+    #loading { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 24px; background: #F7F8FA; font: 14px/1.5 system-ui, sans-serif; }
+    .loader { width: min(100%, 380px); }
+    .brand { margin: 0 0 28px; color: #69727D; font-size: 12px; letter-spacing: .04em; }
+    .mark { display: grid; grid-template-columns: repeat(2, 17px); gap: 5px; margin-bottom: 24px; width: fit-content; }
+    .mark span { width: 17px; height: 17px; border: 1px solid #BCC7D2; border-radius: 3px; background: #EDF0F3; }
+    .mark span:last-child { background: #526B87; border-color: #526B87; }
+    h1 { margin: 0 0 8px; font-size: 25px; font-weight: 550; letter-spacing: -.035em; }
+    .intro { margin: 0 0 30px; color: #69727D; }
+    .track { height: 3px; overflow: hidden; background: #E3E7EB; border-radius: 3px; }
+    .track::after { content: ''; display: block; width: 35%; height: 100%; background: #526B87; border-radius: inherit; animation: loading 1.8s ease-in-out infinite; }
+    @keyframes loading { 0% { transform: translateX(-110%); } 100% { transform: translateX(390%); } }
+    #loading-status { margin: 14px 0 0; min-height: 21px; }
+    #loading-hint { margin: 8px 0 0; color: #69727D; font-size: 12px; }
+    #loading-retry { margin-top: 20px; border: 1px solid #DCE1E6; border-radius: 6px; background: white; color: #405873; padding: 10px 16px; font: inherit; cursor: pointer; }
+    #loading-retry:hover { background: #EDF0F3; }
+    #loading-retry:focus-visible { outline: 2px solid #526B87; outline-offset: 3px; }
+    #loading.failed .track::after { animation: none; width: 100%; opacity: .35; }
+    noscript { display: block; margin-top: 20px; }
+    @media (prefers-reduced-motion: reduce) { .track::after { animation: none; width: 100%; opacity: .5; } }
+  </style>
 </head>
 <body>
-  <div id="loading" role="status">Loading CMRX Video Toolkit components…</div>
-  <script>
-    window.addEventListener('flutter-first-frame', () => document.getElementById('loading')?.remove());
-  </script>
-  <script src="flutter_bootstrap.js" async></script>
+  <main id="loading" aria-labelledby="loading-title">
+    <div class="loader">
+      <p class="brand">CMRX Video Toolkit</p>
+      <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <h1 id="loading-title">Component browser</h1>
+      <p class="intro">Explore components. Make them your own.</p>
+      <div class="track" aria-hidden="true"></div>
+      <p id="loading-status" role="status" aria-live="polite" aria-atomic="true">Loading the browser…</p>
+      <p id="loading-hint">The first visit may take a few moments.</p>
+      <button id="loading-retry" type="button" hidden>Try again</button>
+      <noscript>Enable JavaScript to open the component browser.</noscript>
+    </div>
+  </main>
+  <script src="loading.js"></script>
+  <script src="flutter_bootstrap.js" async onerror="window.componentLoading.fail()"></script>
 </body>
 </html>
