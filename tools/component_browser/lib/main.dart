@@ -1,5 +1,8 @@
+import 'selection.dart';
+import 'download.dart';
 import 'demo_style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:video_components/video_components.dart';
 import 'catalog.dart';
@@ -33,7 +36,7 @@ Future<void> main() async {
   }
 }
 
-class ComponentBrowser extends StatelessWidget {
+class ComponentBrowser extends StatefulWidget {
   const ComponentBrowser({
     super.key,
     required this.catalog,
@@ -44,10 +47,22 @@ class ComponentBrowser extends StatelessWidget {
   final DitherPrograms? programs;
   final String? initialRoute;
   @override
+  State<ComponentBrowser> createState() => _ComponentBrowserState();
+}
+
+class _ComponentBrowserState extends State<ComponentBrowser> {
+  final selection = ComponentSelection();
+  @override
+  void dispose() {
+    selection.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'CMRX Video Toolkit · Components',
     debugShowCheckedModeBanner: false,
-    initialRoute: initialRoute,
+    initialRoute: widget.initialRoute,
     theme: ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: DemoPalette.white,
@@ -85,9 +100,10 @@ class ComponentBrowser extends StatelessWidget {
         settings: settings,
         builder: (_) => BrowserPage(
           key: ValueKey(settings.name),
-          catalog: catalog,
-          programs: programs,
+          catalog: widget.catalog,
+          programs: widget.programs,
           componentId: id,
+          selection: selection,
           initialVariant: uri.queryParameters['variant'],
           initialSidebarOffset: settings.arguments is Map
               ? (settings.arguments as Map)['offset'] as double
@@ -104,6 +120,7 @@ class ComponentBrowser extends StatelessWidget {
 class BrowserPage extends StatefulWidget {
   const BrowserPage({
     super.key,
+    required this.selection,
     required this.catalog,
     this.programs,
     this.componentId = '',
@@ -111,6 +128,7 @@ class BrowserPage extends StatefulWidget {
     this.initialSidebarOffset = 0,
     this.initialPreviewTheme = 'Original',
   });
+  final ComponentSelection selection;
   final List<ComponentSpec> catalog;
   final DitherPrograms? programs;
   final String componentId;
@@ -153,7 +171,7 @@ class _BrowserPageState extends State<BrowserPage>
       vsync: this,
       duration: const Duration(seconds: 10),
       value: .5,
-    )..addListener(() => setState(() {}));
+    );
   }
 
   @override
@@ -165,10 +183,10 @@ class _BrowserPageState extends State<BrowserPage>
       motionInitialized = true;
     } else if (!motionInitialized) {
       motionInitialized = true;
-      if (selected == null ||
-          selected!.id == 'video.texture' ||
-          selected!.id == 'video.dither-background' ||
-          selected!.id == 'video.gif') {
+      if (selected != null &&
+          (selected!.id == 'video.texture' ||
+              selected!.id == 'video.dither-background' ||
+              selected!.id == 'video.gif')) {
         playing = true;
         clock.repeat();
       }
@@ -310,6 +328,7 @@ class _BrowserPageState extends State<BrowserPage>
             child: Divider(height: 1),
           ),
         ),
+        bottomNavigationBar: selectionBar(),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -375,179 +394,313 @@ class _BrowserPageState extends State<BrowserPage>
       ...results.where((s) => s.data['expanded'] == true),
       ...results.where((s) => s.data['expanded'] != true),
     ];
-    return ListView(
-      padding: const EdgeInsets.all(28),
-      children: [
-        if (widget.componentId.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              'Unknown component “${widget.componentId}”. Choose one below.',
-            ),
-          ),
-        const Text(
-          'The pieces of a video',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -1,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Inspect a widget. Try a variant. Use its name in the next brief.',
-        ),
-        const SizedBox(height: 24),
-        TextField(
-          decoration: const InputDecoration(
-            labelText: 'Search components',
-            prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: (v) => setState(() => query = v),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 48,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final group in [
-                  'All',
-                  'New components',
-                  ...widget.catalog.map((e) => e.category).toSet(),
-                ])
-                  TextButton(
-                    onPressed: () => setState(() => category = group),
-                    style: TextButton.styleFrom(
-                      backgroundColor: category == group
-                          ? DemoPalette.surface
-                          : null,
-                      shape: const RoundedRectangleBorder(),
-                    ),
-                    child: Text(group),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '${results.length} ${results.length == 1 ? 'component' : 'components'}',
-          style: const TextStyle(color: DemoPalette.muted),
-        ),
-        const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              setState(() => playing = !playing);
-              if (playing) {
-                clock.repeat();
-              } else {
-                clock.stop();
-              }
-            },
-            icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-            label: Text(
-              playing ? 'Pause animated previews' : 'Play animated previews',
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (results.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 48),
-            child: Text(
-              'No matching components. Try a widget name, like caption or layers.',
-            ),
-          ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = (constraints.maxWidth / 300).floor().clamp(1, 3);
-            return Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                for (final spec in ordered)
-                  SizedBox(
-                    width:
-                        (constraints.maxWidth - (columns - 1) * 16) / columns,
-                    child: Material(
-                      color: DemoPalette.white,
-                      shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: DemoPalette.rule),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = ((constraints.maxWidth - 56) / 300).floor().clamp(1, 3);
+        return CustomScrollView(
+          key: const ValueKey('component-overview'),
+          scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.componentId.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Unknown component “${widget.componentId}”. Choose one below.',
+                        ),
                       ),
-                      child: InkWell(
-                        onTap: () => navigate(spec.id),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    const Text(
+                      'The pieces of a video',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Inspect a widget. Try a variant. Use its name in the next brief.',
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search components',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (v) => setState(() => query = v),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 48,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
                           children: [
-                            SizedBox(
-                              height: 180,
-                              width: double.infinity,
-                              child: IgnorePointer(
-                                child: SpecimenFrame(
-                                  spec: spec,
-                                  props: spec.props(spec.variants.first['id']),
-                                  progress: spec.data['expanded'] == true
-                                      ? (playing
-                                            ? clock.value
-                                            : (spec.category == 'Transitions' ||
-                                                      spec.id ==
-                                                          'video.credits-roll' ||
-                                                      spec.id ==
-                                                          'video.timed-word-captions'
-                                                  ? .5
-                                                  : 1))
-                                      : (spec.id == 'video.texture' ||
-                                            spec.id ==
-                                                'video.dither-background' ||
-                                            spec.id == 'video.gif')
-                                      ? clock.value
-                                      : .65,
-                                  programs: widget.programs,
+                            for (final group in [
+                              'All',
+                              'New components',
+                              ...widget.catalog.map((e) => e.category).toSet(),
+                            ])
+                              TextButton(
+                                onPressed: () =>
+                                    setState(() => category = group),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: category == group
+                                      ? DemoPalette.surface
+                                      : null,
+                                  shape: const RoundedRectangleBorder(),
                                 ),
+                                child: Text(group),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    spec.name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    spec.id,
-                                    style: DemoType.mono.copyWith(fontSize: 12),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    '${spec.variants.length} variants · ${spec.category}',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: DemoPalette.muted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '${results.length} ${results.length == 1 ? 'component' : 'components'}',
+                      style: const TextStyle(color: DemoPalette.muted),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() => playing = !playing);
+                          if (playing) {
+                            clock.repeat();
+                          } else {
+                            clock.stop();
+                          }
+                        },
+                        icon: Icon(playing ? Icons.pause : Icons.play_arrow),
+                        label: Text(
+                          playing
+                              ? 'Pause animated previews'
+                              : 'Play animated previews',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (results.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 48),
+                        child: Text(
+                          'No matching components. Try a widget name, like caption or layers.',
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisExtent: 380,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => overviewCard(ordered[index]),
+                  childCount: ordered.length,
+                  addAutomaticKeepAlives: false,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  double pausedProgress(ComponentSpec spec) =>
+      spec.category == 'Transitions' ||
+          spec.id == 'video.credits-roll' ||
+          spec.id == 'video.timed-word-captions'
+      ? .5
+      : 1;
+
+  Widget overviewCard(ComponentSpec spec) {
+    final previewProps = spec.props(spec.variants.first['id']);
+    return Material(
+      color: DemoPalette.white,
+      shape: const RoundedRectangleBorder(
+        side: BorderSide(color: DemoPalette.rule),
+      ),
+      child: InkWell(
+        onTap: () => navigate(spec.id),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 36,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: ListenableBuilder(
+                  listenable: widget.selection,
+                  builder: (context, child) => Tooltip(
+                    message: 'Select ${spec.name}',
+                    child: Checkbox(
+                      key: ValueKey('select-${spec.id}'),
+                      value: widget.selection.contains(spec.id),
+                      visualDensity: VisualDensity.compact,
+                      onChanged: (checked) {
+                        if (checked == true) {
+                          widget.selection.put(
+                            spec.id,
+                            spec.variants.first['id'],
+                            previewProps,
+                          );
+                        } else {
+                          widget.selection.remove(spec.id);
+                        }
+                      },
+                    ),
                   ),
-              ],
-            );
-          },
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 180,
+              width: double.infinity,
+              child: IgnorePointer(
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: spec.motion && playing
+                        ? clock
+                        : const AlwaysStoppedAnimation<double>(0),
+                    builder: (context, child) => SpecimenFrame(
+                      spec: spec,
+                      props: previewProps,
+                      progress: spec.motion && playing
+                          ? clock.value
+                          : pausedProgress(spec),
+                      programs: widget.programs,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    spec.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(spec.id, style: DemoType.mono.copyWith(fontSize: 12)),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${spec.variants.length} variants · ${spec.category}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: DemoPalette.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget selectionBar() => ListenableBuilder(
+    listenable: widget.selection,
+    builder: (context, child) {
+      final selection = widget.selection;
+      if (selection.length == 0) return const SizedBox.shrink();
+      return SafeArea(
+        top: false,
+        child: Material(
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${selection.length} selected',
+                    key: const ValueKey('selection-count'),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Clear selection',
+                  onPressed: selection.clear,
+                  icon: const Icon(Icons.clear_all, size: 20),
+                ),
+                IconButton(
+                  tooltip: 'Copy selection',
+                  onPressed: () => copySelection(),
+                  icon: const Icon(Icons.copy, size: 20),
+                ),
+                IconButton(
+                  tooltip: 'Export selection',
+                  onPressed: () => exportSelection(),
+                  icon: const Icon(Icons.download_outlined, size: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  Future<void> copySelection() async {
+    final json = widget.selection.encode(previewTheme: previewTheme);
+    try {
+      await Clipboard.setData(ClipboardData(text: json));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Component selection copied')),
+        );
+    } catch (_) {
+      if (mounted) showSelection(json);
+    }
+  }
+
+  void exportSelection() {
+    final json = widget.selection.encode(previewTheme: previewTheme);
+    try {
+      if (!downloadSelection(json)) showSelection(json);
+    } catch (_) {
+      showSelection(json);
+    }
+  }
+
+  void showSelection(String json) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Component selection'),
+        content: SizedBox(
+          width: 600,
+          child: SingleChildScrollView(child: SelectableText(json)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -590,6 +743,23 @@ class _BrowserPageState extends State<BrowserPage>
               spec.id,
               style: DemoType.mono.copyWith(fontSize: 15),
             ),
+            ListenableBuilder(
+              listenable: widget.selection,
+              builder: (context, child) => OutlinedButton.icon(
+                onPressed: () => widget.selection.put(spec.id, variant, props),
+                icon: Icon(
+                  widget.selection.contains(spec.id)
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 18,
+                ),
+                label: Text(
+                  widget.selection.contains(spec.id)
+                      ? 'Update selection'
+                      : 'Select for video',
+                ),
+              ),
+            ),
             FilledButton.icon(
               onPressed: () => copy(flowReference(spec, variant, props)),
               icon: const Icon(Icons.copy, size: 18),
@@ -621,13 +791,18 @@ class _BrowserPageState extends State<BrowserPage>
                   height: 390,
                   color: DemoPalette.mist,
                   padding: const EdgeInsets.all(16),
-                  child: SpecimenFrame(
-                    spec: spec,
-                    props: props,
-                    progress: clock.value,
-                    videoControls: true,
-                    programs: widget.programs,
-                    canvas: canvas,
+                  child: RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: clock,
+                      builder: (context, child) => SpecimenFrame(
+                        spec: spec,
+                        props: props,
+                        progress: clock.value,
+                        videoControls: true,
+                        programs: widget.programs,
+                        canvas: canvas,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -657,37 +832,40 @@ class _BrowserPageState extends State<BrowserPage>
                 ),
                 if (spec.motion) ...[
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: playing ? 'Pause preview' : 'Play preview',
-                        onPressed: () {
-                          setState(() => playing = !playing);
-                          if (playing) {
-                            clock.repeat();
-                          } else {
-                            clock.stop();
-                          }
-                        },
-                        icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: clock.value,
-                          divisions: 300,
-                          label: '${(clock.value * 300).round()} / 300',
-                          onChanged: (v) {
-                            clock.stop();
-                            playing = false;
-                            clock.value = v;
+                  AnimatedBuilder(
+                    animation: clock,
+                    builder: (context, child) => Row(
+                      children: [
+                        IconButton(
+                          tooltip: playing ? 'Pause preview' : 'Play preview',
+                          onPressed: () {
+                            setState(() => playing = !playing);
+                            if (playing) {
+                              clock.repeat();
+                            } else {
+                              clock.stop();
+                            }
                           },
+                          icon: Icon(playing ? Icons.pause : Icons.play_arrow),
                         ),
-                      ),
-                      Text('Frame ${(clock.value * 300).round()} / 300'),
-                    ],
+                        Expanded(
+                          child: Slider(
+                            value: clock.value,
+                            divisions: 300,
+                            label: '${(clock.value * 300).round()} / 300',
+                            onChanged: (v) {
+                              clock.stop();
+                              setState(() => playing = false);
+                              clock.value = v;
+                            },
+                          ),
+                        ),
+                        Text('Frame ${(clock.value * 300).round()} / 300'),
+                      ],
+                    ),
                   ),
                   const Text(
-                    '10-second inspection loop · 30 fps. Video timing comes from the edited timeline.',
+                    '10-second live preview · scrubber shows 300 positions. Video timing comes from the edited timeline.',
                     style: TextStyle(fontSize: 12, color: DemoPalette.muted),
                   ),
                 ],

@@ -29,8 +29,10 @@ changes are shared through Copy flow reference, not an automatic agent callback.
 
 Search by friendly name, stable ID, widget class or purpose; filter by category.
 Select a component to try its named variants and editable properties. Inspect
-16:9, 9:16 and square canvases. Dither and GIF previews animate automatically unless reduced motion is enabled;
-pause them or scrub the 300-frame inspection loop. Other motion starts paused. This clock is only for inspection, never a source of video cues.
+16:9, 9:16 and square canvases. Dither and GIF detail previews animate automatically unless reduced motion is enabled.
+The overview and other detail previews start paused. Play or scrub the ten-second
+live preview; the 300 scrubber positions do not set the rendering frame rate.
+This clock is only for inspection, never a source of video cues.
 Previews fit the canvas into the screen, so fine dither needs native delivery-size
 review before approving a video. The browser is not a video compositor.
 
@@ -117,8 +119,8 @@ recording. This version previews bundled samples; it does not upload or select
 personal media. Replace asset paths in the composition when using your footage.
 
 For texture, select `lavender-lime` on `video.texture` or
-`video.dither-background`. Both are animated in the browser by default; the frozen
-presets remain still. Pause all overview animation with its preview control.
+`video.dither-background`. Their detail previews animate by default; frozen presets remain still.
+Use Play animated previews to animate visible overview cards.
 Native widget tests validate GIF timing and shader pixels; they do not certify
 HTML video playback in a browser. The production video component supplies a
 frame around a caller-provided Fluvie Clip, not an HTML player in exported video.
@@ -157,3 +159,26 @@ Every entry has two presets, meaningful controls, a live widget and copyable cod
 Play animated previews or scrub the detail clock to inspect motion. Theme choice
 applies to these components too. Media placeholders are original synthetic screens,
 portrait silhouettes and maps; replace widget slots in your composition.
+
+## Batch selection and preview performance
+
+Check the small checkbox on an overview card to collect its default preset.
+Selection survives searches, category filters and component navigation for the
+current app session. In a detail page, **Select for video** or **Update selection**
+snapshots the current preset and edited properties. Later edits do not silently
+change a selection; use Update selection again. Each component has one entry.
+
+The bottom bar shows the selected count, clear, **Copy selection** and
+**Export selection** buttons. Export downloads `video-components.json`; copy uses
+the same JSON. A selectable dialog is the fallback when unavailable. The
+`component-selection` document contains `schemaVersion: 1`, the browser
+`previewTheme` name, and ordered `components` with `component`, `variant`, `props`.
+It is a collection for a brief, not a composition or strict annotation document;
+production timing and the actual parent style still belong to the composition.
+Reloading the app clears the selection.
+
+One AnimationController drives live widget previews. Animation ticks rebuild only
+the specimen and its playback controls, with repaint boundaries around specimens.
+The lazy overview grid mounts viewport cards instead of the complete catalog;
+offscreen cards are disposed. Page chrome, sidebar and property controls do not
+rebuild on every animation tick.
