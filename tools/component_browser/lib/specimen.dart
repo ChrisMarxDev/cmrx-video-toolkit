@@ -15,6 +15,16 @@ Widget specimen(
   bool videoControls = false,
   VideoStyle style = demoStyle,
 }) {
+  final rendered = spec.presentation(p);
+  if (!identical(rendered, spec))
+    return specimen(
+      rendered,
+      p,
+      progress,
+      programs,
+      videoControls: videoControls,
+      style: style,
+    );
   if (spec.data['expanded'] == true) {
     return VideoThemeScope(
       style: style,

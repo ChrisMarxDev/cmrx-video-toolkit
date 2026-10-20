@@ -1,6 +1,8 @@
 # Expanded video components
 
-The library includes 48 additional widgets across eight families. Import
+The library includes 48 additional widget implementations across eight categories.
+The browser groups overlapping implementations into catalog families; see
+[FAMILIES.md](FAMILIES.md) for the consolidated entries and presentation presets. Import
 `package:video_components/video_components.dart` (or `expanded.dart` for just this
 set). Every styled widget accepts `style:` or inherits `VideoThemeScope`.
 Transitions inherit the appearance of their source/destination children;

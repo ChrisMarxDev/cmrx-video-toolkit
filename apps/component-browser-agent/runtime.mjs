@@ -28,7 +28,7 @@ export class ComponentRuntime {
     const catalog = await this.catalog();
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     const entries = catalog.components.filter(c => (!category || c.category === category) &&
-      words.every(w => [c.id, c.name, c.widget, c.description, c.category].join(' ').toLowerCase().includes(w)));
+      words.every(w => [c.id, c.name, c.widget, c.description, c.category, ...Object.values(c.presentations ?? {}).map(p => [p.id, p.name, p.widget, p.description].join(' '))].join(' ').toLowerCase().includes(w)));
     return { identity: catalog.identity, categories: [...new Set(catalog.components.map(c => c.category))],
       total: entries.length, nextOffset: offset + limit < entries.length ? offset + limit : null,
       components: entries.slice(offset, offset + limit).map(({ id, name, widget, category, description, variants }) =>
@@ -36,15 +36,22 @@ export class ComponentRuntime {
   }
   async get({ id, variant } = {}) {
     const catalog = await this.catalog();
-    const component = catalog.components.find(c => c.id === id);
+    const component = catalog.components.find(c => c.id === id || c.presentations?.[id]);
     if (!component) throw Error(`Unknown component: ${id}. Use list_components.`);
-    const preset = component.variants.find(v => v.id === (variant ?? component.variants[0]?.id));
+    const legacy = id !== component.id ? component.presentations[id] : null;
+    const preset = legacy
+      ? component.variants.find(v => v.presentation === id && v.sourceVariant === (variant ?? legacy.variants[0].id))
+      : component.variants.find(v => v.id === (variant ?? component.variants[0]?.id));
     if (!preset) throw Error(`Unknown variant for ${id}: ${variant}`);
-    const props = Object.fromEntries(Object.entries(component.parameters ?? {}).map(([key, value]) => [key, value.default]));
-    return { identity: catalog.identity, importPath: catalog.importPath, component,
-      selection: { component: id, variant: preset.id, props: { ...props, ...preset.props } },
-      note: 'Catalog defaults describe the preview. Supply caller-owned styling and resolve production timing separately. Copy code in the browser for a constructor example.' };
+    const implementation = component.presentations?.[preset.presentation] ?? component;
+    const props = Object.fromEntries(Object.entries(implementation.parameters ?? {}).map(([key, value]) => [key, value.default]));
+    return { identity: catalog.identity, importPath: catalog.importPath, component, implementation,
+      selection: { component: component.id, variant: preset.id, props: {
+        ...(component.presentations ? { presentation: preset.presentation } : {}), ...props, ...preset.props,
+      } },
+      note: 'A family preset selects a presentation and its property schema. Supply caller-owned styling and production timing. Copy code in the browser for the selected constructor.' };
   }
+
   runCommand(command, args, cwd) {
     return new Promise((resolveRun, reject) => {
       let tail = '';
@@ -128,7 +135,7 @@ export class ComponentRuntime {
     const detail = id ? await this.get({ id, variant }) : undefined;
     await this.ensureBuild(rebuild);
     const origin = await this.origin();
-    const route = detail ? `/${encodeURIComponent(id)}?variant=${encodeURIComponent(detail.selection.variant)}` : '/';
+    const route = detail ? `/${encodeURIComponent(detail.selection.component)}?variant=${encodeURIComponent(detail.selection.variant)}` : '/';
     return { browserUrl: `${origin}/#${route}`, selection: detail?.selection ?? null,
       note: 'Shows the actual Flutter workbench in compatible MCP Apps hosts. Use browserUrl if local frames are blocked. UI changes are not sent back automatically; copy the flow reference for the agent.' };
   }

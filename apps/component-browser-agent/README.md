@@ -112,3 +112,11 @@ real workbench separately using [its checks](../../tools/component_browser/READM
 
 Protocol references: [MCP Apps lifecycle](https://apps.extensions.modelcontextprotocol.io/api/documents/overview.html)
 and [resource CSP](https://apps.extensions.modelcontextprotocol.io/api/interfaces/app.McpUiResourceCsp.html).
+
+## Catalog families
+
+Schema version 2 lists canonical families once. Searching an old layout name or ID
+returns its family. `get_component` and `open_component_browser` accept old IDs
+and preset names, resolve them, and return canonical selections. `get_component`
+includes `implementation` with the selected presentation's property schema. See
+[the family contract](../../components/FAMILIES.md).

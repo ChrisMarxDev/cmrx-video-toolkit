@@ -28,6 +28,11 @@ Do not infer that UI failed merely because the tool returns structured data.
 Follow host permission rules before browser/computer automation or screenshots.
 Starting a local server does not grant permission to inspect its UI.
 
+The schema-version-2 catalog groups related layouts into families. See
+`components/FAMILIES.md`: family variants select a presentation with its own
+property schema. Resolve those defaults before applying overrides; copied
+references include the canonical ID and presentation. Old IDs remain aliases.
+
 The creator can inspect variants, edit props, compare aspect ratios and scrub the
 inspection clock. Ask them to share **Copy flow reference** for custom values;
 there is no automatic selection/approval callback to the agent. **Copy variant

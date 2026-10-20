@@ -202,7 +202,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('select-video.quote-card')));
       await tester.pumpAndSettle();
       expect(find.text('2 selected'), findsOneWidget);
-      await tester.tap(find.text('Attributed quote card').last);
+      await tester.tap(find.text('Quote card').last);
       await tester.pumpAndSettle();
       expect(find.text('2 selected'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, 'Changed quotation');

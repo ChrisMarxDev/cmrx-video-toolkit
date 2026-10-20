@@ -164,3 +164,27 @@ test('missing build executable gives a diagnostic instead of hanging', async t =
   const { runtime } = await fixture(t);
   await assert.rejects(runtime.runCommand('/definitely-not-a-toolkit-executable', [], runtime.root), /Cannot run.*README/);
 });
+
+test('family discovery removes duplicates and resolves all legacy presets canonically', async t => {
+  const { runtime } = await fixture(t);
+  const catalog = await runtime.catalog();
+  assert.equal(catalog.components.length, 60);
+  const found = await runtime.list({ query: 'video.focus-carousel' });
+  assert.equal(found.total, 1);
+  assert.equal(found.components[0].id, 'video.screenshot-rail');
+  for (const family of catalog.components.filter(c => c.presentations)) {
+    for (const original of Object.values(family.presentations)) {
+      for (const variant of original.variants) {
+        const detail = await runtime.get({ id: original.id, variant: variant.id });
+        assert.equal(detail.selection.component, family.id);
+        assert.equal(detail.implementation.id, original.id);
+        assert.equal(detail.selection.props.presentation, original.id);
+        const direct = await runtime.get({ id: family.id, variant: detail.selection.variant });
+        assert.deepEqual(direct.selection, detail.selection);
+      }
+    }
+  }
+  const opened = await runtime.open({ id: 'video.episode-title' });
+  assert.match(opened.browserUrl, /#\/video.editorial-title\?variant=episode-title%2Fdefault$/);
+  assert.equal(opened.selection.props.presentation, 'video.episode-title');
+});

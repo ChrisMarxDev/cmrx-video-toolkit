@@ -34,7 +34,7 @@ For authoring SVG assets or explanatory vector graphics, follow
 [component-authoring](../.skills/component-authoring/SKILL.md) and its focused
 reference. Use this catalog to select existing geometry and check API limits.
 
-The catalog now has 72 entries, including 12 technical entries. These are Flutter
+The catalog now has 60 entries, including 11 technical/chart families. These are Flutter
 widgets/custom vector painters, so the same instances work in video compositions,
 Flutter Deck slides and the browser. They have no brand palette or bundled fonts.
 SVG remains appropriate for a fixed illustration; use these widgets when labels,
@@ -119,3 +119,9 @@ The [expanded component reference](EXPANDED.md) documents 48 additional reusable
 widgets, all registered with editable presets and constructor examples. Filter
 **New components** in the browser to view them. They use the same parent theme
 as the original components; no second style system or external runtime is needed.
+
+## Family consolidation
+
+High-overlap catalog entries are grouped into ten families. Original layouts are
+available as presets and existing widget APIs remain supported. See
+[FAMILIES.md](FAMILIES.md) for canonical IDs, alias resolution and schema version 2.

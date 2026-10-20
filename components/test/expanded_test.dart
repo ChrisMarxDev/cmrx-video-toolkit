@@ -12,6 +12,11 @@ void main() {
   final entries =
       (jsonDecode(File('components.json').readAsStringSync())['components']
               as List)
+          .expand(
+            (e) => e['presentations'] == null
+                ? [e]
+                : (e['presentations'] as Map).values,
+          )
           .where((e) => e['expanded'] == true)
           .cast<Map<String, dynamic>>()
           .toList();

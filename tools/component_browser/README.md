@@ -84,7 +84,7 @@ To add an element:
 4. Run the browser tests and build. The variant test covers every registry entry
    in both portrait and landscape; missing builders fail rather than silently hide.
 
-The catalog covers 72 entries, including media, technical diagrams and charts. Shader internals,
+The catalog covers 60 entries, including media, technical diagrams and charts. Shader internals,
 asset loaders, token constants and the Fluvie video wrapper remain documented
 APIs rather than separate browsable content components.
 
@@ -152,10 +152,11 @@ application examples and are not library defaults.
 
 ## Expanded families
 
-**New components** filters the 48 additions. They appear first in the overview
+**New components** filters the 40 families containing the original 48 additions.
+Redundant standalone entries are now named presentation presets. These families appear first in the overview
 and also belong to eight family filters: Titles, End cards, Presenter overlays,
 Developer demos, Media layouts, Data graphics, Transitions, Social and spatial.
-Every entry has two presets, meaningful controls, a live widget and copyable code.
+Every entry has named presets, relevant controls, a live widget and copyable code.
 Play animated previews or scrub the detail clock to inspect motion. Theme choice
 applies to these components too. Media placeholders are original synthetic screens,
 portrait silhouettes and maps; replace widget slots in your composition.
@@ -187,3 +188,10 @@ Numeric controls preserve fractional values by default. Catalog fields with
 `step: 1` are discrete counts or indices; positions, perspective, spread, sizes
 and coordinates remain continuous. Labels show up to three decimal places, but
 preview properties and copied references retain the full numeric value.
+
+## Consolidated families
+
+The public catalog has 60 entries, down from 72.
+Choose a family, then a Variant to select its layout. Old links continue to work;
+copy/export uses the canonical family and selected presentation. A batch contains
+one selection per family. See [the family contract](../../components/FAMILIES.md) for mappings and catalog schema version 2.

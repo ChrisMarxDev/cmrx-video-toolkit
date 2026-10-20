@@ -172,7 +172,10 @@ void main() {
         );
         for (final variant in spec.variants) {
           final props = spec.props(variant['id']);
-          expect(dartExample(spec, props), contains(spec.widget));
+          expect(
+            dartExample(spec, props),
+            contains(spec.presentation(props).widget),
+          );
           final ref = jsonDecode(flowReference(spec, variant['id'], props));
           expect(ref['props'], props);
           for (final canvas in [const Size(960, 540), const Size(540, 960)]) {
@@ -220,7 +223,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'video.layers');
       await tester.pumpAndSettle();
       expect(find.text('1 component'), findsOneWidget);
-      expect(find.text('Exploded layers'), findsOneWidget);
+      expect(find.text('Layer stack'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, 'missing-widget');
       await tester.pumpAndSettle();
       expect(find.textContaining('No matching components'), findsOneWidget);

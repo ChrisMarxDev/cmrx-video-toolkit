@@ -1,31 +1,9 @@
+import 'catalog_model.dart';
+export 'catalog_model.dart';
 import 'package:video_components/expanded_samples.dart';
 import 'technical_specimens.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-
-class ComponentSpec {
-  ComponentSpec(this.data);
-  final Map<String, dynamic> data;
-  String get id => data['id'];
-  String get name => data['name'];
-  String get widget => data['widget'];
-  String get category => data['category'];
-  String get description => data['description'];
-  String get source => data['source'];
-  bool get motion => data['motion'];
-  Map<String, dynamic> get parameters => data['parameters'];
-  List<dynamic> get variants => data['variants'];
-  Map<String, dynamic> props(String variant) {
-    final selected = variants.firstWhere(
-      (v) => v['id'] == variant,
-      orElse: () => variants.first,
-    );
-    return {
-      for (final p in parameters.entries) p.key: p.value['default'],
-      ...Map<String, dynamic>.from(selected['props']),
-    };
-  }
-}
 
 Future<List<ComponentSpec>> loadCatalog() async {
   final data =
@@ -49,6 +27,8 @@ String flowReference(
 String literal(Object? value) => jsonEncode(value).replaceAll(r'$', r'\$');
 
 String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
+  final rendered = spec.presentation(p);
+  if (!identical(rendered, spec)) return dartExample(rendered, p);
   if (spec.data['expanded'] == true) return expandedExample(spec.id, p);
   if (isTechnical(spec)) return technicalDartExample(spec, p);
   final text = literal(p['text']);

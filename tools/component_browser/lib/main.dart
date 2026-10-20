@@ -158,15 +158,12 @@ class _BrowserPageState extends State<BrowserPage>
       initialScrollOffset: widget.initialSidebarOffset,
     );
     for (final entry in widget.catalog) {
-      if (entry.id == widget.componentId) selected = entry;
+      if (entry.matchesId(widget.componentId)) selected = entry;
     }
-    variant = selected?.variants.first['id'] ?? '';
-    if (selected != null) {
-      if (selected!.variants.any((v) => v['id'] == widget.initialVariant)) {
-        variant = widget.initialVariant!;
-      }
-      props = selected!.props(variant);
-    }
+    variant =
+        selected?.variantForRoute(widget.componentId, widget.initialVariant) ??
+        '';
+    if (selected != null) props = selected!.props(variant);
     clock = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -384,9 +381,7 @@ class _BrowserPageState extends State<BrowserPage>
                   (category == 'New components' &&
                       s.data['expanded'] == true) ||
                   s.category == category) &&
-              '${s.name} ${s.id} ${s.widget} ${s.description}'
-                  .toLowerCase()
-                  .contains(query.toLowerCase()),
+              s.searchText.contains(query.toLowerCase()),
         )
         .toList();
     // Stable ordering keeps the new families discoverable without changing IDs.
@@ -948,7 +943,7 @@ class _BrowserPageState extends State<BrowserPage>
         ],
         const SizedBox(height: 12),
         SelectableText(
-          'Source: ${spec.source}\nWidget: ${spec.widget}',
+          'Source: ${spec.presentation(props).source}\nWidget: ${spec.presentation(props).widget}',
           style: DemoType.mono.copyWith(fontSize: 12),
         ),
         const SizedBox(height: 8),
@@ -969,9 +964,9 @@ class _BrowserPageState extends State<BrowserPage>
       ),
       const SizedBox(height: 16),
       DropdownButtonFormField<String>(
+        isExpanded: true,
         key: ValueKey('${spec.id}:$variant'),
         initialValue: variant,
-        isExpanded: true,
         decoration: const InputDecoration(labelText: 'Variant'),
         items: [
           for (final v in spec.variants)
@@ -983,7 +978,7 @@ class _BrowserPageState extends State<BrowserPage>
         }),
       ),
       const SizedBox(height: 16),
-      for (final entry in spec.parameters.entries)
+      for (final entry in spec.parametersFor(props).entries)
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: control(entry.key, entry.value),
@@ -1017,6 +1012,7 @@ class _BrowserPageState extends State<BrowserPage>
         );
       case 'choice':
         return DropdownButtonFormField<String>(
+          isExpanded: true,
           key: ValueKey('$variant:$key:$value'),
           initialValue: value,
           decoration: InputDecoration(labelText: meta['label']),
@@ -1034,7 +1030,7 @@ class _BrowserPageState extends State<BrowserPage>
           decoration: InputDecoration(labelText: meta['label']),
           onChanged: (v) => setState(() {
             props[key] = v;
-            if (selected!.id == 'video.code')
+            if (selected!.presentation(props).id == 'video.code')
               props['focusLine'] = effectiveFocus(props);
           }),
         );
