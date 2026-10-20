@@ -107,7 +107,13 @@ Widget enter(Widget child, double progress, {double dy = 24}) {
   final p = unit(progress);
   return Opacity(
     opacity: p,
-    child: Transform.translate(offset: Offset(0, dy * (1 - p)), child: child),
+    child: Transform.translate(
+      offset: Offset(0, dy * (1 - p)),
+      // Filter a bitmap of the text instead of re-rasterizing glyphs at snapped
+      // pixel positions during slow, fractional translation (notably on web).
+      filterQuality: FilterQuality.low,
+      child: child,
+    ),
   );
 }
 

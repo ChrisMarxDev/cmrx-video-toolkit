@@ -1041,21 +1041,24 @@ class _BrowserPageState extends State<BrowserPage>
       default:
         final min = (meta['min'] as num).toDouble(),
             max = (meta['max'] as num).toDouble();
+        final step = (meta['step'] as num?)?.toDouble();
+        final display = (value as num)
+            .toStringAsFixed(3)
+            .replaceFirst(RegExp(r'\.?0+$'), '');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${meta['label']} · ${value is double ? value.toStringAsFixed(key == 'speed' ? 2 : 0) : value}',
-            ),
+            Text('${meta['label']} · $display'),
             Slider(
-              value: (value as num).toDouble(),
+              value: value.toDouble(),
               min: min,
               max: max,
-              divisions: key == 'speed' ? 16 : (max - min).round(),
+              divisions: step == null ? null : ((max - min) / step).round(),
               onChanged: (v) => setState(() {
-                props[key] = key == 'speed'
-                    ? double.parse(v.toStringAsFixed(2))
-                    : v.round();
+                props[key] = step == null
+                    ? v
+                    : (min + ((v - min) / step).round() * step).clamp(min, max);
+                if (step == 1) props[key] = (props[key] as num).round();
                 if (key == 'focusLine') props[key] = effectiveFocus(props);
               }),
             ),

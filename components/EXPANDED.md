@@ -210,3 +210,11 @@ rm test/expanded_examples_generated_test.dart
 The generated file is a temporary verification artifact, not the authoritative
 example source. Real media decoding/preloading and production timeline mapping
 remain the caller's responsibility.
+
+## Transform sampling
+
+Shared entrance translations use bilinear bitmap filtering so text moves at
+fractional pixel positions instead of holding and jumping during slow motion.
+Rotated, scaled and perspective cards use medium filtering, and screen content
+clips use antialiasing. These are still live Flutter widgets with deterministic
+progress inputs; filtering is applied during painting, not via prerendered video.

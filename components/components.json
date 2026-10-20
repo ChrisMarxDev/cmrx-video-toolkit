@@ -129,7 +129,8 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 3
+          "max": 3,
+          "step": 1
         }
       },
       "variants": [
@@ -159,7 +160,8 @@
           "type": "number",
           "default": 1,
           "min": 0,
-          "max": 2
+          "max": 2,
+          "step": 1
         }
       },
       "variants": [
@@ -737,7 +739,8 @@
           "type": "number",
           "default": 1,
           "min": 0,
-          "max": 5
+          "max": 5,
+          "step": 1
         }
       },
       "variants": [
@@ -802,7 +805,8 @@
           "type": "number",
           "default": 1,
           "min": 0,
-          "max": 3
+          "max": 3,
+          "step": 1
         }
       },
       "variants": [
@@ -1235,7 +1239,8 @@
           "default": 1,
           "min": -1,
           "max": 8,
-          "label": "Emphasis"
+          "label": "Emphasis",
+          "step": 1
         }
       },
       "variants": [
@@ -1930,14 +1935,16 @@
           "default": 1,
           "min": 0,
           "max": 6,
-          "label": "Focus Start"
+          "label": "Focus Start",
+          "step": 1
         },
         "focusEnd": {
           "type": "number",
           "default": 4,
           "min": 0,
           "max": 6,
-          "label": "Focus End"
+          "label": "Focus End",
+          "step": 1
         }
       },
       "variants": [
@@ -2015,7 +2022,8 @@
           "default": 1,
           "min": -1,
           "max": 3,
-          "label": "Active Row"
+          "label": "Active Row",
+          "step": 1
         }
       },
       "variants": [
@@ -2086,7 +2094,8 @@
           "default": 1,
           "min": 0,
           "max": 3,
-          "label": "Active Index"
+          "label": "Active Index",
+          "step": 1
         }
       },
       "variants": [
@@ -2124,7 +2133,8 @@
           "default": 1,
           "min": 0,
           "max": 3,
-          "label": "Focus"
+          "label": "Focus",
+          "step": 1
         }
       },
       "variants": [
@@ -2185,7 +2195,8 @@
           "default": 0,
           "min": -1,
           "max": 3,
-          "label": "Active Tile"
+          "label": "Active Tile",
+          "step": 1
         }
       },
       "variants": [
@@ -2339,7 +2350,8 @@
           "default": 8,
           "min": 1,
           "max": 24,
-          "label": "Weeks"
+          "label": "Weeks",
+          "step": 1
         },
         "title": {
           "type": "text",
@@ -2511,7 +2523,8 @@
           "default": 8,
           "min": 1,
           "max": 20,
-          "label": "Count"
+          "label": "Count",
+          "step": 1
         },
         "direction": {
           "type": "choice",
@@ -2554,14 +2567,16 @@
           "default": 12,
           "min": 2,
           "max": 24,
-          "label": "Columns"
+          "label": "Columns",
+          "step": 1
         },
         "rows": {
           "type": "number",
           "default": 8,
           "min": 2,
           "max": 16,
-          "label": "Rows"
+          "label": "Rows",
+          "step": 1
         }
       },
       "variants": [
@@ -2593,14 +2608,16 @@
           "default": 8,
           "min": 2,
           "max": 20,
-          "label": "Columns"
+          "label": "Columns",
+          "step": 1
         },
         "rows": {
           "type": "number",
           "default": 5,
           "min": 2,
           "max": 12,
-          "label": "Rows"
+          "label": "Rows",
+          "step": 1
         }
       },
       "variants": [
@@ -2632,7 +2649,8 @@
           "default": 6,
           "min": 1,
           "max": 20,
-          "label": "Count"
+          "label": "Count",
+          "step": 1
         }
       },
       "variants": [
@@ -2761,7 +2779,8 @@
           "default": 0,
           "min": 0,
           "max": 2,
-          "label": "Active Index"
+          "label": "Active Index",
+          "step": 1
         }
       },
       "variants": [
@@ -2792,14 +2811,16 @@
           "default": 10,
           "min": 0,
           "max": 3600,
-          "label": "Start"
+          "label": "Start",
+          "step": 1
         },
         "end": {
           "type": "number",
           "default": 0,
           "min": 0,
           "max": 3600,
-          "label": "End"
+          "label": "End",
+          "step": 1
         },
         "labelText": {
           "type": "text",
@@ -2811,7 +2832,8 @@
           "default": 2,
           "min": 1,
           "max": 6,
-          "label": "Pad"
+          "label": "Pad",
+          "step": 1
         }
       },
       "variants": [

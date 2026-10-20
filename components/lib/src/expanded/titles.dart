@@ -221,7 +221,11 @@ class SelectionTitle extends StatelessWidget {
           Positioned(
             right: 40 * (1 - unit(progress)) - 8,
             bottom: -30,
-            child: Transform.rotate(angle: -.3, child: label(s, '↖', size: 42)),
+            child: Transform.rotate(
+              filterQuality: FilterQuality.medium,
+              angle: -.3,
+              child: label(s, '↖', size: 42),
+            ),
           ),
         ],
       ),

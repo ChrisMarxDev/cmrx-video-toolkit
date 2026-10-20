@@ -16,7 +16,11 @@ class Reveal extends StatelessWidget {
     final p = Curves.easeOutCubic.transform(progress.clamp(0.0, 1.0));
     return Opacity(
       opacity: p,
-      child: Transform.translate(offset: Offset(0, (1 - p) * 32), child: child),
+      child: Transform.translate(
+        filterQuality: FilterQuality.low,
+        offset: Offset(0, (1 - p) * 32),
+        child: child,
+      ),
     );
   }
 }

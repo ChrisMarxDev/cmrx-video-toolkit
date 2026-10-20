@@ -182,3 +182,8 @@ the specimen and its playback controls, with repaint boundaries around specimens
 The lazy overview grid mounts viewport cards instead of the complete catalog;
 offscreen cards are disposed. Page chrome, sidebar and property controls do not
 rebuild on every animation tick.
+
+Numeric controls preserve fractional values by default. Catalog fields with
+`step: 1` are discrete counts or indices; positions, perspective, spread, sizes
+and coordinates remain continuous. Labels show up to three decimal places, but
+preview properties and copied references retain the full numeric value.

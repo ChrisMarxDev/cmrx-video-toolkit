@@ -11,7 +11,11 @@ Widget screen(
 }) => SizedBox(
   width: width,
   height: height,
-  child: panel(s, ClipRect(child: child), padding: 8),
+  child: panel(
+    s,
+    ClipRect(clipBehavior: Clip.antiAlias, child: child),
+    padding: 8,
+  ),
 );
 
 class ScreenshotRail extends StatelessWidget {
@@ -41,6 +45,7 @@ class ScreenshotRail extends StatelessWidget {
                 left: 220 + (i - position.clamp(0, screens.length - 1)) * 390,
                 top: 105,
                 child: Transform(
+                  filterQuality: FilterQuality.medium,
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, .001)
                     ..rotateY(perspective.clamp(-.6, .6)),
@@ -86,6 +91,7 @@ class ScreenshotStack extends StatelessWidget {
               left: 150 + n * 22 * unit(progress),
               top: 70 + n * 18 * unit(progress),
               child: Transform.rotate(
+                filterQuality: FilterQuality.medium,
                 angle: (n - order.length + 1) * -.035 * unit(progress),
                 child: screen(s, screens[order[n]], width: 440, height: 300),
               ),
@@ -128,6 +134,7 @@ class ScreenshotFan extends StatelessWidget {
               left: 220 + (i - (screens.length - 1) / 2) * 65 * unit(progress),
               top: 100,
               child: Transform.rotate(
+                filterQuality: FilterQuality.medium,
                 angle:
                     (i - (screens.length - 1) / 2) *
                     spread.clamp(0, .6) *
@@ -275,6 +282,7 @@ class FocusCarousel extends StatelessWidget {
               child: Opacity(
                 opacity: (1 - (i - p).abs() * .25).clamp(.15, 1.0),
                 child: Transform.scale(
+                  filterQuality: FilterQuality.medium,
                   scale: (1 - (i - p).abs() * .18).clamp(.5, 1.0),
                   child: screen(s, items[i], height: 300),
                 ),

@@ -181,6 +181,7 @@ class SubscribeInteraction extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Transform.scale(
+              filterQuality: FilterQuality.medium,
               scale: p > .45 && p < .6 ? .94 : 1,
               child: panel(
                 s,
