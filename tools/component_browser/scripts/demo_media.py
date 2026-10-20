@@ -8,7 +8,7 @@ OUT = ROOT / 'assets/demo'
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    if (OUT / 'palette-v3').exists() and all((OUT / name).exists() for name in ('image.png', 'loop.gif', 'clip.mp4')):
+    if (OUT / 'palette-v4').exists() and all((OUT / name).exists() for name in ('image.png', 'loop.gif', 'clip.mp4')):
         return
     width, height, count = 320, 180, 24
     frames = bytearray()
@@ -21,7 +21,7 @@ def main():
                 if 28 < x < 292 and 28 < y < 152:
                     color = (40, 45, 52)
                 if (x - cx) ** 2 + (y - cy) ** 2 < 22 ** 2:
-                    color = (139, 158, 180)
+                    color = (12, 102, 228)
                 frames.extend(color)
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pixel_format', 'rgb24',
         '-video_size', f'{width}x{height}', '-framerate', '12', '-i', 'pipe:0',
@@ -32,7 +32,7 @@ def main():
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(OUT/'clip.mp4'),
         '-filter_complex', '[0:v]split[a][b];[a]palettegen[p];[b][p]paletteuse',
         '-loop', '0', str(OUT/'loop.gif')], check=True)
-    (OUT / 'palette-v3').write_text('slate-blue\n')
+    (OUT / 'palette-v4').write_text('application-blue\n')
     print('Generated original CMRX Video Toolkit image, GIF and video fixtures in', OUT)
 
 if __name__ == '__main__':

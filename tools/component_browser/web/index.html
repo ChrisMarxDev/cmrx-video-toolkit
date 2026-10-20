@@ -15,17 +15,17 @@
     .brand { margin: 0 0 28px; color: #69727D; font-size: 12px; letter-spacing: .04em; }
     .mark { display: grid; grid-template-columns: repeat(2, 17px); gap: 5px; margin-bottom: 24px; width: fit-content; }
     .mark span { width: 17px; height: 17px; border: 1px solid #BCC7D2; border-radius: 3px; background: #EDF0F3; }
-    .mark span:last-child { background: #526B87; border-color: #526B87; }
+    .mark span:last-child { background: #0C66E4; border-color: #0C66E4; }
     h1 { margin: 0 0 8px; font-size: 25px; font-weight: 550; letter-spacing: -.035em; }
     .intro { margin: 0 0 30px; color: #69727D; }
     .track { height: 3px; overflow: hidden; background: #E3E7EB; border-radius: 3px; }
-    .track::after { content: ''; display: block; width: 35%; height: 100%; background: #526B87; border-radius: inherit; animation: loading 1.8s ease-in-out infinite; }
+    .track::after { content: ''; display: block; width: 35%; height: 100%; background: #0C66E4; border-radius: inherit; animation: loading 1.8s ease-in-out infinite; }
     @keyframes loading { 0% { transform: translateX(-110%); } 100% { transform: translateX(390%); } }
     #loading-status { margin: 14px 0 0; min-height: 21px; }
     #loading-hint { margin: 8px 0 0; color: #69727D; font-size: 12px; }
-    #loading-retry { margin-top: 20px; border: 1px solid #DCE1E6; border-radius: 6px; background: white; color: #405873; padding: 10px 16px; font: inherit; cursor: pointer; }
+    #loading-retry { margin-top: 20px; border: 1px solid #DCE1E6; border-radius: 6px; background: white; color: #0C66E4; padding: 10px 16px; font: inherit; cursor: pointer; }
     #loading-retry:hover { background: #EDF0F3; }
-    #loading-retry:focus-visible { outline: 2px solid #526B87; outline-offset: 3px; }
+    #loading-retry:focus-visible { outline: 2px solid #0C66E4; outline-offset: 3px; }
     #loading.failed .track::after { animation: none; width: 100%; opacity: .35; }
     noscript { display: block; margin-top: 20px; }
     @media (prefers-reduced-motion: reduce) { .track::after { animation: none; width: 100%; opacity: .5; } }

@@ -6,7 +6,7 @@ abstract final class DemoPalette {
   static const white = Color(0xFFFFFFFF);
   static const ink = Color(0xFF282D34);
   static const surface = Color(0xFFEDF0F3);
-  static const accent = Color(0xFF526B87);
+  static const accent = Color(0xFF0C66E4);
   static const mist = Color(0xFFF7F8FA);
   static const muted = Color(0xFF69727D);
   static const rule = Color(0xFFDCE1E6);

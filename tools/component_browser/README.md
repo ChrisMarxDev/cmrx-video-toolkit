@@ -6,7 +6,7 @@ Flutter widgets**. No parallel HTML imitations or Widgetbook dependency.
 [Open the hosted component browser](https://chrismarxdev.github.io/cmrx-video-toolkit/components/)
 — no installation needed. It includes the 60 public component families, live
 previews, editable properties and copy/export selection. The default demonstration
-theme uses cool grays, muted blue accents and subtle 6px corners; no lime accents.
+theme uses cool grays, standard application-blue accents (#0C66E4) and subtle 6px corners; no lime accents.
 
 ## GitHub Pages
 
