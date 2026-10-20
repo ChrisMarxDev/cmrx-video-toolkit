@@ -168,7 +168,7 @@ test('missing build executable gives a diagnostic instead of hanging', async t =
 test('family discovery removes duplicates and resolves all legacy presets canonically', async t => {
   const { runtime } = await fixture(t);
   const catalog = await runtime.catalog();
-  assert.equal(catalog.components.length, 60);
+  assert.equal(catalog.components.length, 62);
   const found = await runtime.list({ query: 'video.focus-carousel' });
   assert.equal(found.total, 1);
   assert.equal(found.components[0].id, 'video.screenshot-rail');

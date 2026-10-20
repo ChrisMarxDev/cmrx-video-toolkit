@@ -33,6 +33,10 @@ String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
   if (isTechnical(spec)) return technicalDartExample(spec, p);
   final text = literal(p['text']);
   return switch (spec.id) {
+    'video.chapter-wipe' =>
+      "ChapterWipe(progress: progress, count: ${p['count']}, direction: WipeDirection.${p['direction']}, color: style.${p['tone']})",
+    'video.camera-frame' =>
+      "CameraFrame(program: cameraFrameProgram, shape: CameraFrameShape.${p['shape']}, feather: ${p['feather']}, dither: ${p['dither']}, pixelSize: ${p['pixelSize']}, child: cameraContent)",
     'video.image' =>
       'VideoImage(image: decodedImage, fit: BoxFit.${p['fit']}, framed: ${p['framed']})',
     'video.gif' =>

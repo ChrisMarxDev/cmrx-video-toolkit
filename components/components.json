@@ -3620,6 +3620,127 @@
       ],
       "description": "Caller-owned map slot with a normalized pin, address and event details.",
       "expanded": true
+    },
+    {
+      "id": "video.chapter-wipe",
+      "name": "Chapter color wipe",
+      "widget": "ChapterWipe",
+      "category": "Transitions",
+      "source": "components/lib/src/expanded/transitions.dart",
+      "motion": true,
+      "description": "One color sweeps in, covers the chapter cut, then sweeps out. Change chapter at progress 0.5.",
+      "parameters": {
+        "count": {
+          "type": "number",
+          "default": 8,
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "label": "Stripes"
+        },
+        "direction": {
+          "type": "choice",
+          "default": "right",
+          "options": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "label": "Direction"
+        },
+        "tone": {
+          "type": "choice",
+          "default": "foreground",
+          "options": [
+            "foreground",
+            "accent",
+            "surface"
+          ],
+          "label": "Fill color"
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "props": {}
+        },
+        {
+          "id": "single-panel",
+          "props": {
+            "count": 1
+          }
+        },
+        {
+          "id": "upward",
+          "props": {
+            "direction": "up",
+            "count": 10,
+            "tone": "accent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "video.camera-frame",
+      "name": "Dithered camera frame",
+      "widget": "CameraFrame",
+      "category": "Camera frames",
+      "source": "components/lib/src/camera_frame.dart",
+      "motion": false,
+      "description": "Rectangular or circular camera crop with a feathered, ordered-dither alpha edge and an untouched center. Not person segmentation.",
+      "parameters": {
+        "shape": {
+          "type": "choice",
+          "default": "rectangle",
+          "options": [
+            "rectangle",
+            "circle"
+          ],
+          "label": "Shape"
+        },
+        "feather": {
+          "type": "number",
+          "default": 0.18,
+          "min": 0.02,
+          "max": 0.45,
+          "label": "Edge fade width"
+        },
+        "dither": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1,
+          "label": "Dither strength"
+        },
+        "pixelSize": {
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 6,
+          "label": "Dither cell pixels"
+        }
+      },
+      "variants": [
+        {
+          "id": "rectangle",
+          "props": {}
+        },
+        {
+          "id": "circle",
+          "props": {
+            "shape": "circle",
+            "feather": 0.16
+          }
+        },
+        {
+          "id": "soft",
+          "props": {
+            "dither": 0,
+            "feather": 0.22
+          }
+        }
+      ]
     }
   ]
 }

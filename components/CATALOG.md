@@ -125,3 +125,34 @@ as the original components; no second style system or external runtime is needed
 High-overlap catalog entries are grouped into ten families. Original layouts are
 available as presets and existing widget APIs remain supported. See
 [FAMILIES.md](FAMILIES.md) for canonical IDs, alias resolution and schema version 2.
+
+## Chapter transitions and camera frames
+
+`ChapterWipe(progress:, count: 8, direction: WipeDirection.right)` is a transparent
+color overlay: strips enter, hold full coverage from progress .45 through .55,
+then continue off the opposite side. Put it last in a full-size `Stack`; switch
+chapters at .5. A suggested short duration is 0.6–0.9 seconds; progress comes from
+the composition timeline, not a private animation controller. Set `color` explicitly
+or inherit the parent style's accent. Count 1 gives a single-panel pass.
+
+`CameraFrame(program:, child:)` applies a geometric alpha mask to Flutter-painted
+image/video content. Preload `await CameraFrame.loadProgram()` before frame zero.
+Use a bounded parent and a fitted child, such as `RawImage` or decoded video frames.
+Rectangle and inscribed-circle presets keep the center unchanged and feather
+inward from the boundary. `feather` is a fraction of the shortest side (0–.5,
+exclusive of zero); `dither` blends smooth alpha (0) with fixed Bayer 4×4 coverage
+(1). It does not quantize image colors, animate noise, segment a person or recolor
+the center. Existing child transparency is preserved.
+
+`pixelSize` is the final-output dither cell size; `outputScale` is output pixels
+per local canvas unit. Set both deliberately when scaling a composition. Defaults
+are one pixel and scale one. Inspect at final resolution and after video encoding.
+Flutter platform views/HTML video overlays do not necessarily participate in
+ShaderMask; use Flutter-painted media/decoded frames for capture. No per-frame
+shader loading or image readback is performed. Each instance owns/disposes its
+fragment shader. The implementation follows Flutter's
+[fragment shader contract](https://docs.flutter.dev/ui/design/graphics/fragment-shaders).
+
+Both are exported by `video_components.dart` / `expanded.dart`, registered as
+`video.chapter-wipe` and `video.camera-frame`, and available in the public browser.
+The camera sample there is an original synthetic portrait.

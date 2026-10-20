@@ -8,3 +8,5 @@ export 'src/expanded/data.dart';
 export 'src/expanded/transitions.dart';
 export 'src/expanded/social.dart';
 export 'src/expanded/inputs.dart';
+
+export 'src/camera_frame.dart';

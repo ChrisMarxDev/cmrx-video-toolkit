@@ -11,7 +11,7 @@ void main() {
     () async {
       TestWidgetsFlutterBinding.ensureInitialized();
       final catalog = await loadCatalog();
-      expect(catalog.length, 60);
+      expect(catalog.length, 62);
       final families = catalog
           .where((s) => s.presentations.isNotEmpty)
           .toList();

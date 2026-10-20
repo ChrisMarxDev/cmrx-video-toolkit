@@ -228,3 +228,12 @@ preferences disable the loading animation. JavaScript is required.
 
 Run `node --test test/loading_test.mjs` to check slow-load, failure, retry and
 first-frame cleanup behavior.
+
+## Camera frames and chapter wipe
+
+The Camera frames category contains rectangular/circular edge-fade presets with
+shape, feather width, dither strength and cell-size controls. The center retains
+the source image unchanged. The shader is preloaded at startup; unsupported hosts
+show the existing shader-unavailable state. Chapter color wipe appears under
+Transitions, with stripe count, direction and inherited fill-color controls.
+Preview progress is continuous; production timing comes from the composition.

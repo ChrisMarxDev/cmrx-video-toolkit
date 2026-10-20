@@ -16,6 +16,7 @@ flutter:
   assets:
     - components.json
   shaders:
+    - shaders/camera_frame.frag
     - shaders/dither_field.frag
     - shaders/dither_image.frag
     - shaders/sculpture.frag

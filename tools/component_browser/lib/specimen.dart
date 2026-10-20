@@ -41,6 +41,44 @@ Widget specimen(
     child: Padding(padding: const EdgeInsets.all(32), child: child),
   );
   final content = switch (spec.id) {
+    'video.chapter-wipe' => Stack(
+      fit: StackFit.expand,
+      children: [
+        Center(
+          child: Text(
+            progress < .5 ? 'Chapter 01' : 'Chapter 02',
+            style: style.body.copyWith(color: style.foreground, fontSize: 36),
+          ),
+        ),
+        ChapterWipe(
+          progress: progress,
+          count: (p['count'] as num).toInt(),
+          direction: WipeDirection.values.byName(p['direction']),
+          color: switch (p['tone']) {
+            'accent' => style.accent,
+            'surface' => style.surface,
+            _ => style.foreground,
+          },
+        ),
+      ],
+    ),
+    'video.camera-frame' =>
+      cameraFrameProgram == null
+          ? shaderUnavailable()
+          : Center(
+              child: FractionallySizedBox(
+                widthFactor: .7,
+                heightFactor: .8,
+                child: CameraFrame(
+                  program: cameraFrameProgram!,
+                  shape: CameraFrameShape.values.byName(p['shape']),
+                  feather: number('feather'),
+                  dither: number('dither'),
+                  pixelSize: number('pixelSize'),
+                  child: const SyntheticPortrait(),
+                ),
+              ),
+            ),
     'video.image' =>
       demoImage == null
           ? const SizedBox()

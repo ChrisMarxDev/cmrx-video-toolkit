@@ -265,3 +265,75 @@ class _RevealClip extends CustomClipper<Path> {
       direction != old.direction ||
       center != old.center;
 }
+
+/// Transparent -> solid color -> transparent, moving onward in one direction.
+/// Change the underlying chapter at progress .5 (fully covered from .45 to .55).
+class ChapterWipe extends StatelessWidget {
+  const ChapterWipe({
+    super.key,
+    required this.progress,
+    this.count = 8,
+    this.direction = WipeDirection.right,
+    this.color,
+    this.style,
+  });
+  final double progress;
+  final int count;
+  final WipeDirection direction;
+  final Color? color;
+  final VideoStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!progress.isFinite || count < 1 || count > 64) {
+      throw ArgumentError('Use finite progress and 1–64 stripes.');
+    }
+    final fill = color ?? VideoThemeScope.resolve(context, style).accent;
+    return IgnorePointer(
+      child: ClipPath(
+        clipper: _ChapterClip(progress.clamp(0.0, 1.0), count, direction),
+        child: ColoredBox(color: fill, child: const SizedBox.expand()),
+      ),
+    );
+  }
+}
+
+class _ChapterClip extends CustomClipper<Path> {
+  const _ChapterClip(this.p, this.count, this.direction);
+  final double p;
+  final int count;
+  final WipeDirection direction;
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    if (p <= 0 || p >= 1) return path;
+    final vertical =
+        direction == WipeDirection.up || direction == WipeDirection.down;
+    final reverse =
+        direction == WipeDirection.up || direction == WipeDirection.left;
+    final length = vertical ? size.height : size.width;
+    final cross = (vertical ? size.width : size.height) / count;
+    for (var i = 0; i < count; i++) {
+      final delay = count == 1 ? 0.0 : i / (count - 1) * .12;
+      final enter = Curves.easeInOutCubic.transform(
+        ((p - delay) / .33).clamp(0.0, 1.0),
+      );
+      final leave = Curves.easeInOutCubic.transform(
+        ((p - .55 - delay) / .33).clamp(0.0, 1.0),
+      );
+      final start = (reverse ? 1 - enter : leave) * length;
+      final end = (reverse ? 1 - leave : enter) * length;
+      if (end <= start) continue;
+      path.addRect(
+        vertical
+            ? Rect.fromLTWH(i * cross, start, cross, end - start)
+            : Rect.fromLTWH(start, i * cross, end - start, cross),
+      );
+    }
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_ChapterClip old) =>
+      old.p != p || old.count != count || old.direction != direction;
+}
