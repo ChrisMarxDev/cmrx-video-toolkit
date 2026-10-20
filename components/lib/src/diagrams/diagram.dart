@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
+
 import '../style.dart';
 
 enum DiagramShape { process, terminal, decision, database, document }
@@ -182,39 +184,42 @@ class TechnicalNode extends StatelessWidget {
   const TechnicalNode({
     super.key,
     required this.label,
-    required this.style,
+    this.style,
     this.shape = DiagramShape.process,
     this.active = false,
   });
   final String label;
-  final VideoStyle style;
+  final VideoStyle? style;
   final DiagramShape shape;
   final bool active;
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: label,
-    child: CustomPaint(
-      painter: _NodePainter(shape, style, active),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: shape == DiagramShape.decision ? 34 : 14,
-          vertical: shape == DiagramShape.decision ? 24 : 16,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: style.body.copyWith(
-              color: style.foreground,
-              decoration: TextDecoration.none,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Semantics(
+      label: label,
+      child: CustomPaint(
+        painter: _NodePainter(shape, style, active),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: shape == DiagramShape.decision ? 34 : 14,
+            vertical: shape == DiagramShape.decision ? 24 : 16,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: style.body.copyWith(
+                color: style.foreground,
+                decoration: TextDecoration.none,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _NodePainter extends CustomPainter {
@@ -228,7 +233,7 @@ class _NodePainter extends CustomPainter {
     final path = Path();
     switch (shape) {
       case DiagramShape.process:
-        path.addRect(r);
+        path.addRRect(RRect.fromRectAndRadius(r, Radius.circular(style.radius)));
       case DiagramShape.terminal:
         path.addRRect(
           RRect.fromRectAndRadius(r, Radius.circular(r.height / 2)),
@@ -284,7 +289,7 @@ class _NodePainter extends CustomPainter {
     final pen = Paint()
       ..color = style.foreground
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = style.borderWidth;
     canvas.drawPath(path, pen);
     if (shape == DiagramShape.database) {
       final ry = math.min(14.0, r.height / 6);
@@ -304,7 +309,7 @@ class TechnicalDiagram extends StatelessWidget {
     super.key,
     required List<DiagramNode> nodes,
     required List<DiagramEdge> edges,
-    required this.style,
+    this.style,
     this.designSize = const Size(800, 480),
     this.progress = 1,
   }) : nodes = List.unmodifiable(nodes),
@@ -339,43 +344,46 @@ class TechnicalDiagram extends StatelessWidget {
   }
   final List<DiagramNode> nodes;
   final List<DiagramEdge> edges;
-  final VideoStyle style;
+  final VideoStyle? style;
   final Size designSize;
   final double progress;
   @override
-  Widget build(BuildContext context) => FittedBox(
-    fit: BoxFit.contain,
-    child: SizedBox.fromSize(
-      size: designSize,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Semantics(
-              label: edges
-                  .map(
-                    (e) =>
-                        '${e.from} to ${e.to}${e.label.isEmpty ? '' : ': ${e.label}'}',
-                  )
-                  .join('; '),
-              child: CustomPaint(
-                painter: _Edges(nodes, edges, style, progress),
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: SizedBox.fromSize(
+        size: designSize,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Semantics(
+                label: edges
+                    .map(
+                      (e) =>
+                          '${e.from} to ${e.to}${e.label.isEmpty ? '' : ': ${e.label}'}',
+                    )
+                    .join('; '),
+                child: CustomPaint(
+                  painter: _Edges(nodes, edges, style, progress),
+                ),
               ),
             ),
-          ),
-          for (final node in nodes)
-            Positioned.fromRect(
-              rect: node.bounds,
-              child: TechnicalNode(
-                label: node.label,
-                shape: node.shape,
-                active: node.active,
-                style: style,
+            for (final node in nodes)
+              Positioned.fromRect(
+                rect: node.bounds,
+                child: TechnicalNode(
+                  label: node.label,
+                  shape: node.shape,
+                  active: node.active,
+                  style: style,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Edges extends CustomPainter {

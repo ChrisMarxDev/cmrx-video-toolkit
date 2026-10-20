@@ -45,8 +45,9 @@ List<SequenceMessage> sequenceSteps(String example) => [
 Widget technicalSpecimen(
   ComponentSpec spec,
   Map<String, dynamic> p,
-  double progress,
-) {
+  double progress, {
+  VideoStyle style = demoStyle,
+}) {
   final id = spec.id.split('.').last;
   Widget content;
   try {
@@ -56,7 +57,7 @@ Widget technicalSpecimen(
           width: 280,
           height: 140,
           child: TechnicalNode(
-            style: demoStyle,
+            style: style,
             label: p['label'],
             shape: DiagramShape.values.byName(p['shape']),
             active: p['active'],
@@ -64,7 +65,7 @@ Widget technicalSpecimen(
         ),
       ),
       'connector' => TechnicalDiagram(
-        style: demoStyle,
+        style: style,
         designSize: const Size(800, 280),
         nodes: [
           DiagramNode(
@@ -92,12 +93,12 @@ Widget technicalSpecimen(
       ),
       'flowchart' || 'architecture' => technicalDiagramExample(
         DiagramExample.values.byName(p['example']),
-        style: demoStyle,
+        style: style,
         vertical: p['vertical'] == true,
         progress: progress,
       ),
       'layer-stack' => TechnicalStack(
-        style: demoStyle,
+        style: style,
         layers: technicalLayers(p),
         activeLayer: (p['active'] as num).toInt().clamp(
           0,
@@ -106,7 +107,7 @@ Widget technicalSpecimen(
         expansion: progress,
       ),
       'tensor-grid' => TechnicalGrid(
-        style: demoStyle,
+        style: style,
         cells: technicalCells(p['example']),
         activeRow: p['axis'] == 'row' ? (p['active'] as num).toInt() : null,
         activeColumn: p['axis'] == 'column'
@@ -114,13 +115,13 @@ Widget technicalSpecimen(
             : null,
       ),
       'sequence' => TechnicalSequence(
-        style: demoStyle,
+        style: style,
         participants: sequenceActors(p['example']),
         messages: sequenceSteps(p['example']),
         progress: progress,
       ),
       'annotation' => TechnicalAnnotation(
-        style: demoStyle,
+        style: style,
         notes: [
           TechnicalNote(
             target: const Offset(370, 300),
@@ -130,14 +131,14 @@ Widget technicalSpecimen(
         ],
         progress: progress,
         child: TechnicalStack(
-          style: demoStyle,
+          style: style,
           layers: const ['Storage', 'Logic', 'Interface'],
           activeLayer: 1,
           expansion: 0.7,
         ),
       ),
       _ => TechnicalChart(
-        style: demoStyle,
+        style: style,
         kind: TechnicalChartKind.values.byName(id.substring(6)),
         data: parseTechnicalChartData(p['text']),
         unit: p['unit'],
@@ -163,7 +164,7 @@ Widget technicalSpecimen(
   return ColoredBox(
     color: const Color(0xFFFFFFFF),
     child: DefaultTextStyle(
-      style: demoStyle.body,
+      style: style.body,
       child: Padding(padding: const EdgeInsets.all(32), child: content),
     ),
   );
@@ -173,20 +174,20 @@ String technicalDartExample(ComponentSpec spec, Map<String, dynamic> p) {
   final id = spec.id.split('.').last;
   return switch (id) {
     'diagram-node' =>
-      '''TechnicalNode(style: demoStyle, label: ${literal(p['label'])}, shape: DiagramShape.${p['shape']}, active: ${p['active']})''',
+      '''TechnicalNode(style: style, label: ${literal(p['label'])}, shape: DiagramShape.${p['shape']}, active: ${p['active']})''',
     'connector' =>
-      '''TechnicalDiagram(style: demoStyle, designSize: const Size(800, 280), nodes: [DiagramNode(id: 'a', label: 'Producer', bounds: const Rect.fromLTWH(20, 100, 200, 80)), DiagramNode(id: 'b', label: 'Consumer', bounds: const Rect.fromLTWH(580, 100, 200, 80), active: true)], edges: [DiagramEdge(from: 'a', to: 'b', label: ${literal(p['label'])}, dashed: ${p['dashed']}, active: true)], progress: progress)''',
+      '''TechnicalDiagram(style: style, designSize: const Size(800, 280), nodes: [DiagramNode(id: 'a', label: 'Producer', bounds: const Rect.fromLTWH(20, 100, 200, 80)), DiagramNode(id: 'b', label: 'Consumer', bounds: const Rect.fromLTWH(580, 100, 200, 80), active: true)], edges: [DiagramEdge(from: 'a', to: 'b', label: ${literal(p['label'])}, dashed: ${p['dashed']}, active: true)], progress: progress)''',
     'flowchart' || 'architecture' =>
-      '''technicalDiagramExample(DiagramExample.${p['example']}, style: demoStyle, vertical: ${p['vertical'] == true}, progress: progress)''',
+      '''technicalDiagramExample(DiagramExample.${p['example']}, style: style, vertical: ${p['vertical'] == true}, progress: progress)''',
     'layer-stack' =>
-      '''TechnicalStack(style: demoStyle, layers: ${literal(technicalLayers(p))}, activeLayer: ${(p['active'] as num).toInt().clamp(0, technicalLayers(p).length - 1)}, expansion: progress)''',
+      '''TechnicalStack(style: style, layers: ${literal(technicalLayers(p))}, activeLayer: ${(p['active'] as num).toInt().clamp(0, technicalLayers(p).length - 1)}, expansion: progress)''',
     'tensor-grid' =>
-      '''TechnicalGrid(style: demoStyle, cells: ${literal(technicalCells(p['example']))}, activeRow: ${p['axis'] == 'row' ? p['active'] : null}, activeColumn: ${p['axis'] == 'column' ? p['active'] : null})''',
+      '''TechnicalGrid(style: style, cells: ${literal(technicalCells(p['example']))}, activeRow: ${p['axis'] == 'row' ? p['active'] : null}, activeColumn: ${p['axis'] == 'column' ? p['active'] : null})''',
     'sequence' =>
-      '''TechnicalSequence(style: demoStyle, participants: ${literal(sequenceActors(p['example']))}, messages: [${sequenceSteps(p['example']).map((m) => 'SequenceMessage(from: ${m.from}, to: ${m.to}, label: ${literal(m.label)}, response: ${m.response})').join(', ')}], progress: progress)''',
+      '''TechnicalSequence(style: style, participants: ${literal(sequenceActors(p['example']))}, messages: [${sequenceSteps(p['example']).map((m) => 'SequenceMessage(from: ${m.from}, to: ${m.to}, label: ${literal(m.label)}, response: ${m.response})').join(', ')}], progress: progress)''',
     'annotation' =>
-      '''TechnicalAnnotation(style: demoStyle, notes: [TechnicalNote(target: const Offset(370, 300), labelPosition: const Offset(480, 65), text: ${literal(p['label'])})], progress: progress, child: TechnicalStack(style: demoStyle, layers: const ['Storage', 'Logic', 'Interface'], activeLayer: 1, expansion: 0.7))''',
+      '''TechnicalAnnotation(style: style, notes: [TechnicalNote(target: const Offset(370, 300), labelPosition: const Offset(480, 65), text: ${literal(p['label'])})], progress: progress, child: TechnicalStack(style: style, layers: const ['Storage', 'Logic', 'Interface'], activeLayer: 1, expansion: 0.7))''',
     _ =>
-      '''TechnicalChart(style: demoStyle, kind: TechnicalChartKind.${id.substring(6)}, data: parseTechnicalChartData(${literal(p['text'])}), unit: ${literal(p['unit'])}, source: ${literal(p['source'])}, progress: progress)''',
+      '''TechnicalChart(style: style, kind: TechnicalChartKind.${id.substring(6)}, data: parseTechnicalChartData(${literal(p['text'])}), unit: ${literal(p['unit'])}, source: ${literal(p['source'])}, progress: progress)''',
   };
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+
 import 'style.dart';
 import 'shaders.dart';
 
@@ -9,90 +10,105 @@ enum VideoTheme { light, dark }
 class VideoStage extends StatelessWidget {
   const VideoStage({
     super.key,
-    required this.style,
+    this.style,
     required this.child,
     this.theme = VideoTheme.light,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final Widget child;
   final VideoTheme theme;
   @override
-  Widget build(BuildContext context) => Directionality(
-    textDirection: TextDirection.ltr,
-    child: ColoredBox(
-      color: theme == VideoTheme.light
-          ? style.background
-          : style.darkBackground,
-      child: DefaultTextStyle(
-        style: style.body.copyWith(
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return VideoThemeScope(
+      style: style,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: ColoredBox(
           color: theme == VideoTheme.light
-              ? style.foreground
-              : style.darkForeground,
+              ? style.background
+              : style.darkBackground,
+          child: DefaultTextStyle(
+            style: style.body.copyWith(
+              color: theme == VideoTheme.light
+                  ? style.foreground
+                  : style.darkForeground,
+            ),
+            child: child,
+          ),
         ),
-        child: child,
       ),
-    ),
-  );
+    );
+  }
 }
 
-/// Square explanatory element. No automatic heading, logo, timer or shadow.
+/// Theme-styled explanatory element. No automatic heading, logo, timer or shadow.
 class VideoBlock extends StatelessWidget {
   const VideoBlock({
     super.key,
-    required this.style,
+    this.style,
     required this.child,
     this.active = false,
-    this.padding = 20,
+    this.padding,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final Widget child;
   final bool active;
-  final double padding;
+  final double? padding;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.all(padding),
-    decoration: BoxDecoration(
-      color: active ? style.accent : style.surface,
-      border: Border.all(color: style.foreground, width: 1.5),
-    ),
-    child: DefaultTextStyle(
-      style: style.body,
-      child: IconTheme(
-        data: IconThemeData(color: style.foreground, size: 32),
-        child: child,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Container(
+      padding: EdgeInsets.all(padding ?? style.spacing),
+      decoration: BoxDecoration(
+        color: active ? style.accent : style.surface,
+        border: Border.all(
+          color: style.foreground,
+          width: style.borderWidth,
+          style: style.borderWidth == 0 ? BorderStyle.none : BorderStyle.solid,
+        ),
+        borderRadius: BorderRadius.circular(style.radius),
       ),
-    ),
-  );
+      child: DefaultTextStyle(
+        style: style.body.copyWith(color: style.foreground),
+        child: IconTheme(
+          data: IconThemeData(color: style.foreground, size: 32),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
 
 class VideoCaption extends StatelessWidget {
-  const VideoCaption(
-    this.text, {
-    super.key,
-    required this.style,
-    this.fontSize,
-  });
-  final VideoStyle style;
+  const VideoCaption(this.text, {super.key, this.style, this.fontSize});
+  final VideoStyle? style;
   final String text;
   final double? fontSize;
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: style.foreground,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: style.caption.copyWith(fontSize: fontSize),
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Container(
+      decoration: BoxDecoration(
+        color: style.foreground,
+        borderRadius: BorderRadius.circular(style.radius),
       ),
-    ),
-  );
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: style.caption.copyWith(fontSize: fontSize),
+        ),
+      ),
+    );
+  }
 }
 
 class VideoCode extends StatelessWidget {
   VideoCode({
     super.key,
-    required this.style,
+    this.style,
     required List<String> lines,
     this.focusLine,
   }) : lines = List.unmodifiable(lines) {
@@ -101,42 +117,48 @@ class VideoCode extends StatelessWidget {
       throw ArgumentError('Provide code lines and an in-range focusLine');
     }
   }
-  final VideoStyle style;
+  final VideoStyle? style;
   final List<String> lines;
   final int? focusLine;
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: style.foreground,
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < lines.length; i++)
-            Container(
-              color: i == focusLine ? style.accent : null,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                lines[i],
-                style: style.mono.copyWith(
-                  color: i == focusLine
-                      ? style.foreground
-                      : style.darkForeground,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Container(
+      decoration: BoxDecoration(
+        color: style.foreground,
+        borderRadius: BorderRadius.circular(style.radius),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(style.spacing),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < lines.length; i++)
+              Container(
+                color: i == focusLine ? style.accent : null,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  lines[i],
+                  style: style.mono.copyWith(
+                    color: i == focusLine
+                        ? style.foreground
+                        : style.darkForeground,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Bounded optional texture; callers place clean captions/presenter above it.
 class VideoTexture extends StatelessWidget {
   const VideoTexture({
     super.key,
-    required this.style,
+    this.style,
     required this.programs,
     this.seconds = 0,
     this.animated = false,
@@ -146,24 +168,27 @@ class VideoTexture extends StatelessWidget {
     this.accentPalette = false,
     this.outputScale = 1,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final DitherPrograms programs;
   final double seconds, outputScale, speed, pixelSize;
   final bool animated, strong, accentPalette;
   @override
-  Widget build(BuildContext context) => DitherField(
-    programs: programs,
-    time: 2.4 + (animated ? seconds * speed : 0),
-    style: DitherStyle(
-      background: accentPalette
-          ? style.surface
-          : (strong ? style.foreground : style.background),
-      foreground: accentPalette ? style.accent : style.surface,
-      pixelSize: pixelSize,
-      outputScale: outputScale,
-      pattern: DitherPattern.bayer4,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return DitherField(
+      programs: programs,
+      time: 2.4 + (animated ? seconds * speed : 0),
+      style: DitherStyle(
+        background: accentPalette
+            ? style.surface
+            : (strong ? style.foreground : style.background),
+        foreground: accentPalette ? style.accent : style.surface,
+        pixelSize: pixelSize,
+        outputScale: outputScale,
+        pattern: DitherPattern.bayer4,
+      ),
+    );
+  }
 }
 
 /// Full-canvas, gently moving dither behind clean foreground content.
@@ -171,7 +196,7 @@ class VideoTexture extends StatelessWidget {
 class VideoDitherBackground extends StatelessWidget {
   VideoDitherBackground({
     super.key,
-    required this.style,
+    this.style,
     required this.programs,
     required this.seconds,
     required this.child,
@@ -192,43 +217,46 @@ class VideoDitherBackground extends StatelessWidget {
       );
     }
   }
-  final VideoStyle style;
+  final VideoStyle? style;
   final DitherPrograms programs;
   final double seconds, speed, outputScale, pixelSize;
   final Widget child;
   final bool accentPalette;
   @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
-    alignment: Alignment.topLeft,
-    children: [
-      Positioned.fill(
-        child: IgnorePointer(
-          child: DitherField(
-            programs: programs,
-            time: 2.4 + seconds * speed,
-            style: DitherStyle(
-              background: accentPalette ? style.surface : style.background,
-              foreground: accentPalette ? style.accent : style.surface,
-              pattern: DitherPattern.bayer4,
-              pixelSize: pixelSize,
-              outputScale: outputScale,
-              contrast: .65,
-              bias: -.08,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Stack(
+      fit: StackFit.expand,
+      alignment: Alignment.topLeft,
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DitherField(
+              programs: programs,
+              time: 2.4 + seconds * speed,
+              style: DitherStyle(
+                background: accentPalette ? style.surface : style.background,
+                foreground: accentPalette ? style.accent : style.surface,
+                pattern: DitherPattern.bayer4,
+                pixelSize: pixelSize,
+                outputScale: outputScale,
+                contrast: .65,
+                bias: -.08,
+              ),
             ),
           ),
         ),
-      ),
-      child,
-    ],
-  );
+        child,
+      ],
+    );
+  }
 }
 
 /// Technical exploded layers; explicit progress supports reverse seeks.
 class VideoLayers extends StatelessWidget {
   VideoLayers({
     super.key,
-    required this.style,
+    this.style,
     this.expansion = 0,
     this.activeLayer = 1,
   }) {
@@ -240,14 +268,17 @@ class VideoLayers extends StatelessWidget {
       throw ArgumentError('expansion 0..1; activeLayer 0..2');
     }
   }
-  final VideoStyle style;
+  final VideoStyle? style;
   final double expansion;
   final int activeLayer;
   @override
-  Widget build(BuildContext context) => CustomPaint(
-    painter: _Layers(expansion, activeLayer, style),
-    child: const SizedBox.expand(),
-  );
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return CustomPaint(
+      painter: _Layers(expansion, activeLayer, style),
+      child: const SizedBox.expand(),
+    );
+  }
 }
 
 class _Layers extends CustomPainter {

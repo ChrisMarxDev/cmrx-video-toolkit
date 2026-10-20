@@ -23,6 +23,100 @@ void main() {
     () => binding.platformDispatcher.clearAccessibilityFeaturesTestValue(),
   );
 
+  testWidgets('Preview theme persists across component navigation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const reviewDir = String.fromEnvironment('THEME_REVIEW_DIR');
+    if (reviewDir.isNotEmpty) {
+      await tester.runAsync(() async {
+        await (FontLoader(
+          'MaterialIcons',
+        )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+        for (final entry in {
+          'sans-serif': const String.fromEnvironment('THEME_REVIEW_SANS'),
+          'serif': const String.fromEnvironment('THEME_REVIEW_SERIF'),
+        }.entries) {
+          if (entry.value.isNotEmpty) {
+            final bytes = await File(entry.value).readAsBytes();
+            await (FontLoader(
+              entry.key,
+            )..addFont(Future.value(ByteData.sublistView(bytes)))).load();
+          }
+        }
+      });
+    }
+    final boundary = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: boundary,
+        child: ComponentBrowser(
+          catalog: (await tester.runAsync(loadCatalog))!,
+          initialRoute: '/video.block',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final selector = find.byKey(const ValueKey('preview-theme'));
+    for (final name in ['Rounded', 'Editorial', 'Original']) {
+      await tester.tap(selector);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(name).last);
+      await tester.pumpAndSettle();
+      final style = VideoThemeScope.of(
+        tester.element(find.byType(SpecimenFrame).first),
+      );
+      expect(
+        style.radius,
+        name == 'Rounded'
+            ? 24
+            : name == 'Editorial'
+            ? 4
+            : 0,
+      );
+      const directory = String.fromEnvironment('THEME_REVIEW_DIR');
+      if (directory.isNotEmpty) {
+        await tester.runAsync(() async {
+          final capture =
+              await (boundary.currentContext!.findRenderObject()
+                      as RenderRepaintBoundary)
+                  .toImage();
+          final bytes = await capture.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          await Directory(directory).create(recursive: true);
+          await File(
+            '$directory/$name.png',
+          ).writeAsBytes(bytes!.buffer.asUint8List());
+          capture.dispose();
+        });
+      }
+    }
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rounded').last);
+    await tester.pumpAndSettle();
+    final sidebar = find.byKey(const ValueKey('component-sidebar'));
+    await tester.tap(
+      find
+          .descendant(of: sidebar, matching: find.byType(ListTile))
+          .hitTestable()
+          .at(2),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<DropdownButton<String>>(selector).value, 'Rounded');
+    expect(
+      VideoThemeScope.of(
+        tester.element(find.byType(SpecimenFrame).first),
+      ).radius,
+      24,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Sidebar keeps its scroll position when selecting components', (
     tester,
   ) async {

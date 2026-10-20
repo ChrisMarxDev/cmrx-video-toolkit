@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
+
 import '../style.dart';
 import 'diagram.dart';
 
@@ -8,7 +10,7 @@ class TechnicalStack extends StatelessWidget {
   TechnicalStack({
     super.key,
     required List<String> layers,
-    required this.style,
+    this.style,
     this.expansion = 1,
     this.activeLayer = 0,
   }) : layers = List.unmodifiable(layers) {
@@ -21,24 +23,27 @@ class TechnicalStack extends StatelessWidget {
     }
   }
   final List<String> layers;
-  final VideoStyle style;
+  final VideoStyle? style;
   final double expansion;
   final int activeLayer;
   @override
-  Widget build(BuildContext context) => Semantics(
-    label:
-        'Layers, bottom to top: ${layers.join(', ')}. Active: ${layers[activeLayer]}',
-    child: FittedBox(
-      fit: BoxFit.contain,
-      child: SizedBox(
-        width: 760,
-        height: 500,
-        child: CustomPaint(
-          painter: _StackPainter(layers, style, expansion, activeLayer),
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Semantics(
+      label:
+          'Layers, bottom to top: ${layers.join(', ')}. Active: ${layers[activeLayer]}',
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 760,
+          height: 500,
+          child: CustomPaint(
+            painter: _StackPainter(layers, style, expansion, activeLayer),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _StackPainter extends CustomPainter {
@@ -102,7 +107,7 @@ class TechnicalGrid extends StatelessWidget {
   TechnicalGrid({
     super.key,
     required List<List<String>> cells,
-    required this.style,
+    this.style,
     this.activeRow,
     this.activeColumn,
   }) : cells = List.unmodifiable(
@@ -121,54 +126,57 @@ class TechnicalGrid extends StatelessWidget {
     }
   }
   final List<List<String>> cells;
-  final VideoStyle style;
+  final VideoStyle? style;
   final int? activeRow, activeColumn;
   @override
-  Widget build(BuildContext context) => FittedBox(
-    fit: BoxFit.contain,
-    child: SizedBox(
-      width: cells.first.length * 76.0,
-      height: cells.length * 64.0,
-      child: Column(
-        children: [
-          for (var row = 0; row < cells.length; row++)
-            Expanded(
-              child: Row(
-                children: [
-                  for (var col = 0; col < cells[row].length; col++)
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: row == activeRow || col == activeColumn
-                              ? style.accent
-                              : style.surface,
-                          border: Border.all(
-                            color: style.foreground,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            cells[row][col],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: style.mono.copyWith(
-                              fontSize: 20,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: SizedBox(
+        width: cells.first.length * 76.0,
+        height: cells.length * 64.0,
+        child: Column(
+          children: [
+            for (var row = 0; row < cells.length; row++)
+              Expanded(
+                child: Row(
+                  children: [
+                    for (var col = 0; col < cells[row].length; col++)
+                      Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: row == activeRow || col == activeColumn
+                                ? style.accent
+                                : style.surface,
+                            border: Border.all(
                               color: style.foreground,
-                              decoration: TextDecoration.none,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              cells[row][col],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: style.mono.copyWith(
+                                fontSize: 20,
+                                color: style.foreground,
+                                decoration: TextDecoration.none,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 @immutable
@@ -190,7 +198,7 @@ class TechnicalSequence extends StatelessWidget {
     super.key,
     required List<String> participants,
     required List<SequenceMessage> messages,
-    required this.style,
+    this.style,
     this.progress = 1,
   }) : participants = List.unmodifiable(participants),
        messages = List.unmodifiable(messages) {
@@ -213,26 +221,30 @@ class TechnicalSequence extends StatelessWidget {
   }
   final List<String> participants;
   final List<SequenceMessage> messages;
-  final VideoStyle style;
+  final VideoStyle? style;
   final double progress;
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: messages
-        .map(
-          (m) => '${participants[m.from]} to ${participants[m.to]}: ${m.label}',
-        )
-        .join('; '),
-    child: FittedBox(
-      fit: BoxFit.contain,
-      child: SizedBox(
-        width: 800,
-        height: 140 + messages.length * 64.0,
-        child: CustomPaint(
-          painter: _SequencePainter(participants, messages, style, progress),
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Semantics(
+      label: messages
+          .map(
+            (m) =>
+                '${participants[m.from]} to ${participants[m.to]}: ${m.label}',
+          )
+          .join('; '),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 800,
+          height: 140 + messages.length * 64.0,
+          child: CustomPaint(
+            painter: _SequencePainter(participants, messages, style, progress),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _SequencePainter extends CustomPainter {
@@ -338,7 +350,7 @@ class TechnicalAnnotation extends StatelessWidget {
     super.key,
     required this.child,
     required List<TechnicalNote> notes,
-    required this.style,
+    this.style,
     this.designSize = const Size(800, 480),
     this.progress = 1,
   }) : notes = List.unmodifiable(notes) {
@@ -357,23 +369,26 @@ class TechnicalAnnotation extends StatelessWidget {
   }
   final Widget child;
   final List<TechnicalNote> notes;
-  final VideoStyle style;
+  final VideoStyle? style;
   final Size designSize;
   final double progress;
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: notes.map((n) => n.text).join('; '),
-    child: FittedBox(
-      fit: BoxFit.contain,
-      child: SizedBox.fromSize(
-        size: designSize,
-        child: CustomPaint(
-          foregroundPainter: _NotesPainter(notes, style, progress),
-          child: child,
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Semantics(
+      label: notes.map((n) => n.text).join('; '),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox.fromSize(
+          size: designSize,
+          child: CustomPaint(
+            foregroundPainter: _NotesPainter(notes, style, progress),
+            child: child,
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _NotesPainter extends CustomPainter {

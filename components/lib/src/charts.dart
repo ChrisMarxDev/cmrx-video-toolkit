@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as fluvie;
+
 import 'style.dart';
 import 'diagrams/diagram.dart' show checkProgress;
 
@@ -12,16 +13,14 @@ class TechnicalChart extends StatelessWidget {
   TechnicalChart({
     super.key,
     required Map<String, num> data,
-    required this.style,
+    this.style,
     required this.kind,
     this.progress = 1,
     this.unit = '',
     this.source = '',
     List<Color>? seriesColors,
   }) : data = Map.unmodifiable(data),
-       seriesColors = List.unmodifiable(
-         seriesColors ?? [style.foreground, style.accent, style.surface],
-       ) {
+       seriesColors = List.unmodifiable(seriesColors ?? const <Color>[]) {
     checkProgress(progress);
     if (data.isEmpty ||
         data.length > 8 ||
@@ -35,17 +34,21 @@ class TechnicalChart extends StatelessWidget {
     if (kind == TechnicalChartKind.donut && data.values.every((v) => v == 0)) {
       throw ArgumentError('A donut requires a positive total');
     }
-    if (this.seriesColors.isEmpty)
+    if (seriesColors != null && seriesColors.isEmpty)
       throw ArgumentError('A chart palette cannot be empty');
   }
   final Map<String, num> data;
-  final VideoStyle style;
+  final VideoStyle? style;
   final TechnicalChartKind kind;
   final double progress;
   final String unit, source;
   final List<Color> seriesColors;
   @override
   Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    final seriesColors = this.seriesColors.isEmpty
+        ? [style.foreground, style.accent, style.surface]
+        : this.seriesColors;
     final chart = switch (kind) {
       TechnicalChartKind.bar => fluvie.Chart.bar(
         data: data,

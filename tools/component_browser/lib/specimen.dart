@@ -12,8 +12,10 @@ Widget specimen(
   double progress,
   DitherPrograms? programs, {
   bool videoControls = false,
+  VideoStyle style = demoStyle,
 }) {
-  if (isTechnical(spec)) return technicalSpecimen(spec, p, progress);
+  if (isTechnical(spec))
+    return technicalSpecimen(spec, p, progress, style: style);
   double number(String key) => (p[key] as num).toDouble();
   Widget centered(Widget child) => Center(
     child: Padding(padding: const EdgeInsets.all(32), child: child),
@@ -25,7 +27,7 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoImage(
-                style: demoStyle,
+                style: style,
                 image: demoImage!.images.first,
                 fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
                 framed: p['framed'],
@@ -37,7 +39,7 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoGif(
-                style: demoStyle,
+                style: style,
                 frames: demoGif!,
                 seconds: progress * 10,
                 fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
@@ -47,38 +49,38 @@ Widget specimen(
     'video.video' => Padding(
       padding: const EdgeInsets.all(32),
       child: VideoVideo(
-        style: demoStyle,
+        style: style,
         framed: p['framed'],
         child: videoControls
             ? videoPreview(p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain)
             : (demoImage == null
                   ? const SizedBox()
                   : VideoImage(
-                      style: demoStyle,
+                      style: style,
                       image: demoImage!.images.first,
                       fit: p['fit'] == 'cover' ? BoxFit.cover : BoxFit.contain,
                     )),
       ),
     ),
     'video.stage' => VideoStage(
-      style: demoStyle,
+      style: style,
       theme: p['theme'] == 'dark' ? VideoTheme.dark : VideoTheme.light,
       child: centered(const Text('An idea takes shape.')),
     ),
     'video.block' => centered(
       VideoBlock(
-        style: demoStyle,
+        style: style,
         active: p['active'],
         padding: number('padding'),
         child: Text(p['text']),
       ),
     ),
     'video.caption' => centered(
-      VideoCaption(style: demoStyle, p['text'], fontSize: number('fontSize')),
+      VideoCaption(style: style, p['text'], fontSize: number('fontSize')),
     ),
     'video.code' => centered(
       VideoCode(
-        style: demoStyle,
+        style: style,
         lines: (p['text'] as String).split('\n'),
         focusLine: effectiveFocus(p),
       ),
@@ -86,7 +88,7 @@ Widget specimen(
     'video.layers' => Padding(
       padding: const EdgeInsets.all(24),
       child: VideoLayers(
-        style: demoStyle,
+        style: style,
         expansion: progress,
         activeLayer: (p['activeLayer'] as num).toInt(),
       ),
@@ -97,7 +99,7 @@ Widget specimen(
           : Padding(
               padding: const EdgeInsets.all(32),
               child: VideoTexture(
-                style: demoStyle,
+                style: style,
                 programs: programs,
                 seconds: progress * 10,
                 animated: p['animated'],
@@ -109,43 +111,40 @@ Widget specimen(
       programs == null
           ? shaderUnavailable()
           : VideoDitherBackground(
-              style: demoStyle,
+              style: style,
               programs: programs,
               seconds: progress * 10,
               speed: number('speed'),
               accentPalette: p['accentPalette'],
               pixelSize: number('pixelSize'),
               child: centered(
-                const VideoBlock(
-                  style: demoStyle,
-                  child: Text('Clean foreground'),
-                ),
+                VideoBlock(style: style, child: const Text('Clean foreground')),
               ),
             ),
     'video.type' => centered(
       Text(
         p['text'],
         style: switch (p['role']) {
-          'mono' => DemoType.mono,
-          'caption' => DemoType.caption,
-          _ => DemoType.body,
+          'mono' => style.mono,
+          'caption' => style.caption,
+          _ => style.body,
         },
       ),
     ),
     'video.reveal' => centered(
       Reveal(
         progress: progress,
-        child: VideoBlock(style: demoStyle, child: Text(p['text'])),
+        child: VideoBlock(style: style, child: Text(p['text'])),
       ),
     ),
     _ => throw StateError('Missing specimen: ${spec.id}'),
   };
   return VideoStage(
-    style: demoStyle,
+    style: style,
     child: ColoredBox(
       color: spec.id == 'video.type' && p['role'] == 'caption'
-          ? DemoPalette.ink
-          : DemoPalette.surface,
+          ? style.foreground
+          : style.surface,
       child: content,
     ),
   );
@@ -190,6 +189,7 @@ class SpecimenFrame extends StatelessWidget {
           progress,
           programs,
           videoControls: videoControls,
+          style: VideoThemeScope.maybeOf(context) ?? demoStyle,
         ),
       ),
     ),

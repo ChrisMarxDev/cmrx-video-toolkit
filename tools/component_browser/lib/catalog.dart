@@ -52,28 +52,28 @@ String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
   final text = literal(p['text']);
   return switch (spec.id) {
     'video.image' =>
-      'VideoImage(style: demoStyle, image: decodedImage, fit: BoxFit.${p['fit']}, framed: ${p['framed']})',
+      'VideoImage(image: decodedImage, fit: BoxFit.${p['fit']}, framed: ${p['framed']})',
     'video.gif' =>
-      'VideoGif(style: demoStyle, frames: decodedGif, seconds: outputSeconds,\n  fit: BoxFit.${p['fit']}, framed: ${p['framed']})',
+      'VideoGif(frames: decodedGif, seconds: outputSeconds,\n  fit: BoxFit.${p['fit']}, framed: ${p['framed']})',
     'video.video' =>
-      "VideoVideo(style: demoStyle, framed: ${p['framed']},\n  child: Clip.asset('assets/clip.mp4', fit: BoxFit.${p['fit']}))",
+      "VideoVideo(framed: ${p['framed']},\n  child: Clip.asset('assets/clip.mp4', fit: BoxFit.${p['fit']}))",
     'video.stage' =>
-      'VideoStage(style: demoStyle, theme: VideoTheme.${p['theme']}, child: content)',
+      'VideoStage(theme: VideoTheme.${p['theme']}, child: content)',
     'video.block' =>
-      'VideoBlock(style: demoStyle, active: ${p['active']}, padding: ${p['padding']},\n  child: Text($text))',
+      'VideoBlock(active: ${p['active']}, padding: ${p['padding']},\n  child: Text($text))',
     'video.caption' =>
-      'VideoCaption(style: demoStyle, $text, fontSize: ${p['fontSize']})',
+      'VideoCaption($text, fontSize: ${p['fontSize']})',
     'video.code' =>
-      'VideoCode(style: demoStyle, lines: ${literal((p['text'] as String).split('\n'))},\n  focusLine: ${effectiveFocus(p)})',
+      'VideoCode(lines: ${literal((p['text'] as String).split('\n'))},\n  focusLine: ${effectiveFocus(p)})',
     'video.layers' =>
-      'VideoLayers(style: demoStyle, expansion: progress, activeLayer: ${p['activeLayer']})',
+      'VideoLayers(expansion: progress, activeLayer: ${p['activeLayer']})',
     'video.texture' =>
-      'VideoTexture(style: demoStyle, programs: programs, seconds: outputSeconds,\n  animated: ${p['animated']}, strong: ${p['strong']}, accentPalette: ${p['accentPalette']})',
+      'VideoTexture(programs: programs, seconds: outputSeconds,\n  animated: ${p['animated']}, strong: ${p['strong']}, accentPalette: ${p['accentPalette']})',
     'video.dither-background' =>
-      'VideoDitherBackground(style: demoStyle, programs: programs, seconds: outputSeconds,\n  speed: ${p['speed']}, pixelSize: ${p['pixelSize']}, accentPalette: ${p['accentPalette']}, child: content)',
-    'video.type' => 'Text($text, style: demoStyle.${p['role']})',
+      'VideoDitherBackground(programs: programs, seconds: outputSeconds,\n  speed: ${p['speed']}, pixelSize: ${p['pixelSize']}, accentPalette: ${p['accentPalette']}, child: content)',
+    'video.type' => 'Text($text, style: VideoThemeScope.of(context).${p['role']})',
     'video.reveal' =>
-      'Reveal(progress: progress, child: VideoBlock(style: demoStyle, child: Text($text)))',
+      'Reveal(progress: progress, child: VideoBlock(child: Text($text)))',
     _ => throw StateError('Missing example: ${spec.id}'),
   };
 }

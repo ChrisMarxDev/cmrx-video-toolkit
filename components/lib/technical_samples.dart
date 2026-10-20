@@ -16,7 +16,7 @@ enum DiagramExample {
 
 TechnicalDiagram technicalDiagramExample(
   DiagramExample example, {
-  required VideoStyle style,
+  VideoStyle? style,
   double progress = 1,
   bool vertical = false,
   Map<String, String> labels = const {},

@@ -106,3 +106,9 @@ API for numeric x coordinates or multiple series. Small explanatory charts are
 not a replacement for a scientific plotting package. Keep labels concise.
 `parseTechnicalChartData` reads one unique `Label: value` per line and rejects
 invalid data instead of silently altering it.
+
+## Inherited appearance
+
+All styled widgets accept an optional explicit `style:` or resolve the nearest
+`VideoThemeScope`. `VideoStage` installs its resolved style for descendants. See
+[the theme contract](THEMING.md) for token roles, precedence and examples.

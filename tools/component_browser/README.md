@@ -138,3 +138,12 @@ alongside the editable preview and copyable Dart constructor. Chart data is
 edited as one `Label: value` per line; invalid input displays an explanation.
 Recipe constructors in the public package additionally require
 `package:video_components/technical_samples.dart`. All samples are illustrative.
+
+## Preview themes
+
+Use the top-right Original / Rounded / Editorial selector to compare the same
+components with different parent tokens. Selection persists when opening another
+component. Constructor snippets inherit a `VideoThemeScope` supplied by your
+composition; see [the theme API](../../components/THEMING.md). Explicit component
+style remains available for intentional local overrides. Preview presets are
+application examples and are not library defaults.

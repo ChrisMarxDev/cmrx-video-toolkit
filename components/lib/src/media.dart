@@ -1,51 +1,65 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:flutter/widgets.dart';
+
 import 'style.dart';
 
 /// Shared clean media surface. Caller owns the content's fit and playback.
 class VideoVideo extends StatelessWidget {
   const VideoVideo({
     super.key,
-    required this.style,
+    this.style,
     required this.child,
     this.framed = false,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final Widget child;
   final bool framed;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.all(framed ? 8 : 0),
-    color: framed ? style.accent : style.foreground,
-    child: ClipRect(child: child),
-  );
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return Container(
+      padding: EdgeInsets.all(framed ? 8 : 0),
+      decoration: BoxDecoration(
+        color: framed ? style.accent : style.foreground,
+        borderRadius: BorderRadius.circular(style.radius),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(style.radius),
+        child: child,
+      ),
+    );
+  }
 }
 
 /// Pass a predecoded image for deterministic capture; the caller disposes it.
 class VideoImage extends StatelessWidget {
   const VideoImage({
     super.key,
-    required this.style,
+    this.style,
     required this.image,
     this.fit = BoxFit.contain,
     this.framed = false,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final ui.Image image;
   final BoxFit fit;
   final bool framed;
   @override
-  Widget build(BuildContext context) => VideoVideo(
-    style: style,
-    framed: framed,
-    child: RawImage(
-      image: image,
-      fit: fit,
-      width: double.infinity,
-      height: double.infinity,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return VideoVideo(
+      style: style,
+      framed: framed,
+      child: RawImage(
+        image: image,
+        fit: fit,
+        width: double.infinity,
+        height: double.infinity,
+      ),
+    );
+  }
 }
 
 /// Decode once before capture. Frame selection uses encoded GIF durations.
@@ -104,22 +118,25 @@ class VideoGifFrames {
 class VideoGif extends StatelessWidget {
   const VideoGif({
     super.key,
-    required this.style,
+    this.style,
     required this.frames,
     required this.seconds,
     this.fit = BoxFit.contain,
     this.framed = false,
   });
-  final VideoStyle style;
+  final VideoStyle? style;
   final VideoGifFrames frames;
   final double seconds;
   final BoxFit fit;
   final bool framed;
   @override
-  Widget build(BuildContext context) => VideoImage(
-    style: style,
-    image: frames.at(seconds),
-    fit: fit,
-    framed: framed,
-  );
+  Widget build(BuildContext context) {
+    final style = VideoThemeScope.resolve(context, this.style);
+    return VideoImage(
+      style: style,
+      image: frames.at(seconds),
+      fit: fit,
+      framed: framed,
+    );
+  }
 }

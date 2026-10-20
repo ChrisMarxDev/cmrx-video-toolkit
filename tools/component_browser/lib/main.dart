@@ -89,9 +89,12 @@ class ComponentBrowser extends StatelessWidget {
           programs: programs,
           componentId: id,
           initialVariant: uri.queryParameters['variant'],
-          initialSidebarOffset: settings.arguments is double
-              ? settings.arguments as double
+          initialSidebarOffset: settings.arguments is Map
+              ? (settings.arguments as Map)['offset'] as double
               : 0,
+          initialPreviewTheme: settings.arguments is Map
+              ? (settings.arguments as Map)['theme'] as String
+              : 'Original',
         ),
       );
     },
@@ -106,12 +109,14 @@ class BrowserPage extends StatefulWidget {
     this.componentId = '',
     this.initialVariant,
     this.initialSidebarOffset = 0,
+    this.initialPreviewTheme = 'Original',
   });
   final List<ComponentSpec> catalog;
   final DitherPrograms? programs;
   final String componentId;
   final String? initialVariant;
   final double initialSidebarOffset;
+  final String initialPreviewTheme;
   @override
   State<BrowserPage> createState() => _BrowserPageState();
 }
@@ -119,6 +124,7 @@ class BrowserPage extends StatefulWidget {
 class _BrowserPageState extends State<BrowserPage>
     with SingleTickerProviderStateMixin {
   String query = '', category = 'All', format = '16:9';
+  late String previewTheme;
   late final AnimationController clock;
   late final ScrollController sidebarController;
   ComponentSpec? selected;
@@ -129,6 +135,7 @@ class _BrowserPageState extends State<BrowserPage>
   @override
   void initState() {
     super.initState();
+    previewTheme = widget.initialPreviewTheme;
     sidebarController = ScrollController(
       initialScrollOffset: widget.initialSidebarOffset,
     );
@@ -183,9 +190,12 @@ class _BrowserPageState extends State<BrowserPage>
         path: '/$id',
         queryParameters: variant == null ? null : {'variant': variant},
       ).toString(),
-      arguments: sidebarController.hasClients
-          ? sidebarController.offset
-          : widget.initialSidebarOffset,
+      arguments: {
+        'offset': sidebarController.hasClients
+            ? sidebarController.offset
+            : widget.initialSidebarOffset,
+        'theme': previewTheme,
+      },
     );
   }
 
@@ -211,38 +221,102 @@ class _BrowserPageState extends State<BrowserPage>
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 980;
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: DemoPalette.white,
-        surfaceTintColor: Colors.transparent,
-        toolbarHeight: 80,
-        title: Row(
-          children: [
-            const Flexible(
-              child: Text(
-                'CMRX Video Toolkit',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 16),
-            const Flexible(
-              child: Text('Component browser', style: TextStyle(fontSize: 18)),
-            ),
-          ],
+    final base = demoStyle;
+    final style = switch (previewTheme) {
+      'Rounded' => base.copyWith(
+        background: const Color(0xFFF6F9FF),
+        foreground: const Color(0xFF102547),
+        surface: const Color(0xFFDEE9FA),
+        accent: const Color(0xFFFFCC65),
+        radius: 24,
+        borderWidth: 0,
+        spacing: 28,
+        body: const TextStyle(
+          fontFamily: 'sans-serif',
+          fontSize: 24,
+          color: Color(0xFF102547),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
+        mono: const TextStyle(fontFamily: 'monospace', fontSize: 20),
+        caption: const TextStyle(
+          fontFamily: 'sans-serif',
+          fontSize: 22,
+          color: Color(0xFFFFFFFF),
         ),
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (wide) SizedBox(width: 232, child: navigation()),
-          Expanded(child: selected != null ? detail(wide) : overview()),
-        ],
+      'Editorial' => base.copyWith(
+        background: const Color(0xFFFFFAF0),
+        foreground: const Color(0xFF37251C),
+        surface: const Color(0xFFF0E2CC),
+        accent: const Color(0xFFE7AD70),
+        radius: 4,
+        borderWidth: 3,
+        spacing: 32,
+        body: const TextStyle(
+          fontFamily: 'serif',
+          fontSize: 26,
+          color: Color(0xFF37251C),
+        ),
+        mono: const TextStyle(fontFamily: 'monospace', fontSize: 20),
+        caption: const TextStyle(
+          fontFamily: 'serif',
+          fontSize: 24,
+          color: Color(0xFFFFFFFF),
+        ),
+      ),
+      _ => base,
+    };
+    return VideoThemeScope(
+      style: style,
+      child: Scaffold(
+        appBar: AppBar(
+          actions: [
+            DropdownButton<String>(
+              key: const ValueKey('preview-theme'),
+              value: previewTheme,
+              underline: const SizedBox.shrink(),
+              items: ['Original', 'Rounded', 'Editorial']
+                  .map(
+                    (name) => DropdownMenuItem(value: name, child: Text(name)),
+                  )
+                  .toList(),
+              onChanged: (value) => setState(() => previewTheme = value!),
+            ),
+            const SizedBox(width: 16),
+          ],
+          automaticallyImplyLeading: false,
+          backgroundColor: DemoPalette.white,
+          surfaceTintColor: Colors.transparent,
+          toolbarHeight: 80,
+          title: Row(
+            children: [
+              const Flexible(
+                child: Text(
+                  'CMRX Video Toolkit',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Flexible(
+                child: Text(
+                  'Component browser',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1),
+          ),
+        ),
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (wide) SizedBox(width: 232, child: navigation()),
+            Expanded(child: selected != null ? detail(wide) : overview()),
+          ],
+        ),
       ),
     );
   }
