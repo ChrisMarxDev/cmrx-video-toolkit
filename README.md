@@ -9,8 +9,9 @@
 
 # CMRX Video Toolkit
 
-Edit recordings through a transcript, add captions and Flutter animations, and
-render videos with FFmpeg. The toolkit includes a browser editor, reusable video
+A general-purpose blueprint for creating videos with AI: generate media, edit
+recordings through a transcript, add captions and Flutter animations, and render
+with FFmpeg. The toolkit includes a browser editor, reusable video
 components and skills that guide a coding agent through each stage.
 
 You review the cuts and visual plan before the agent builds the animation. Your
@@ -25,6 +26,7 @@ Python + FFmpeg + Flutter · MIT licensed
 | [Transcript editor](apps/editor/) | Review keep/cut ranges, add timed visual notes and export an agent handoff. |
 | [Component browser](tools/component_browser/) | Explore real Flutter widgets, variants, props and motion. |
 | [Video components](components/) | Compose with reusable widgets, shaders, media and deterministic motion. |
+| [fal connector](tools/fal/) | Submit AI generation jobs and download media with provenance for composition. |
 | [Dither tool](tools/dither/) | Explore local image/field dithering and export PNGs. |
 | [Pipeline tools](scripts/) | Work with edit timelines, soundmaps, rendering and media checks. |
 | [Agent skills](.skills/) | Give a coding agent instructions for editing, animation and review. |
@@ -74,7 +76,7 @@ versions, setup details and platform constraints.
 | Fluvie package and CLI | Video compositions and pipeline preview/render commands | Restore the project Pub dependencies and install the `fluvie` CLI on PATH. |
 | Python 3 | Review server, pipeline/media scripts and browser demo-media generation | Install Python; the review server requires 3.10+. |
 | FFmpeg and ffprobe | Media inspection, audio extraction, cuts, encoding, exports and demo media | Install both executables on PATH. |
-| Node.js and npm | Current review/component-browser MCP adapters, JavaScript tests and documentation tooling | Node 22+ for MCP; 22.12+ for docs. Restore each adapter's locked npm packages. |
+| Node.js and npm | Current MCP adapters, optional fal connector, JavaScript tests and documentation tooling | Node 22+ for MCP; 22.12+ for docs. Restore each adapter's locked npm packages. |
 | whisper.cpp CLI and a compatible model | Generating new local transcripts | Install the recognizer; model lookup/download is automatic. Not required for an existing transcript. |
 | Modern browser | Browser review and the component browser | Use an existing desktop browser. |
 | Local MCP-capable agent host | Using the MCP adapters | Stdio support is required; inline UI additionally needs MCP Apps/local-origin support. |
@@ -82,7 +84,7 @@ versions, setup details and platform constraints.
 | NumPy, ONNX Runtime and RVM model | Optional person/background cutout | Separate Python environment and model, only for this feature. |
 | Git and Make | Cloning/updating source and running the documented `make` targets | Make is a command wrapper; individual underlying commands can also be run directly. |
 
-**Node is currently required for our MCP adapters, not for Flutter itself.**
+**Node is currently required for our MCP adapters and optional fal connector, not for Flutter itself.**
 Ordinary browser review uses Python and FFmpeg without Node. Building the component
 browser directly uses Flutter, Python and FFmpeg without Node. The full local
 check suite also uses Node for JavaScript/MCP tests and the docs build.
@@ -90,7 +92,26 @@ check suite also uses Node for JavaScript/MCP tests and the docs build.
 No dependency replacement or migration has been decided. This list records what
 we need today so future reductions can be evaluated separately.
 
+## External service keys
+
+Local editing, components and rendering do not require a cloud API key. Optional
+connectors use credentials supplied by the consuming workspace or server.
+
+| Service | Key | Used for | Setup |
+| --- | --- | --- | --- |
+| fal.ai | `FAL_KEY` | Optional image, video and audio generation; provider charges may apply | [fal connector](tools/fal/README.md#keys-and-setup) |
+
+Store keys in a private environment file outside the checkout or a server secret
+store. Do not include them in browser/Flutter builds, source control, prompts or
+asset manifests. The hosted component browser has no credential storage or
+secret-bearing backend. Model inputs and generated media are sent to/received from
+the chosen provider; keep downloaded outputs in your production workspace.
+
 ## From recording to finished video
+
+Generated assets can enter at storyboard/compose time through the optional fal
+connector. Review and save them locally before rendering; video creation does not
+require an original recording.
 
 **Ingest → Transcribe → Edit → Storyboard → Compose → Review → Render**
 

@@ -1,0 +1,21 @@
+{
+  "name": "@cmrx/video-fal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Optional server-side fal generation and local asset handoff for video workflows",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": "./src/index.mjs",
+  "bin": {
+    "video-fal": "./src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/cli.mjs"
+  },
+  "dependencies": {
+    "@fal-ai/client": "1.10.1"
+  }
+}

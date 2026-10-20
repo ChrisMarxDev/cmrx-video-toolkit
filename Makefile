@@ -23,6 +23,7 @@ editor:
 
 .PHONY: setup-dev hooks check-local
 setup-dev:
+	npm --prefix tools/fal ci
 	npm --prefix apps/review-agent ci
 	npm --prefix apps/component-browser-agent ci
 	npm --prefix docs ci
@@ -33,6 +34,7 @@ hooks:
 
 # Routine checks run locally; Flutter checks remain available through make test.
 check-local:
+	npm --prefix tools/fal test
 	python3 -m unittest discover -s tests -q
 	python3 -m unittest discover -s apps/editor/tests -q
 	node --test apps/editor/tests/model.test.mjs tools/dither/core.test.mjs

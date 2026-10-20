@@ -10,3 +10,8 @@ were authored in this project. Paper is a research reference, not copied source.
 No meme images, external brand logos, client portraits, or private brand archive
 is included. Public example component styling is illustrative and not a grant of
 exclusive rights to the CMRX name.
+
+The optional fal connector resolves `@fal-ai/client` (MIT) through its npm
+manifest and lockfile; it does not vendor the SDK. fal service/model terms and
+output rights are separate from this repository's software license. See
+[the official client](https://github.com/fal-ai/fal-js).

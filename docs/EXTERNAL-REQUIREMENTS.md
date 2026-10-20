@@ -14,7 +14,7 @@ current requirements. This inventory owns exact workflow/package details; keep
 both updated when requirements change.
 
 Local app/component builds require Flutter. Node is currently required by the MCP
-adapters, JavaScript tests and docs tooling, not by Flutter itself. Avoiding Node
+adapters, optional fal generation, JavaScript tests and docs tooling, not by Flutter itself. Avoiding Node
 is an open consideration, not an agreed migration. No Python-to-Dart port, Dart
 MCP replacement, tooling rewrite or prebuilt-distribution roadmap has been chosen.
 Reduction candidates elsewhere in this inventory are possibilities, not commitments.
@@ -33,6 +33,7 @@ Reduction candidates elsewhere in this inventory are possibilities, not commitme
 | Viewing an already-built component browser | Browser plus a static host; the current MCP static host uses Node. No Flutter SDK for viewing; prebuilt release distribution is not yet implemented. |
 | Flutter composition / building the component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
 | Fluvie preview/final render | Composition requirements + `fluvie` CLI on PATH and runtime/capture support for the selected platform |
+| Optional fal media generation | Node 22+, npm packages in tools/fal, network access, fal account/credits and server-side FAL_KEY |
 | Optional person/background cutout | Media tools + Python venv/pip + NumPy + ONNX Runtime + RVM model |
 | Optional native Flutter Scene capture | Flutter/Dart + native macOS build toolchain + Metal/Impeller-capable environment + Scene packages/assets |
 
@@ -72,6 +73,7 @@ and contribute to the footprint. Full transitive dependencies belong in lockfile
 | --- | --- |
 | `@modelcontextprotocol/sdk`, `zod`, `esbuild` (including its platform binary) | Full MCP adapter and shared-UI bundling; `apps/review-agent/package.json` and package-lock.json |
 | `@modelcontextprotocol/sdk`, `zod` | Component browser MCP adapter; `apps/component-browser-agent/package.json` and package-lock.json; no bundler or transcription dependencies |
+| `@fal-ai/client` | Optional generation connector; `tools/fal/package.json` and package-lock.json. Requires `FAL_KEY` only in the local/server process; generated media remains outside Git. |
 | `express` plus MCP SDK and Zod | Synthetic MCP feasibility sample only; `apps/mcp-review-sample/package.json`; not required by full stdio adapter |
 | Flutter Pub dependencies, including `fluvie: 0.3.1` | Composition/component packages; pubspec.yaml and lockfiles; `flutter pub get` restores them |
 | `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets | Optional native GPU scene path; `.skills/flutter-scene/references/native-capture.md` |
