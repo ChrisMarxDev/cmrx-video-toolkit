@@ -13,7 +13,7 @@ class CameraFrame extends StatefulWidget {
     this.shape = CameraFrameShape.rectangle,
     this.feather = .18,
     this.dither = 1,
-    this.pixelSize = 1,
+    this.pixelSize = 8,
     this.outputScale = 1,
   }) {
     if (!feather.isFinite ||
@@ -47,6 +47,8 @@ class CameraFrame extends StatefulWidget {
   final double dither;
 
   /// Final output pixels per dither cell and per local canvas unit.
+  /// Defaults to visible 8-pixel blocks; use 1 for fine grain.
+  /// Supply the actual render scale, not the viewing display devicePixelRatio.
   final double pixelSize, outputScale;
 
   @override

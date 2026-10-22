@@ -3715,10 +3715,10 @@
         },
         "pixelSize": {
           "type": "number",
-          "default": 1,
+          "default": 8,
           "min": 1,
-          "max": 6,
-          "label": "Dither cell pixels"
+          "max": 16,
+          "label": "Edge cell size (output px)"
         }
       },
       "variants": [
@@ -3738,6 +3738,12 @@
           "props": {
             "dither": 0,
             "feather": 0.22
+          }
+        },
+        {
+          "id": "fine",
+          "props": {
+            "pixelSize": 1
           }
         }
       ]

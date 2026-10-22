@@ -144,9 +144,13 @@ exclusive of zero); `dither` blends smooth alpha (0) with fixed Bayer 4×4 cover
 (1). It does not quantize image colors, animate noise, segment a person or recolor
 the center. Existing child transparency is preserved.
 
-`pixelSize` is the final-output dither cell size; `outputScale` is output pixels
-per local canvas unit. Set both deliberately when scaling a composition. Defaults
-are one pixel and scale one. Inspect at final resolution and after video encoding.
+`pixelSize` is the final-output dither cell size (default 8 for visible square
+blocks; use 1 or the `fine` variant for fine grain). Feather coverage is sampled
+once per cell in dither mode; smooth mode retains the continuous contour.
+The camera center is not color-quantized. Background dithering is independent.
+Supply the actual capture scale, not the display density where a video is viewed.
+`outputScale` is output pixels per local canvas unit (default 1). Set both
+deliberately when scaling a composition. Inspect at final resolution and after video encoding.
 Flutter platform views/HTML video overlays do not necessarily participate in
 ShaderMask; use Flutter-painted media/decoded frames for capture. No per-frame
 shader loading or image readback is performed. Each instance owns/disposes its

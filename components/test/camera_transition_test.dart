@@ -9,6 +9,54 @@ int alpha(Uint8List data, int x, int y, [int width = 100]) =>
     data[(y * width + x) * 4 + 3];
 void main() {
   testWidgets(
+    'coarse camera feather uses whole cells at explicit output scales',
+    (tester) async {
+      final program = (await tester.runAsync(
+        () => ui.FragmentProgram.fromAsset('shaders/camera_frame.frag'),
+      ))!;
+      for (final scale in [1.0, .5]) {
+        final data = await pixels(
+          tester,
+          CameraFrame(
+            program: program,
+            shape: CameraFrameShape.circle,
+            feather: .25,
+            outputScale: scale,
+            child: const ColoredBox(color: Color(0xFF4488CC)),
+          ),
+          width: 128,
+          height: 128,
+        );
+        final cell = (8 / scale).round();
+        final coverage = <int>{};
+        for (var y = 0; y < 128; y += cell) {
+          for (var x = 0; x < 128; x += cell) {
+            final a = alpha(data, x, y, 128);
+            coverage.add(a);
+            for (var dy = 0; dy < cell; dy++) {
+              for (var dx = 0; dx < cell; dx++) {
+                expect(
+                  alpha(data, x + dx, y + dy, 128),
+                  a,
+                  reason: 'The feather must not slice a square dither cell',
+                );
+              }
+            }
+          }
+        }
+        expect(coverage, {0, 255});
+        expect(alpha(data, 64, 64, 128), 255);
+        expect(data.sublist((64 * 128 + 64) * 4, (64 * 128 + 64) * 4 + 4), [
+          68,
+          136,
+          204,
+          255,
+        ]);
+      }
+    },
+  );
+
+  testWidgets(
     'camera mask protects center, fades edge and preserves transparency',
     (tester) async {
       final program = (await tester.runAsync(
