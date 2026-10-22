@@ -223,3 +223,12 @@ when recognition is pending. Open by path retains advanced preparation options.
 without it the upload home is the library root. See the review-agent README for
 discovery boundaries and embedded sizing. The video keeps a minimum usable height;
 small screens stack the transcript below it instead of squeezing both columns.
+
+### Timeline preview
+
+A time ruler and full-length video track anchor the taller feedback tracks. Move
+the pointer anywhere over the timeline to preview that time; the secondary marker
+shows your previous position. Leaving restores that position (and resumes playback
+if it was running). Click to keep the preview position. Touch and active drags do
+not trigger hover preview. Comments remain timed feedback on the opened video;
+the media track does not imply that composition layers can be edited here.

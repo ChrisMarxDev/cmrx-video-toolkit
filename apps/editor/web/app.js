@@ -29,6 +29,8 @@ let doc = null,
   redo = [];
 let picking = false, choosing = true;
 let timelineZoom = 1;
+let hoverPreview = null;
+let hoverFrame = null;
 let completing = false,
   ended = false;
 let busy = false,
@@ -353,7 +355,10 @@ function renderTimeline() {
   timeline.replaceChildren();
   const all = [...items(), ...(draft ? [draft] : [])],
     rows = annotationRows(all);
-  const height = Math.max(104, rows.count * 30 + 24);
+  const height = Math.max(96, rows.count * 48 + 24);
+  renderRuler();
+  $("source-clip-name").textContent = $("source-name").textContent;
+  $("source-clip-duration").textContent = clock(doc.source.duration);
   timeline.style.height = height + "px";
   $("editor").style.setProperty("--timeline-content-height", height + "px");
   if (!all.length)
@@ -376,7 +381,7 @@ function renderTimeline() {
       "aria-label",
       `${value.kind === "good" ? "Keep" : value.kind === "bad" ? "Cut" : "Comment"}: ${value.text || "New comment"}, ${clock(value.source_start)} to ${clock(value.source_end)}`,
     );
-    bar.style.top = row * 30 + 6 + "px";
+    bar.style.top = row * 48 + 6 + "px";
     placeBar(bar, value);
     bar.append(
       element(
@@ -570,12 +575,69 @@ function setTimelineZoom(next) {
   $('zoom-out').disabled = timelineZoom === 1;
   $('zoom-in').disabled = timelineZoom === 32;
   $('zoom-fit').textContent = timelineZoom === 1 ? 'Fit' : timelineZoom + '×';
+  renderRuler();
   highlightPlayback();
   positionPopover();
 }
 $('zoom-in').onclick = () => setTimelineZoom(timelineZoom * 2);
 $('zoom-out').onclick = () => setTimelineZoom(timelineZoom / 2);
 $('zoom-fit').onclick = () => setTimelineZoom(1);
+// Hover is a temporary preview, independent of saved annotations and selection.
+const timelineSurface = document.querySelector('.timeline-surface');
+function endHover(commit = false) {
+  if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
+  hoverFrame = null;
+  const previous = hoverPreview;
+  hoverPreview = null;
+  $('timeline-origin').hidden = true;
+  timelineSurface.classList.remove('hover-preview');
+  if (!previous || commit) return;
+  previewTime(previous.time);
+  if (previous.playing) video.play().catch(e => error(e.message));
+}
+function timelineTime(clientX) {
+  const bounds = $('timeline').getBoundingClientRect();
+  return clamp((clientX - bounds.left) / bounds.width, 0, 1) * doc.source.duration;
+}
+timelineSurface.addEventListener('pointermove', e => {
+  if (!doc || busy || dragging || e.buttons || e.pointerType === 'touch') return;
+  if (!hoverPreview) {
+    hoverPreview = { time: video.currentTime, playing: !video.paused };
+    video.pause();
+    $('timeline-origin').style.left = hoverPreview.time / doc.source.duration * 100 + '%';
+    $('timeline-origin').hidden = false;
+    timelineSurface.classList.add('hover-preview');
+  }
+  if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
+  const time = timelineTime(e.clientX);
+  hoverFrame = requestAnimationFrame(() => { hoverFrame = null; previewTime(time); });
+});
+timelineSurface.addEventListener('pointerleave', () => endHover());
+timelineSurface.addEventListener('pointerdown', e => {
+  if (!doc || busy || e.button !== 0) return;
+  endHover(true);
+  video.pause();
+  previewTime(timelineTime(e.clientX));
+}, true);
+document.addEventListener('pointerdown', e => {
+  if (!timelineSurface.contains(e.target)) endHover();
+}, true);
+document.addEventListener('keydown', () => endHover(), true);
+window.addEventListener('blur', () => endHover());
+function renderRuler() {
+  if (!doc) return;
+  const width = $('timeline').clientWidth;
+  const target = doc.source.duration / Math.max(1, width / 90);
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(target, 0.001)));
+  const step = [1, 2, 5, 10].find(n => n * magnitude >= target) * magnitude;
+  const ruler = $('time-ruler');
+  ruler.replaceChildren();
+  for (let time = 0; time <= doc.source.duration; time += step) {
+    const tick = element('span', 'time-tick', clock(time).replace(/\.00$/, ''));
+    tick.style.left = time / doc.source.duration * 100 + '%';
+    ruler.append(tick);
+  }
+}
 function previewTime(time) {
   video.currentTime = clamp(time, 0, doc.source.duration);
   highlightPlayback();

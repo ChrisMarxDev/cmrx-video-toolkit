@@ -139,7 +139,7 @@ export class ReviewRuntime {
       return { ...await request('session'), browserUrl: started.browserUrl,
         mediaUrl: `${await this.mediaOrigin()}/media/${started.sessionId}/${started.token}`,
         apiUrl: `${await this.mediaOrigin()}/session/${started.sessionId}/${started.token}`,
-        message: 'The review is open. Ask the user to select a video, review and click Done. Do not automatically open another app or tab. browserUrl is a manual fallback. Never mark Done on the user’s behalf.' };
+        message: (source ? 'The supplied video is opening directly. Ask the user to review and click Done.' : 'The review is open. Ask the user to select a video, review and click Done.') + ' Do not automatically open another app or tab. browserUrl is a manual fallback. Never mark Done on the user’s behalf.' };
     } catch (error) {
       child.kill('SIGINT');
       this.workspaces.delete(target);

@@ -213,3 +213,14 @@ timelines scroll horizontally. Dragging a range previews its moving boundary.
 The host controls the final window dimensions. Existing MCP
 processes must restart to load the library relay and v3 UI resource; saved media
 and review artifacts stay in place. Done still only submits the review.
+
+### Direct review of an edited draft
+
+`open_review({path: "renders/revision-02.mp4", workspace: "reviews/revision-02"})`
+opens that rendered video directly, even though generated media is excluded from
+library discovery. No picker or re-upload is required. Use a distinct workspace
+for each revision to preserve the original feedback. Omit `transcript` unless it
+is aligned to this exact output; preparation generates a new transcript as needed.
+After human Done, read `get_review(sessionId)` and apply the feedback in the
+rendered video's time coordinate system. The flow skills require this return to
+the editor after each authorized draft render; Done itself never renders.

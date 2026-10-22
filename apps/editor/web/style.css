@@ -724,3 +724,22 @@ body { overflow: hidden; }
   .mcp-app .action-bar { position: fixed; left: 50%; transform: translateX(-50%); margin: 0; bottom: 12px; }
   #source-name { flex-basis: 100%; }
 }
+
+/* A time ruler and full-length media track anchor the annotation tracks. */
+.timeline-surface { height: 210px; border: 1px solid var(--line); border-radius: 10px; }
+.timeline-expanded .timeline-surface { height: 306px; }
+#time-ruler { position: relative; height: 34px; margin-left: 6px; width: var(--axis-width, calc(100% - 12px)); overflow: hidden; }
+.time-tick { position: absolute; top: 3px; height: 30px; padding-left: 5px; border-left: 1px solid var(--line); color: var(--muted); font: 11px/20px ui-monospace, monospace; white-space: nowrap; }
+#source-track { height: 54px; margin: 0 6px 8px; width: var(--axis-width, calc(100% - 12px)); border: 1px solid var(--accent); border-radius: 8px; background: linear-gradient(180deg, #aebaff30, #aebaff12); display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 12px; cursor: crosshair; overflow: hidden; }
+#source-clip-name { font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+#source-clip-duration { font: 11px ui-monospace, monospace; color: var(--muted); }
+#seek { position: absolute; top: 22px; left: 0; opacity: 0; height: 12px; }
+#seek:focus-visible { opacity: 1; }
+#timeline-scroll { height: calc(100% - 96px); }
+.playhead-track { top: 22px; }
+#timeline-playhead { width: 2px; }
+#timeline-playhead::before { content: ''; position: absolute; left: -5px; top: -5px; width: 12px; height: 12px; border-radius: 3px 3px 6px 6px; background: var(--accent); }
+#timeline-origin { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: .6; }
+.bar { height: 40px; border-radius: 7px; padding: 7px 12px; }
+.bar .edge { height: 100%; }
+.timeline-empty { font-size: 12px; }

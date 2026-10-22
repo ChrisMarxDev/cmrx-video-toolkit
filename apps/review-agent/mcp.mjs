@@ -18,7 +18,7 @@ export function createServer(runtime, { decorateResource } = {}) {
     await editorResource([await runtime.mediaOrigin()], decorateResource),
   ] }));
   server.registerTool('open_review', {
-    description: 'Open the shared video review app for a local video or review.json. Omit path to let the user choose a video in the local browser editor; no chat attachment is needed. Ask the human to review and click Done. Hosts supporting MCP Apps display it inline; other hosts can open browserUrl. Do not infer absent UI from receiving session data.',
+    description: 'Open a local recording, edited/rendered video, or review.json directly in the review app. After an authorized draft render, call this with the exact output path and a separate workspace per revision so the human can comment; no re-upload or picker is needed. Feedback times belong to that opened video. Omit path to let the user choose a video in the local browser editor; no chat attachment is needed. Ask the human to review and click Done. Hosts supporting MCP Apps display it inline; other hosts can open browserUrl. Do not infer absent UI from receiving session data.',
     inputSchema: { path: z.string().min(1).optional(), workspace: z.string().optional(), transcript: z.string().optional() }, annotations,
     _meta: { ui: { resourceUri: uiUri }, 'openai/outputTemplate': uiUri },
   }, safe(args => runtime.open(args)));

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm, symlink, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -120,6 +120,32 @@ for (const chooseLater of [false, true, 'library']) test(`real MCP â†’ Python â†
     assert.equal(completed.review.format, 'video-review');
     const { review: approvedReview, ...receipt } = completed;
     assert.deepEqual(JSON.parse(await readFile(completed.receiptPath)), receipt);
+    if (chooseLater === false) {
+      // Edited outputs are excluded from picker discovery but can open directly.
+      await mkdir(join(root, 'renders'));
+      const edited = join(root, 'renders', 'revision-01.mp4');
+      const rendered = spawnSync('ffmpeg', ['-v', 'error', '-i', clip, '-t', '0.6', '-vf', 'hflip', edited]);
+      assert.equal(rendered.status, 0, String(rendered.stderr));
+      const next = await tool('open_review', { path: edited, workspace: 'reviews/revision-01', transcript: 'transcript.json' });
+      assert.ok(!next.isError, JSON.stringify(next));
+      assert.match(next.structuredContent.message, /opening directly/);
+      const nextId = next.structuredContent.sessionId;
+      let ready;
+      for (let attempt = 0; attempt < 200; attempt++) {
+        ready = await runtime.request(nextId, 'state');
+        if (ready.document) break;
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      assert.ok(ready.document, JSON.stringify(ready));
+      assert.notEqual(ready.document.source.sha256, doc.source.sha256);
+      assert.ok(ready.document.source.duration < doc.source.duration);
+      assert.deepEqual(ready.document.marks, []);
+      await runtime.request(nextId, 'save', { revision: ready.document.revision,
+        source_sha256: ready.document.source.sha256, objects: [],
+        marks: [{ id: 'revision-note', kind: 'comment', text: 'Adjust this edited moment', source_start: 0.1, source_end: 0.4 }] });
+      assert.equal((await tool('get_review', { sessionId: nextId })).structuredContent.status, 'reviewing');
+      assert.equal((await tool('get_review', { sessionId })).structuredContent.review.marks[0].text, 'Keep this moment');
+    }
     await writeFile(completed.artifactPath, '{}');
     assert.equal((await tool('get_review', { sessionId })).isError, true);
   } finally {

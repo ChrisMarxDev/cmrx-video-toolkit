@@ -65,6 +65,8 @@
           </div>
           <div id="timeline-viewport" tabindex="0" aria-label="Scrollable timeline">
           <div class="timeline-surface">
+            <div id="time-ruler" aria-hidden="true"></div>
+            <div id="source-track" aria-label="Video track"><span id="source-clip-name"></span><span id="source-clip-duration"></span></div>
             <input
               id="seek"
               aria-label="Playback position"
@@ -77,6 +79,7 @@
               <div id="timeline" aria-label="Comment timeline"></div>
             </div>
             <div class="playhead-track" aria-hidden="true">
+              <div id="timeline-origin" hidden></div>
               <div id="timeline-playhead"></div>
             </div>
           </div>

@@ -53,3 +53,20 @@ Consult `docs/EXTERNAL-REQUIREMENTS.md` before setup. Install only requirements
 for the requested workflow; optional native GPU, matting and developer tools are
 not prerequisites for ordinary video review. Keep that inventory current when
 changing dependencies, with the goal of reducing user-managed installations.
+
+## Return edited videos to the human
+
+After each authorized edit/draft render finishes, call `open_review` yourself with
+`path` set to that exact rendered video and `workspace` set to a separate revision
+folder, for example `reviews/revision-02`. This opens the video directly: do not
+ask the user to upload it again, find it in the picker, or paste a path. Use the
+same MCP editor for the initial recording and every subsequent draft.
+
+Keep the prior recording review and render immutable. Do not reuse a source
+transcript for a cut/rendered video: omit `transcript` for fresh preparation, or
+supply one explicitly aligned to that rendered revision. Wait for human Done,
+then call `get_review(sessionId)` and apply its notes to that revision of the
+composition. Its times are rendered-video times, not original source times;
+map through the edit timeline when changing source cuts. Repeat the authorized
+edit → draft render → direct review loop until the human approves. Done submits
+feedback; it does not independently authorize a render or final publication.
