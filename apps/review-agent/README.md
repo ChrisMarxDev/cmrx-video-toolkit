@@ -187,3 +187,27 @@ installation remains a separate acceptance requirement.
 
 References: [plugin packaging](https://developers.openai.com/plugins/build/plugins)
 and [local MCP plugins](https://developers.openai.com/plugins/deploy/desktop-only).
+
+### Select Video entry screen
+
+Calling `open_review()` without a path opens **Select Video**, with recordings
+already present in the configured root and its production folders. A single row
+selection opens the saved review (including its comments) or starts media
+preparation and Whisper when no transcript is ready. **Choose a new video…** opens
+the native file picker directly; accepting a file copies it locally and starts
+preparation without another submit button. Refresh retries library discovery;
+Open by path remains an optional fallback.
+
+The library reads the upload home, `.video-reviews/`, `videos/`, `projects/`, and
+`studio/videos/` beneath the configured root, plus video files directly at that
+root. It does not search the entire computer. Discovery excludes generated media
+folders and symlinks escaping the root, deduplicates source paths, and prefers
+saved reviews. It is bounded to 2,000 directories, five nested levels per library
+folder, and 200 entries. Library/select endpoints use the same local capability
+transport as review operations; selection accepts a discovered ID, not a new path.
+
+The embedded editor requests a 760px minimum working height and offers Expand
+when the host advertises fullscreen support. Narrow layouts put the transcript
+below the video. The host controls the final window dimensions. Existing MCP
+processes must restart to load the library relay and v3 UI resource; saved media
+and review artifacts stay in place. Done still only submits the review.

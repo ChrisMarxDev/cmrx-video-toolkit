@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-export const uiUri = 'ui://video-review/editor-v2.html';
+export const uiUri = 'ui://video-review/editor-v3.html';
 
 export async function editorResource(origins, decorate = value => value) {
   const root = new URL('../editor/web/', import.meta.url);

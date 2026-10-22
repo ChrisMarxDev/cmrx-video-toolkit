@@ -209,3 +209,15 @@ whisper.cpp itself and FFmpeg remain prerequisites. Ready transcripts are retain
 A supplied model override is respected; invalid explicit overrides report an error
 rather than silently selecting a different model. Saved global language preferences
 are not imported into a new isolated session; recognition defaults to auto.
+
+### Recording library
+
+The first screen is **Select Video**. Click an existing recording to reopen its
+review, or **Choose a new video…** to select and prepare a new local file in one
+step. Saved transcripts and comments are reused. Preparation only invokes Whisper
+when recognition is pending. Open by path retains advanced preparation options.
+
+`--library-root ROOT` scopes discovery to production folders below that root;
+without it the upload home is the library root. See the review-agent README for
+discovery boundaries and embedded sizing. The video keeps a minimum usable height;
+small screens stack the transcript below it instead of squeezing both columns.

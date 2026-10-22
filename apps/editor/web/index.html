@@ -16,9 +16,18 @@
       <div id="export-result" role="status" hidden></div>
     </div>
     <main id="empty">
-      <h1>Review a video</h1>
-      <p>Select a moment. Leave a comment.</p>
-      <button id="begin">Open video</button>
+      <div class="library-heading">
+        <h1>Select Video</h1>
+        <button id="begin">Choose a new video…</button>
+      </div>
+      <input type="file" id="library-file" accept="video/*,.mkv,.mov,.avi,.webm" hidden />
+      <p id="library-status" role="status">Loading videos…</p>
+      <div id="video-list" aria-label="Existing videos"></div>
+      <div class="library-actions">
+        <button id="back-to-review" hidden>Back to review</button>
+        <button id="refresh-videos">Refresh</button>
+        <button id="open-path">Open by path…</button>
+      </div>
     </main>
     <main id="editor" hidden>
       <section class="viewer-panel" aria-label="Video and timeline">
@@ -70,6 +79,7 @@
       <aside>
         <div class="transcript-heading">
           <h2>Transcript</h2>
+          <button id="expand-app" hidden>Expand</button>
           <span id="save-status" role="status"></span>
         </div>
         <input

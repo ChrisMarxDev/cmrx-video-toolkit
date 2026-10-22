@@ -19,7 +19,7 @@ test('embedded editor uploads and edits without host tool calls or link opening'
   install('__VIDEO_REVIEW_MCP__', true);
   install('parent', parent);
   install('addEventListener', (name, callback) => { if (name === 'message') listener = callback; });
-  install('document', { body: {}, documentElement: { scrollHeight: 600 } });
+  install('document', { body: { classList: { add() {}, toggle() {} }, scrollHeight: 600 }, getElementById() { return null; }, documentElement: { scrollHeight: 600 } });
   install('ResizeObserver', class { observe() {} });
   install('fetch', async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => ({ ok: true }) }; });
   try {
@@ -31,7 +31,7 @@ test('embedded editor uploads and edits without host tool calls or link opening'
     assert.deepEqual(requests.map(r => r.url), ['state', 'save', 'upload'].map(op => `${session.apiUrl}/api/${op}`));
     assert.equal(requests[2].options.body, file);
     assert.equal(host.openBrowser, undefined);
-    assert.deepEqual(messages, ['ui/initialize', 'ui/notifications/initialized']);
+    assert.deepEqual(messages, ['ui/initialize', 'ui/notifications/initialized', 'ui/notifications/size-changed']);
   } finally {
     for (const [key, descriptor] of saved) descriptor ? Object.defineProperty(globalThis, key, descriptor) : delete globalThis[key];
   }

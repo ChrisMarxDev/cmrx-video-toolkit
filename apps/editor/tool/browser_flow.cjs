@@ -29,13 +29,9 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
     }
     for (let i = 0; i < 2; i++) {
       const workspace = root + "/browser-tests/compact-" + run + "-" + i;
-      await page
-        .locator(
-          (await page.locator("#empty").isVisible())
-            ? "#begin"
-            : "#open-button",
-        )
-        .click();
+      if (!(await page.locator("#empty").isVisible()))
+        await page.locator("#open-button").click();
+      await page.locator("#open-path").click();
       await page
         .locator("#path")
         .fill(root + `/original ${i}.${i ? "mkv" : "mp4"}`);
@@ -335,11 +331,9 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
     // Opening old rectangle annotations must neither hide nor rewrite their data.
     const legacy = fixtureEvidence.videos[0].workspace,
       before = JSON.parse(fs.readFileSync(legacy + "/review.json"));
-    await page
-      .locator(
-        (await page.locator("#empty").isVisible()) ? "#begin" : "#open-button",
-      )
-      .click();
+    if (!(await page.locator("#empty").isVisible()))
+      await page.locator("#open-button").click();
+    await page.locator("#open-path").click();
     await page.locator("#path").fill(legacy + "/review.json");
     if (!(await page.locator("details").evaluate((e) => e.open)))
       await page.locator("summary").click();

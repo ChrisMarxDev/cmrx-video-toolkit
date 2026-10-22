@@ -35,8 +35,8 @@ export class ReviewRuntime {
         // Capability-scoped local HTTP transport keeps the editor usable while
         // its agent turn is idle. No host tools/call or ui/open-link is involved.
         if (prefix === 'session') {
-          const reads = ['state', 'session'];
-          const writes = ['open', 'upload', 'save', 'finish', 'abandon', 'export', 'retry', 'cancel'];
+          const reads = ['state', 'session', 'videos'];
+          const writes = ['select', 'open', 'upload', 'save', 'finish', 'abandon', 'export', 'retry', 'cancel'];
           if (api !== 'api' || ![...reads, ...writes].includes(operation)) {
             res.writeHead(404).end(); return;
           }
@@ -115,6 +115,7 @@ export class ReviewRuntime {
     if (this.workspaces.has(target)) throw Error('This workspace already has an active review session.');
     this.workspaces.add(target);
     const args = source ? [this.engine, source, '--workspace', target] : [this.engine, '--home', target];
+    args.push('--library-root', this.root);
     if (this.model) args.push('--model', this.model);
     if (imported) args.push('--transcript', imported);
     const child = spawn(this.python, args, { stdio: ['ignore', 'pipe', 'pipe'] });

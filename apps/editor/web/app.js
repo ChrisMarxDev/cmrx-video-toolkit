@@ -27,6 +27,7 @@ let doc = null,
   selection = [0, 0],
   undo = [],
   redo = [];
+let picking = false, choosing = true;
 let completing = false,
   ended = false;
 let busy = false,
@@ -96,7 +97,11 @@ async function flush() {
   if (dirty) return flush();
 }
 function controls() {
-  document.querySelector(".action-bar").hidden = !doc;
+  for (const node of document.querySelectorAll('#empty button, #open-form button, #open-form input'))
+    node.disabled = busy || picking || ended;
+  $('empty').setAttribute('aria-busy', String(busy || picking));
+  document.querySelector(".action-bar").hidden = !doc || choosing;
+  $("back-to-review").hidden = !doc || !choosing;
   $("undo").disabled = busy || !undo.length;
   $("redo").disabled = busy || !redo.length;
   $("play").disabled = busy || !doc;
@@ -112,6 +117,7 @@ function render() {
     controls();
     return;
   }
+  choosing = false;
   $("empty").hidden = true;
   $("editor").hidden = false;
   controls();
@@ -592,7 +598,7 @@ $("redo").onclick = () => {
   changed();
 };
 window.addEventListener("keydown", (e) => {
-  if (completing || ended) return;
+  if (completing || ended || picking) return;
   if (e.key === "Escape") {
     closeComment();
     return;
@@ -622,46 +628,96 @@ window.addEventListener("resize", () => {
   if (!dragging) renderTimeline();
   positionPopover();
 });
-for (const id of ["begin", "open-button"])
-  $(id).onclick = async () => {
-    $("open-dialog").showModal();
-  };
-$("close-open").onclick = () => $("open-dialog").close();
-$("open-form").onsubmit = async (e) => {
-  e.preventDefault();
-  $("prepare").disabled = true;
+async function loadLibrary() {
+  try {
+    const { videos } = await api('videos');
+    $('video-list').replaceChildren();
+    $('library-status').textContent = videos.length ? '' : 'No videos yet. Choose a recording to get started.';
+    $('library-status').hidden = !!videos.length;
+    for (const entry of videos) {
+      const row = element('button', 'video-entry');
+      row.append(element('span', 'video-entry-name', entry.name));
+      row.append(element('span', 'video-entry-detail',
+        [entry.filename, entry.duration == null ? null : clock(entry.duration),
+          entry.prepared ? 'Resume review' : 'Prepare video'].filter(Boolean).join(' · ')));
+      row.title = entry.location;
+      row.onclick = () => openVideo(() => api('select', { id: entry.id }));
+      $('video-list').append(row);
+    }
+    controls();
+  } catch (failure) {
+    $('library-status').hidden = false;
+    $('library-status').textContent = 'Could not load videos. Refresh to try again, or choose a new recording.';
+    error(failure.message);
+  }
+}
+async function openVideo(operation) {
+  if (busy || picking || ended) return;
+  picking = true;
+  controls();
+  video.pause();
+  $('job').hidden = false;
+  $('job-text').textContent = 'Opening video…';
+  $('cancel').hidden = true;
+  error('');
   try {
     await flush();
-    let path = $("path").value.trim(),
-      folder = $("workspace-path").value.trim();
-    const file = $("video-file").files[0];
-    if (file) {
-      $("job-text").textContent =
-        "Copying selected video into local review folder…";
-      const result = await host.upload(file);
-      path = result.path;
-      folder = result.workspace;
-      $("path").value = path;
-      $("workspace-path").value = folder;
-      $("video-file").value = "";
-    }
-    if (!path) throw Error("Choose a video or enter its local path.");
-    await api("open", {
-      path,
-      workspace: folder || undefined,
-      model: $("model-path").value.trim() || undefined,
-      transcript: $("transcript-path").value.trim() || undefined,
-      source: $("relink-path").value.trim() || undefined,
-    });
-    $("open-dialog").close();
-    error("");
-    await poll();
-  } catch (e) {
-    error(e.message);
+    await operation();
+    $('open-dialog').close();
+  } catch (failure) {
+    error(failure.message);
   } finally {
-    $("prepare").disabled = false;
+    picking = false;
+    await poll().catch(failure => error(failure.message));
+    controls();
   }
+}
+async function uploadAndOpen(file) {
+  if (!file) return;
+  await openVideo(async () => {
+    $('job-text').textContent = 'Copying video…';
+    const selected = await host.upload(file);
+    await api('open', selected);
+  });
+}
+$('begin').onclick = () => $('library-file').click();
+$('library-file').onchange = async () => {
+  await uploadAndOpen($('library-file').files[0]);
+  $('library-file').value = '';
 };
+$('refresh-videos').onclick = loadLibrary;
+$('back-to-review').onclick = render;
+$('open-path').onclick = () => $('open-dialog').showModal();
+$('open-button').onclick = async () => {
+  try { await flush(); } catch (failure) { error(failure.message); return; }
+  choosing = true;
+  video.pause();
+  $('editor').hidden = true;
+  $('empty').hidden = false;
+  document.querySelector('.action-bar').hidden = true;
+  await loadLibrary();
+};
+$('close-open').onclick = () => $('open-dialog').close();
+// Selecting a file always begins preparation; there is no second submit click.
+$('video-file').onchange = async () => {
+  await uploadAndOpen($('video-file').files[0]);
+  $('video-file').value = '';
+};
+$('open-form').onsubmit = async e => {
+  e.preventDefault();
+  const path = $('path').value.trim();
+  if (!path) return error('Choose a video or enter its local path.');
+  await openVideo(() => api('open', {
+    path, workspace: $('workspace-path').value.trim() || undefined,
+    model: $('model-path').value.trim() || undefined,
+    transcript: $('transcript-path').value.trim() || undefined,
+    source: $('relink-path').value.trim() || undefined,
+  }));
+};
+if (host.expand) {
+  $('expand-app').hidden = false;
+  $('expand-app').onclick = () => host.expand().catch(failure => error(failure.message));
+}
 $("retry").onclick = () =>
   api("retry", {})
     .then(poll)
@@ -682,9 +738,9 @@ $("export-form").onsubmit = async (e) => {
   }
 };
 async function poll() {
-  if (completing || ended) return;
+  if (completing || ended || picking) return;
   const state = await api("state");
-  if (completing || ended) return;
+  if (completing || ended || picking) return;
   const wasBusy = busy;
   busy = state.job.busy;
   $("retry").hidden = busy || !state.job.error || !state.last_open;
@@ -804,4 +860,5 @@ async function loop() {
   }
   if (!ended) setTimeout(loop, Math.min(15000, 800 * 2 ** Math.min(connectionFailures, 5)));
 }
+loadLibrary();
 loop();

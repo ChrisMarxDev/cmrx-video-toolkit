@@ -8,6 +8,14 @@ export async function createHost(token) {
     return { request, upload: file => uploadVideo('', token, file), session: response.ok ? await response.json() : null,
       mediaUrl: sha => `/media?token=${encodeURIComponent(token)}&revision=${encodeURIComponent(sha)}` };
   }
+  document.body.classList.add('mcp-app');
+  let context = {};
+  const updateContext = update => {
+    context = { ...context, ...update };
+    document.body.classList.toggle('mcp-fullscreen', context.displayMode === 'fullscreen');
+    const button = document.getElementById('expand-app');
+    if (button) button.textContent = context.displayMode === 'fullscreen' ? 'Collapse' : 'Expand';
+  };
   let sequence = 0;
   const pending = new Map();
   const post = message => parent.postMessage({ jsonrpc: '2.0', ...message }, '*');
@@ -29,20 +37,38 @@ export async function createHost(token) {
       message.error ? call.reject(Error(message.error.message)) : call.resolve(message.result);
     } else if (message.method === 'ui/notifications/tool-result' && message.params?.structuredContent?.sessionId) {
       receive(message.params.structuredContent);
+    } else if (message.method === 'ui/notifications/host-context-changed') {
+      updateContext(message.params);
     } else if (message.method === 'ui/resource-teardown') {
       document.querySelector('video')?.pause();
       post({ id: message.id, result: {} });
     }
   });
-  await rpc('ui/initialize', { appInfo: { name: 'video-review', version: '0.1.0' }, appCapabilities: {}, protocolVersion: '2026-01-26' });
+  const initialized = await rpc('ui/initialize', { appInfo: { name: 'video-review', version: '0.2.0' }, appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] }, protocolVersion: '2026-01-26' });
+  updateContext({ ...initialized.hostContext, ...context });
   post({ method: 'ui/notifications/initialized', params: {} });
   let timer;
   const session = await Promise.race([opened, new Promise((_, reject) => {
     timer = setTimeout(() => reject(Error('The host did not supply a review session. Reopen the review.')), 30000);
   })]).finally(() => clearTimeout(timer));
-  new ResizeObserver(() => post({ method: 'ui/notifications/size-changed', params: { height: document.documentElement.scrollHeight } })).observe(document.body);
+  let lastHeight;
+  const resize = () => {
+    const height = Math.max(760, Math.ceil(document.body.scrollHeight));
+    if (height === lastHeight) return;
+    lastHeight = height;
+    post({ method: 'ui/notifications/size-changed', params: { height } });
+  };
+  new ResizeObserver(resize).observe(document.body);
+  resize();
   if (!session.apiUrl) throw Error('This review uses an older connection. Ask your agent to restart the review service; saved work is preserved.');
-  return { session, request: browserRequest({ origin: session.apiUrl, token: '' }),
+  return { session,
+    expand: context.availableDisplayModes?.includes('fullscreen') ? async () => {
+      const mode = context.displayMode === 'fullscreen' ? 'inline' : 'fullscreen';
+      if (!context.availableDisplayModes?.includes(mode)) return;
+      const result = await rpc('ui/request-display-mode', { mode });
+      updateContext({ displayMode: result.mode });
+    } : undefined,
+    request: browserRequest({ origin: session.apiUrl, token: '' }),
     upload: file => uploadVideo(session.apiUrl, '', file),
     mediaUrl: () => session.mediaUrl,
     notify: result => rpc('ui/message', { role: 'user', content: [{ type: 'text', text: continuationMessage(result) }] }) };

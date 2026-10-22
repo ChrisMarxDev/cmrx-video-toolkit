@@ -9,7 +9,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { ReviewRuntime } from './runtime.mjs';
 import { createServer } from './mcp.mjs';
 
-for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg → approved artifact (choose later: ${chooseLater})`, { timeout: 60000 }, async () => {
+for (const chooseLater of [false, true, 'library']) test(`real MCP → Python → FFmpeg → approved artifact (choose later: ${chooseLater})`, { timeout: 60000 }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'review-agent-'));
   const runtime = new ReviewRuntime({ root });
   const server = createServer(runtime);
@@ -22,6 +22,14 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
       '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=16000', '-t', '1', '-c:v', 'libx264', '-c:a', 'aac', clip]);
     assert.equal(made.status, 0, String(made.stderr));
     await writeFile(join(root, 'transcript.json'), JSON.stringify({ transcription: [] }));
+    if (chooseLater === 'library') {
+      const prepared = spawnSync('python3', ['apps/editor/review.py', clip, '--workspace', join(root, 'videos/lesson_1'), '--transcript', join(root, 'transcript.json')], { cwd: new URL('../..', import.meta.url) });
+      assert.equal(prepared.status, 0, String(prepared.stderr));
+      const artifact = join(root, 'videos/lesson_1/review.json');
+      const saved = JSON.parse(await readFile(artifact));
+      saved.marks = [{ id: 'existing', kind: 'comment', text: 'Preserve this note', source_start: 0, source_end: .5 }];
+      await writeFile(artifact, JSON.stringify(saved));
+    }
     await server.connect(a);
     await client.connect(b);
     const listed = await client.listTools();
@@ -58,7 +66,13 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
     assert.equal((await fetch(`${apiUrl}wrong/api/state`)).status, 404);
     assert.equal((await fetch(`${apiUrl}/api/shutdown`, { method: 'POST' })).status, 404);
     assert.equal((await fetch(`${apiUrl}/api/finish`)).status, 405);
-    if (chooseLater) {
+    if (chooseLater === 'library') {
+      const { videos } = await direct('videos');
+      assert.equal(videos.length, 1);
+      assert.equal(videos[0].prepared, true);
+      assert.equal(videos[0].path, undefined);
+      await direct('select', { id: videos[0].id });
+    } else if (chooseLater) {
       assert.equal(opened.structuredContent.status, 'waiting');
       assert.equal(opened.structuredContent.artifactPath, null);
       const session = runtime.session(sessionId);
@@ -95,6 +109,7 @@ for (const chooseLater of [false, true]) test(`real MCP → Python → FFmpeg �
     // All editing below bypasses host tools: it must work with no active agent turn.
     const state = await direct('state');
     const doc = state.document;
+    if (chooseLater === 'library') assert.equal(doc.marks[0].text, 'Preserve this note');
     const saved = await direct('save', { revision: doc.revision, source_sha256: doc.source.sha256,
       marks: [{ id: 'note', kind: 'comment', text: 'Keep this moment', source_start: 0, source_end: .5 }], objects: [] });
     await assert.rejects(runtime.request(sessionId, 'finish', { sessionId, revision: doc.revision, sourceSha256: doc.source.sha256 }), /changed/);

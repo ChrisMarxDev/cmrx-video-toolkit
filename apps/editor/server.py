@@ -2,6 +2,7 @@
 """Run the single-video review app locally on Windows, macOS or Linux."""
 import argparse
 import copy
+import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import mimetypes
@@ -18,9 +19,10 @@ WEB = Path(__file__).parent / 'web'
 
 
 class Session:
-    def __init__(self, home, model=None):
+    def __init__(self, home, model=None, library_root=None):
         self.home = Path(home).expanduser().resolve()
         self.home.mkdir(parents=True, exist_ok=True)
+        self.library_root = Path(library_root or self.home).expanduser().resolve()
         self.default_model = model or os.environ.get('WHISPER_MODEL')
         settings = self.home / 'settings.json'
         self.default_language = os.environ.get('WHISPER_LANGUAGE') or 'auto'
@@ -38,6 +40,60 @@ class Session:
         self.last_open = None
         self.worker = None
         self.job = dict(busy=False, message='Open a video to begin', error=None, export=None)
+
+    def library(self):
+        """Discover originals and saved reviews in explicit production folders only."""
+        root = self.library_root
+        roots = [self.home, root / '.video-reviews', root / 'videos',
+                 root / 'projects', root / 'studio/videos']
+        skip = {'source', 'transcript', 'renders', 'composition', 'build',
+                'node_modules', '.git', '.dart_tool', 'review'}
+        extensions = {'.mp4', '.mov', '.mkv', '.webm', '.avi', '.m4v'}
+        files, visited = set(), set()
+        # Also accept recordings placed directly in the configured root.
+        files.update(p for p in root.iterdir() if p.is_file() and p.suffix.lower() in extensions)
+        for folder in roots:
+            if not folder.is_dir() or not folder.resolve().is_relative_to(root):
+                continue
+            for current, dirs, names in os.walk(folder, followlinks=False):
+                current = Path(current)
+                if current in visited:
+                    dirs[:] = []
+                    continue
+                visited.add(current)
+                if len(visited) > 2000:
+                    break
+                dirs[:] = sorted(d for d in dirs if d not in skip and not d.startswith('.')
+                                 and not (current / d).is_symlink()
+                                 and len((current / d).relative_to(folder).parts) <= 5)
+                files.update(current / n for n in names if n == 'review.json'
+                             or Path(n).suffix.lower() in extensions)
+        entries = {}
+        # Reviews win over raw files so selecting an existing recording retains notes.
+        for path in sorted(files, key=lambda p: (p.name == 'review.json', str(p))):
+            try:
+                if path.is_symlink() or not path.resolve().is_relative_to(root):
+                    continue
+                doc = review.validate(review.read(path)) if path.name == 'review.json' else None
+                source = review.source_path(doc, path.parent).resolve() if doc else path.resolve()
+                if not source.is_file() or not source.is_relative_to(root):
+                    continue
+                key = hashlib.sha256(str(source).encode()).hexdigest()
+                entries[key] = dict(id=key, name=source.stem, filename=source.name,
+                                    location=str(source.parent.relative_to(root)),
+                                    duration=doc['source']['duration'] if doc else None,
+                                    prepared=bool(doc and doc['transcript']['status'] == 'ready'),
+                                    modified=path.stat().st_mtime,
+                                    path=str(path), workspace=str(path.parent) if doc else str(source) + '.review')
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+        return sorted(entries.values(), key=lambda x: (-x['modified'], x['name']))[:200]
+
+    def select(self, identifier):
+        entry = next((item for item in self.library() if item['id'] == identifier), None)
+        if entry is None:
+            raise ValueError('This video is no longer available. Refresh the video list.')
+        self.open(dict(path=entry['path'], workspace=entry['workspace']))
 
     def snapshot(self):
         with self.lock:
@@ -161,6 +217,9 @@ class Handler(BaseHTTPRequestHandler):
         path = urllib.parse.urlsplit(self.path).path
         if not self.headers_ok(path.startswith('/api/') or path == '/media'):
             return
+        if path == '/api/videos':
+            entries = self.server.session.library()
+            return self.json({'videos': [{k: v for k, v in item.items() if k not in ('path', 'workspace')} for item in entries]})
         if path == '/api/state':
             return self.json(self.server.session.snapshot())
         if path == '/media':
@@ -238,7 +297,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Expected a JSON request under 16 MB')
             data = json.loads(self.rfile.read(length))
             state = self.server.session
-            if path == '/api/open':
+            if path == '/api/select':
+                state.select(data['id'])
+            elif path == '/api/open':
                 state.open(data)
             elif path == '/api/retry':
                 if not state.last_open:
@@ -282,11 +343,11 @@ class Handler(BaseHTTPRequestHandler):
         self.json(dict(path=str(destination), workspace=str(destination.parent.parent)))
 
 
-def make_server(port=0, home=None, model=None, handler=Handler):
+def make_server(port=0, home=None, model=None, handler=Handler, library_root=None):
     server = ThreadingHTTPServer(('127.0.0.1', port), handler)
     server.daemon_threads = True
     server.token = secrets.token_urlsafe(32)
-    server.session = Session(home or Path.home() / 'VideoReviews', model)
+    server.session = Session(home or Path.home() / 'VideoReviews', model, library_root)
     return server
 
 
@@ -297,9 +358,10 @@ def main(handler=Handler):
     parser.add_argument('--workspace')
     parser.add_argument('--model', default=os.environ.get('WHISPER_MODEL'))
     parser.add_argument('--transcript')
+    parser.add_argument('--library-root', help='Root containing recordings and review workspaces')
     parser.add_argument('--home', help='Folder for videos selected through the browser')
     args = parser.parse_args()
-    server = make_server(args.port, args.home, args.model, handler)
+    server = make_server(args.port, args.home, args.model, handler, args.library_root)
     if args.video:
         server.session.open(dict(path=args.video, workspace=args.workspace, model=args.model, transcript=args.transcript))
     print(f'Open http://127.0.0.1:{server.server_address[1]}/#token={server.token}', flush=True)

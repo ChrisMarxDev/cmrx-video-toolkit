@@ -15,8 +15,8 @@ import server
 
 
 class AgentSession(server.Session):
-    def __init__(self, home, model=None):
-        super().__init__(home, model)
+    def __init__(self, home, model=None, library_root=None):
+        super().__init__(home, model, library_root)
         self.session_id = str(uuid.uuid4())
         self.finished = threading.Event()
         self.outcome = None
@@ -111,9 +111,9 @@ class AgentHandler(server.Handler):
             self.json({'error': str(exc)}, 400)
 
 
-def make_server(port=0, home=None, model=None, handler=AgentHandler):
-    instance = server.make_server(port, home, model, handler)
-    instance.session = AgentSession(instance.session.home, model)
+def make_server(port=0, home=None, model=None, handler=AgentHandler, library_root=None):
+    instance = server.make_server(port, home, model, handler, library_root)
+    instance.session = AgentSession(instance.session.home, model, library_root)
     return instance
 
 
@@ -124,11 +124,12 @@ def main(handler=AgentHandler):
     parser.add_argument('--model')
     parser.add_argument('--transcript')
     parser.add_argument('--home')
+    parser.add_argument('--library-root')
     parser.add_argument('--port', type=int, default=0)
     parser.add_argument('--wait', action='store_true', help='Exit with a JSON result after explicit Done/cancel')
     parser.add_argument('--open', action='store_true', help='Open the normal browser automatically')
     args = parser.parse_args()
-    instance = make_server(args.port, args.home, args.model, handler)
+    instance = make_server(args.port, args.home, args.model, handler, args.library_root)
     thread = threading.Thread(target=instance.serve_forever, daemon=True)
     thread.start()
     try:
