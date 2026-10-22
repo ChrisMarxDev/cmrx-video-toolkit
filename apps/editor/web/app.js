@@ -28,6 +28,7 @@ let doc = null,
   undo = [],
   redo = [];
 let picking = false, choosing = true;
+let timelineZoom = 1;
 let completing = false,
   ended = false;
 let busy = false,
@@ -106,6 +107,8 @@ function controls() {
   $("redo").disabled = busy || !redo.length;
   $("play").disabled = busy || !doc;
   $("export-button").disabled = busy || !doc;
+  $('zoom-out').disabled = busy || timelineZoom === 1;
+  $('zoom-in').disabled = busy || timelineZoom === 32;
   if (host.session) {
     $("open-button").hidden = true;
     $("begin").hidden = !!doc || busy || ended;
@@ -414,12 +417,15 @@ function renderTimeline() {
       const original = structuredClone(value),
         x = e.clientX,
         bounds = timeline.getBoundingClientRect(),
+        initialScroll = $('timeline-viewport').scrollLeft,
+        initialTime = video.currentTime,
         edge = e.target.classList.contains("start")
           ? "start"
           : e.target.classList.contains("end")
             ? "end"
             : "move";
       let moved = false;
+      video.pause();
       const before = snapshot();
       if (draft && draft.id !== value.id) draft = null;
       selected = value.id;
@@ -435,16 +441,18 @@ function renderTimeline() {
             value,
             moveInterval(
               original,
-              ((m.clientX - x) / bounds.width) * doc.source.duration,
+              ((m.clientX - x + $('timeline-viewport').scrollLeft - initialScroll) / bounds.width) * doc.source.duration,
               doc.source.duration,
               edge,
             ),
           );
           placeBar(bar, value);
+          previewTime(edge === 'end' ? value.source_end : value.source_start);
         },
         (_e, cancelled) => {
           if (cancelled) {
             Object.assign(value, original);
+            previewTime(initialTime);
             render();
             return;
           }
@@ -453,7 +461,7 @@ function renderTimeline() {
             redo = [];
             changed();
           }
-          video.currentTime = value.source_start;
+          previewTime(edge === 'end' ? value.source_end : value.source_start);
           openComment(value, !moved);
         },
       );
@@ -474,6 +482,8 @@ function renderTimeline() {
       );
       if (value !== draft) checkpoint();
       Object.assign(value, proposed);
+      video.pause();
+      previewTime(e.altKey ? value.source_end : value.source_start);
       if (value !== draft) changed();
       else render();
       openComment(value);
@@ -489,16 +499,18 @@ $("timeline").onpointerdown = (e) => {
   if (!doc || busy || e.button !== 0 || e.target.closest(".bar")) return;
   closeComment();
   const timeline = $("timeline"),
-    bounds = timeline.getBoundingClientRect(),
-    at = (x) =>
-      clamp((x - bounds.left) / bounds.width, 0, 1) * doc.source.duration,
+    at = (x) => {
+      const bounds = timeline.getBoundingClientRect();
+      return clamp((x - bounds.left) / bounds.width, 0, 1) * doc.source.duration;
+    },
+    initialTime = video.currentTime,
     start = at(e.clientX);
   let end = start;
   const band = element("div", "bar draft selected");
   band.style.top = "6px";
   let moved = false;
-  video.currentTime = start;
-  highlightPlayback();
+  video.pause();
+  previewTime(start);
   pointerDrag(
     e,
     (m) => {
@@ -508,11 +520,13 @@ $("timeline").onpointerdown = (e) => {
         timeline.append(band);
       }
       end = at(m.clientX);
+      previewTime(end);
       const [a, b] = range(start, end, doc.source.duration);
       placeBar(band, { source_start: a, source_end: b });
     },
     (_e, cancelled) => {
       band.remove();
+      if (cancelled) previewTime(initialTime);
       if (!cancelled && moved) createDraft(start, end);
       else render();
     },
@@ -540,9 +554,37 @@ $("expand-timeline").onclick = () => {
   positionPopover();
 };
 $("timeline-scroll").onscroll = positionPopover;
+$('timeline-viewport').onscroll = positionPopover;
+function setTimelineZoom(next) {
+  if (!doc || dragging) return;
+  const viewport = $('timeline-viewport');
+  const oldBounds = $('timeline').getBoundingClientRect();
+  const playheadX = oldBounds.left + video.currentTime / doc.source.duration * oldBounds.width;
+  const viewBounds = viewport.getBoundingClientRect();
+  const anchorX = clamp(playheadX - viewBounds.left, 0, viewport.clientWidth);
+  const anchorTime = clamp((viewBounds.left + anchorX - oldBounds.left) / oldBounds.width, 0, 1);
+  timelineZoom = clamp(next, 1, 32);
+  viewport.style.setProperty('--timeline-zoom', timelineZoom);
+  const newBounds = $('timeline').getBoundingClientRect();
+  viewport.scrollLeft += newBounds.left + anchorTime * newBounds.width - viewBounds.left - anchorX;
+  $('zoom-out').disabled = timelineZoom === 1;
+  $('zoom-in').disabled = timelineZoom === 32;
+  $('zoom-fit').textContent = timelineZoom === 1 ? 'Fit' : timelineZoom + '×';
+  highlightPlayback();
+  positionPopover();
+}
+$('zoom-in').onclick = () => setTimelineZoom(timelineZoom * 2);
+$('zoom-out').onclick = () => setTimelineZoom(timelineZoom / 2);
+$('zoom-fit').onclick = () => setTimelineZoom(1);
+function previewTime(time) {
+  video.currentTime = clamp(time, 0, doc.source.duration);
+  highlightPlayback();
+}
 function highlightPlayback() {
   if (!doc) return;
   const t = video.currentTime;
+  // Match the scrubber and playhead to the annotation axis, including its scrollbar gutter.
+  document.querySelector('.timeline-surface').style.setProperty('--axis-width', $('timeline').clientWidth + 'px');
   $("position").textContent = `${clock(t)} / ${clock(doc.source.duration)}`;
   $("seek").value = t;
   $("timeline-playhead").style.left = (t / doc.source.duration) * 100 + "%";
@@ -626,6 +668,7 @@ window.addEventListener("beforeunload", (e) => {
 });
 window.addEventListener("resize", () => {
   if (!dragging) renderTimeline();
+  highlightPlayback();
   positionPopover();
 });
 async function loadLibrary() {
@@ -783,6 +826,8 @@ async function poll() {
     selection = [0, 0];
     video.src = host.mediaUrl(doc.source.sha256);
     $("seek").max = doc.source.duration;
+    setTimelineZoom(1);
+    $('timeline-viewport').scrollLeft = 0;
     $("path").value = workspace + "/review.json";
     $("workspace-path").value = "";
     draft = null;

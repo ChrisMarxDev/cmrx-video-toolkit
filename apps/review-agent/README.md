@@ -206,8 +206,10 @@ saved reviews. It is bounded to 2,000 directories, five nested levels per librar
 folder, and 200 entries. Library/select endpoints use the same local capability
 transport as review operations; selection accepts a discovered ID, not a new path.
 
-The embedded editor requests a 760px minimum working height and offers Expand
+The embedded editor requests a fixed 700px working height and offers Expand
 when the host advertises fullscreen support. Narrow layouts put the transcript
-below the video. The host controls the final window dimensions. Existing MCP
+below the video with internal scrolling. Timeline rows scroll vertically; zoomed
+timelines scroll horizontally. Dragging a range previews its moving boundary.
+The host controls the final window dimensions. Existing MCP
 processes must restart to load the library relay and v3 UI resource; saved media
 and review artifacts stay in place. Done still only submits the review.

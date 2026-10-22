@@ -636,21 +636,6 @@ summary {
   width: 1px;
   background: var(--accent);
 }
-#editor.timeline-expanded {
-  height: max(100dvh, calc(var(--timeline-content-height) + 360px));
-}
-.timeline-expanded .timeline-surface {
-  height: calc(var(--timeline-content-height) + 20px);
-}
-.timeline-expanded #timeline-scroll {
-  overflow: visible;
-}
-body:has(.timeline-expanded) {
-  overflow-y: auto;
-}
-.timeline-expanded aside {
-  max-height: calc(100dvh - 120px);
-}
 
 .bar {
   display: flex;
@@ -674,19 +659,15 @@ body:has(.timeline-expanded) {
 
 /* The recording is the primary working surface, even in a short host iframe. */
 body.mcp-app {
-  --review-height: 760px;
-  min-height: var(--review-height);
-  height: auto;
-  overflow-y: auto;
+  --review-height: 700px;
+  height: var(--review-height);
+  overflow: hidden;
 }
-body.mcp-fullscreen { --review-height: max(760px, 100dvh); }
+body.mcp-fullscreen { --review-height: 100dvh; }
 .mcp-app #editor { height: var(--review-height); }
-.mcp-app #editor.timeline-expanded {
-  height: max(var(--review-height), calc(var(--timeline-content-height) + 480px));
-}
 #editor .viewer-panel { grid-template-rows: minmax(280px, 1fr) auto; }
-#editor { min-height: 600px; }
-body { overflow-y: auto; }
+#editor { min-height: 0; }
+body { overflow: hidden; }
 #empty {
   justify-content: flex-start;
   align-items: stretch;
@@ -714,4 +695,32 @@ body { overflow-y: auto; }
   .library-heading { align-items: flex-start; flex-direction: column; }
   #empty { padding: 28px 18px; }
   .mcp-app .action-bar { position: sticky; bottom: 12px; width: max-content; max-width: 100%; margin: -76px auto 16px; left: auto; transform: none; }
+}
+
+/* Fixed shell; long lists, narrow layouts and annotation stacks scroll inside it. */
+:root { font-size: 13px; }
+#editor, .mcp-app #editor { height: 100%; overflow: auto; padding-bottom: 82px; }
+#editor .viewer-panel { grid-template-rows: minmax(240px, 1fr) auto; }
+#empty { height: 100%; min-height: 0; overflow-y: auto; padding: 28px 24px; }
+#empty h1 { font-size: 24px; }
+.video-entry { padding: 14px 16px; }
+.video-entry-name { font-size: 16px; }
+.library-heading { margin-bottom: 18px; }
+.timeline-panel { min-width: 0; }
+.video-meta { flex-wrap: wrap; gap: 8px; }
+.timeline-zoom { display: flex; gap: 2px; align-items: center; }
+.timeline-zoom button { height: 32px; min-width: 32px; padding: 4px 7px; font-size: 12px; }
+#timeline-viewport { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.timeline-surface { width: calc(100% * var(--timeline-zoom, 1)); height: 116px; }
+#timeline-scroll { overflow-y: auto; overflow-x: hidden; }
+#timeline { min-height: 96px; }
+.timeline-expanded .timeline-surface { height: 196px; }
+#seek { width: var(--axis-width, calc(100% - 12px)); margin-left: 6px; }
+.playhead-track { width: var(--axis-width, calc(100% - 12px)); right: auto; }
+@media (max-width: 640px) {
+  #editor, .mcp-app #editor { display: block; height: 100%; min-height: 0; }
+  #editor .viewer-panel { grid-template-rows: 320px auto; }
+  #editor aside { height: 260px; margin-top: 16px; }
+  .mcp-app .action-bar { position: fixed; left: 50%; transform: translateX(-50%); margin: 0; bottom: 12px; }
+  #source-name { flex-basis: 100%; }
 }

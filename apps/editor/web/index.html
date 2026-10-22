@@ -38,6 +38,11 @@
           <div class="video-meta">
             <span id="source-name"></span>
             <output id="position">0:00</output>
+            <div class="timeline-zoom" role="group" aria-label="Timeline zoom">
+              <button id="zoom-out" aria-label="Zoom out timeline" title="Zoom out timeline">−</button>
+              <button id="zoom-fit" title="Fit entire video">Fit</button>
+              <button id="zoom-in" aria-label="Zoom in timeline" title="Zoom in timeline">+</button>
+            </div>
             <button
               id="expand-timeline"
               class="icon"
@@ -58,6 +63,7 @@
               </svg>
             </button>
           </div>
+          <div id="timeline-viewport" tabindex="0" aria-label="Scrollable timeline">
           <div class="timeline-surface">
             <input
               id="seek"
@@ -73,6 +79,7 @@
             <div class="playhead-track" aria-hidden="true">
               <div id="timeline-playhead"></div>
             </div>
+          </div>
           </div>
         </section>
       </section>

@@ -181,16 +181,23 @@ fs.mkdirSync(root + "/browser-tests", { recursive: true });
       await page.mouse.move(bar.x + bar.width / 2 + 25, bar.y + 12, {
         steps: 8,
       });
+      const movePreview = await page.locator('video').evaluate(v => v.currentTime);
+      assert(movePreview > 7, 'Moving a range must preview before pointerup');
       await page.mouse.up();
       await saved();
       const moved = read().marks.find((m) => m.kind === "comment");
       assert(moved.source_start > 7);
+      assert(Math.abs(movePreview - moved.source_start) < 0.01);
       const edge = await page.locator(".bar.comment .edge.end").boundingBox();
       await page.mouse.move(edge.x + 6, edge.y + 12);
       await page.mouse.down();
       await page.mouse.move(edge.x + 26, edge.y + 12, { steps: 8 });
+      const endPreview = await page.locator('video').evaluate(v => v.currentTime);
+      assert(endPreview > moved.source_end, 'Resizing must preview the end before pointerup');
       await page.mouse.up();
       await saved();
+      assert(Math.abs(await page.locator('video').evaluate(v => v.currentTime) - endPreview) < 0.01,
+        'Release must preserve the end preview');
       assert(
         read().marks.find((m) => m.kind === "comment").source_end >
           moved.source_end,

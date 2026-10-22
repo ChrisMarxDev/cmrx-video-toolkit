@@ -77,8 +77,9 @@ editor launch path.
 
 The workspace stays within one screen: video and scrubber on the left, transcript
 on the right, a comment lane joined to the scrubber by a continuous playhead, and a floating action bar.
-The expand button reveals all annotation rows without scrolling inside the timeline;
-for very many rows the page grows vertically. Collapse restores the fixed workspace.
+The workspace has a fixed height with internal scrolling. Overlapping annotation
+rows scroll vertically, including when the lane is expanded. Use +/− to zoom the
+time axis (up to 32×), scroll horizontally to another section, and Fit to reset.
 
 - Click empty timeline space to seek. Double-click creates a two-second comment
   range (clamped at the end); drag to select a custom range without a click flash.
@@ -88,7 +89,8 @@ for very many rows the page grows vertically. Collapse restores the fixed worksp
 - Click a transcript passage to seek and comment; Shift-click extends the range.
   Search filters the transcript without changing annotations.
 - Click a comment bar to edit. Drag its middle to move the range or its visible
-  end handles to resize. Arrow keys nudge; Shift increases the nudge, Alt adjusts
+  end handles to resize. The playhead and video preview follow the dragged boundary
+  immediately, staying there on release. Arrow keys nudge; Shift increases the nudge, Alt adjusts
   the end. Non-overlapping comments share a row; overlaps stack in the same lane.
 - Enter saves and closes the popover; Shift+Enter inserts a newline. Escape or
   clicking outside closes it. Empty neutral drafts are discarded. Changes autosave.

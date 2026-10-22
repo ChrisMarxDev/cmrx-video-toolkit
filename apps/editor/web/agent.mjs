@@ -53,7 +53,7 @@ export async function createHost(token) {
   })]).finally(() => clearTimeout(timer));
   let lastHeight;
   const resize = () => {
-    const height = Math.max(760, Math.ceil(document.body.scrollHeight));
+    const height = context.displayMode === 'fullscreen' ? document.body.clientHeight : 700;
     if (height === lastHeight) return;
     lastHeight = height;
     post({ method: 'ui/notifications/size-changed', params: { height } });
