@@ -37,6 +37,7 @@ Paths in commands are toolkit-root-relative; skill links are file-relative.
 
 Load [fluvie-compose](../fluvie-compose/SKILL.md) for framework authoring and
 [fluvie-render](../fluvie-render/SKILL.md) for framework export mechanics.
+Use [fluvie-validate](../fluvie-validate/SKILL.md) to check changed Dart before preview/export.
 Use [component-select](../component-select/SKILL.md) when a component choice is
 missing; consume an existing valid selection directly. Use
 [component-author](../component-author/SKILL.md) for new geometry. Load component

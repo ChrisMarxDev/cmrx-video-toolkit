@@ -15,6 +15,7 @@ bundle; individual skill files are not independent software installations.
   their specialist implementation/integration knowledge.
 - Effects: effect-background-remove transforms footage into a person alpha asset.
 - Framework: fluvie-compose and fluvie-render supply installed-version mechanics;
+  fluvie-validate checks static errors and warnings before preview/export;
   fluvie-generative-ai covers optional media/spec generation and cached reuse.
 
 ## Shared software
@@ -46,7 +47,8 @@ host, not a new CLI binary. All skill links resolve within this toolkit checkout
 Fluvie guidance is adapted from a pinned upstream skill and generative-media docs;
 see each Fluvie skill's provenance and MIT notice. No framework upgrade or provider
 request is performed by installing skills. Native Scene/web platform limits remain.
-A composed-video Flutter MCP live preview is future work, not shipped by this cleanup.
+The optional [Previewer](../tools/previewer/README.md) plays composed Fluvie videos;
+the [Validator](../tools/validator/README.md) checks authored code before playback/export.
 
 ## Distribution boundary
 

@@ -28,6 +28,7 @@ Reduction candidates elsewhere in this inventory are possibilities, not commitme
 | Agent launches browser and waits for Done | Same as browser review + the user's existing agent/terminal; no Node/MCP required |
 | Local MCP tools / embedded MCP App | Review requirements + Node.js 22+, npm dependencies, local MCP-capable host; inline display needs MCP Apps support |
 | Component catalog MCP / optional embedded browser | Node 22+ and adapter npm packages for catalog tools; Flutter/Python/FFmpeg for a cold browser build; MCP Apps and local frames for inline display |
+| Static Fluvie validation | Python 3.10+, Flutter/Dart, resolved project dependencies and compatible Fluvie CLI with validate/JSON support; no FFmpeg or browser needed |
 | Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe |
 | Standalone dither studio | Browser only; open the already-built tools/dither/index.html locally |
 | Viewing an already-built component browser | Browser plus a static host; the current MCP static host uses Node. No Flutter SDK for viewing; prebuilt release distribution is not yet implemented. |

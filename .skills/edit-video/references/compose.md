@@ -16,6 +16,7 @@ For framework-specific mechanics, read [fluvie-compose](../../fluvie-compose/SKI
 
 ## Review the composition before encoding
 
+Run [fluvie-validate](../../fluvie-validate/SKILL.md) on changed composition files first.
 For compatible Fluvie projects, prefer the minimal Previewer for iteration:
 `open_preview(path: <authored dart>, project: <project directory>)` on the existing
 edit/review MCP server, followed by `get_preview` until ready and `show_preview` once. Show the player or

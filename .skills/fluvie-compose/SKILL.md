@@ -43,7 +43,7 @@ specialists only when needed; native GPU capture is not established web/headless
 support. Use [fluvie-generative-ai](../fluvie-generative-ai/SKILL.md) for generated
 media or prompt-authored specs, not for ordinary local media composition.
 
-Validate with `fluvie validate <file> --json` when available, plus project analysis.
+Use [fluvie-validate](../fluvie-validate/SKILL.md) after authoring and before preview/export; run project analysis for broader diagnostics.
 Hand off editable code, asset references, timing and unresolved limitations to
 [fluvie-render](../fluvie-render/SKILL.md). Compilation alone is not visual review.
 

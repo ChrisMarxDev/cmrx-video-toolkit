@@ -150,6 +150,7 @@ Tools and libraries remain shared; install/use the toolkit as one coherent bundl
 | [component-dithering](.skills/component-dithering/SKILL.md) | Implement deterministic component dither textures. |
 | [effect-background-remove](.skills/effect-background-remove/SKILL.md) | Create person cutouts from existing footage. |
 | [fluvie-compose](.skills/fluvie-compose/SKILL.md) | Author framework-specific Fluvie compositions. |
+| [fluvie-validate](.skills/fluvie-validate/SKILL.md) | Check composition errors and lint warnings. |
 | [fluvie-render](.skills/fluvie-render/SKILL.md) | Preview, export and diagnose Fluvie rendering. |
 | [fluvie-generative-ai](.skills/fluvie-generative-ai/SKILL.md) | Generate media or prompt-authored compositions. |
 
@@ -244,6 +245,9 @@ or client materials are bundled.
 Built by [Chris Marx Studio](https://cmrx.dev).
 
 ### Live composition preview
+
+[Validator](tools/validator/README.md) checks authored Dart with Fluvie’s analyzer
+and lint rules before preview/export, without rendering.
 
 [Previewer](tools/previewer/README.md) plays authored Fluvie compositions without
 encoding a full video. Use `open_preview` / `get_preview` / `show_preview` / `close_preview` through

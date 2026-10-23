@@ -17,7 +17,7 @@ For toolkit videos, [edit-video's render stage](../edit-video/references/render.
 owns timeline freshness, output naming and delivery QA. The shared pipeline CLI
 wraps the export. For direct framework work, where supported, use:
 
-- `fluvie validate <file> --json` before export.
+- Use [fluvie-validate](../fluvie-validate/SKILL.md) before preview/export; reuse an unchanged passing check.
 - `fluvie preview <file>` for the framework's live preview.
 - `fluvie render <file> --machine` for an encoded deliverable.
 - `fluvie review <file> --render --strict-decode --json` for an additional render

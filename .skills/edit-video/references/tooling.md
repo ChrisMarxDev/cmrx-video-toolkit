@@ -38,6 +38,8 @@ Choose based on the next requested operation, not every capability in the toolki
   additionally needs whisper.cpp and a compatible model; reuse ready transcripts.
 - MCP review/catalog access: Node and the relevant adapter's locked npm packages,
   plus whatever the underlying operation needs. Reuse configured MCP tools first.
+- Static Fluvie validation: Python, Flutter/Dart, resolved project dependencies and
+  a CLI supporting `validate --json`; see fluvie-validate. No FFmpeg/browser needed.
 - Composition/render: compatible Flutter SDK (includes Dart), project Pub packages,
   Fluvie CLI where used, FFmpeg and the chosen platform's capture/build support.
 - Person cutout: the optional isolated media environment/model, only when needed.
