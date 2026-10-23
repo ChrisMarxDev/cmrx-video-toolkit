@@ -12,7 +12,7 @@
 +++ b/packages/fluvie/lib/src/rendering/runtime/video_preview_audio.dart
 @@ -26,6 +26,8 @@
    }
- 
+
    Future<void> _toggleSound() async {
 +    if (_audioLoading) return;
 +    setState(() => _audioLoading = true);
@@ -27,7 +27,7 @@
 +      if (mounted) setState(() => _audioLoading = false);
      }
    }
- 
+
 @@ -43,19 +47,23 @@
        _controller.pause();
        return;
