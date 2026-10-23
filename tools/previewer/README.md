@@ -2,7 +2,7 @@
 
 A small local tool for playing an authored Fluvie composition before export.
 The UI is Fluvie's fitted video canvas, play/pause, sound toggle and seek bar with
-elapsed/duration, plus an optional read-only Layers overlay when authored metadata
+elapsed/duration, plus an optional read-only layer timeline when authored metadata
 is supplied. No editor, annotations, transcript, component inspector, render
 button or approval action. Give feedback in chat; render an export separately.
 
@@ -115,22 +115,49 @@ Protocol tests cover readiness, reuse, reload events, failures, shutdown, scoped
 paths, URL/CSP restrictions and independent MCP tools. Real browser acceptance
 is a separate check, including actual clips/audio and seeking after source edits.
 
-## Optional Layers button
+## Optional layer timeline
 
-`flutter/` is the small `composition_previewer` Flutter package. Add it as a path
-dependency to a **preview adapter**, and import
-`package:composition_previewer/preview_layers.dart`. Wrap the preview's authored
-canvas in `PreviewLayers(child: canvas, seconds: seconds, layers: [...])`.
-Provide `PreviewLayer(name: 'Captions', active: hasCaption)` entries in front-to-back
-order, with optional `detail`. Derive their active state from the same frame and
-conditions used by the authored composition. Audio can be listed separately by
-name/detail; active means the track is included, not that sound is unmuted.
+`flutter/` is the `composition_previewer` Flutter package. Add it as a path
+dependency to a **preview host**, and import
+`package:composition_previewer/preview_layers.dart`.
 
-The small Layers button opens/closes a scrollable, read-only overlay. Entries
-update on playback and seeking. Active means included at this frame, not a promise
-that a layer is unoccluded; hidden entries are labelled Inactive. Without metadata,
-it says so explicitly. No widget-tree inference, layer toggles or editing controls.
-`uiScale` adjusts chrome for fixed-resolution canvases before the player fits them
-on screen. Keep the wrapper in the preview entrypoint so it is never exported.
+Wrap the **player**, outside its composition canvas, in `PreviewLayers`. It places
+a Layers toggle below the player. The timeline is collapsed initially; expanding
+it reserves space below the picture rather than obscuring or changing the canvas.
+Rows show authored time spans, a shared playhead and a ruler. Click a row or ruler
+to seek; assistive increase/decrease actions seek by one second. There are no
+trim handles, dragging, visibility toggles or editing actions. Longer lists scroll.
+
+```dart
+ValueListenableBuilder<int>(
+  valueListenable: playback.frames,
+  builder: (context, frame, player) => PreviewLayers(
+    seconds: frame / video.fps,
+    duration: video.totalFrames / video.fps,
+    layers: const [
+      PreviewLayer(name: 'Camera', spans: [PreviewSpan(0, 10)]),
+      PreviewLayer(name: 'Captions', spans: [PreviewSpan(1, 3), PreviewSpan(6, 8)]),
+    ],
+    onSeek: (seconds) => playback.seek(
+      (seconds * video.fps).round().clamp(0, video.totalFrames - 1)),
+    child: player!,
+  ),
+  child: VideoPreview.builder(controller: playback, builder: buildVideo),
+)
+```
+
+The Fluvie host owns/disposes its playback controller and supplies its existing
+media/audio adapters to VideoPreview. Reuse the same controller for the player
+and timeline; do not create a second clock. Derive full `PreviewSpan(start, end)`
+intervals from the composition's timing in **output seconds**, not source time.
+Intervals are half-open; metadata must be recomputed after timing edits. Supply
+layers in front-to-back order, with optional `detail` (shown on hover). Audio may
+be a separate named row; its bar declares the track, not whether sound is muted.
+
+This replaces the earlier `active`/`uiScale` list-overlay API. It does not infer
+layers by inspecting widgets. Empty metadata is labelled. The shell belongs in
+the preview host only, never the export entrypoint. Upstream's default generated
+host needs this explicit integration; a custom host must be retained/reapplied if
+its generated cache is rebuilt.
 
 Validate with `flutter pub get`, `flutter analyze` and `flutter test` in `flutter/`.
