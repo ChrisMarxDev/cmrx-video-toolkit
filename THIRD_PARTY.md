@@ -36,8 +36,9 @@ regression test.
 ## Creator walkthrough
 
 `docs/public/walkthrough-preview.jpg` is a still from Chris Marx's approved toolkit
-walkthrough (2026-10-23), published at his request. The finished video is hosted
-separately as a GitHub user attachment for inline README playback; the
+walkthrough (2026-10-23), published at his request. The approved finished video is
+tracked at `docs/public/toolkit-walkthrough.mp4` at his explicit request. A GitHub
+user attachment provides inline README playback; the
 `walkthrough-demo` release retains an optional download. The original recording,
 transcript and editable production project are not included in this repository.
 The recording and likeness are not covered by the toolkit's MIT software license;

@@ -69,3 +69,6 @@ __pycache__/
 
 # Local agent sessions started before a video is selected
 .video-reviews/
+
+# Approved public README demonstration.
+!/docs/public/toolkit-walkthrough.mp4
