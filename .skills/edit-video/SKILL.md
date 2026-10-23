@@ -1,9 +1,14 @@
 ---
 name: edit-video
-description: Orchestrate a local video workflow with source integrity, reviewed edits and deterministic renders.
+description: Create, edit or revise videos in a local video workspace with transcript editing, reusable Flutter components, creator-owned styling, human review and Fluvie rendering. Use as the main entry point for the complete video workflow.
 ---
 
 # Edit Video
+
+Coordinate the CMRX Video Toolkit workspace from recording or media assets to a
+reviewed video. Reuse its component library, browser and editing tools, with the
+creator's own visual identity. The toolkit and Fluvie are MIT licensed; optional
+generation services and third-party assets have their own terms.
 
 First follow [tooling readiness](references/tooling.md): locate the toolkit, reuse
 installed tools, prepare only the requested capabilities and verify them. Then

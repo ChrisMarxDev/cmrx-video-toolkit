@@ -16,7 +16,7 @@
 
 # CMRX Video Toolkit
 
-A general-purpose blueprint for creating videos with AI: generate media, edit
+An open-source video workspace for AI-assisted production: generate media, edit
 recordings through a transcript, add captions and Flutter animations, and render
 with FFmpeg. The toolkit includes a browser editor, reusable video
 components and skills that guide a coding agent through each stage.
@@ -25,6 +25,10 @@ You review the cuts and visual plan before the agent builds the animation. Your
 recordings stay on your machine; you supply the colors, fonts and editorial direction.
 
 Python + FFmpeg + Flutter · MIT licensed
+
+Powered by Flutter and [Fluvie](https://github.com/SimonErich/fluvie), with no
+company-size licensing threshold for the toolkit or Fluvie. Optional generation
+services, dependencies and media assets retain their own terms.
 
 ## What’s inside
 
@@ -161,6 +165,9 @@ loading rules and migration from previous names.
 
 ## Install agent skills
 
+Start with **`edit-video`** after installing the complete collection. It coordinates
+the workspace and loads component, style, review and rendering guidance as needed.
+
 Vercel's [skills CLI](https://github.com/vercel-labs/skills) discovers the public
 skills directly from this repository. From your consuming project:
 
@@ -182,6 +189,18 @@ applications, Flutter libraries, FFmpeg, models or MCP registrations. Keep a too
 checkout and install the requirements for the selected workflow. Tell your agent
 where that checkout is. `$edit-video` checks tooling readiness, reuses existing
 installations and follows documented setup for missing requirements before editing.
+
+For a new workspace, install the skills in your consuming project, then ask your
+agent: “Use $edit-video to set up CMRX Video Toolkit and create my first video.”
+The agent can locate or clone the toolkit and prepare the requirements for your
+chosen workflow. See the [quick start](https://chrismarxdev.github.io/cmrx-video-toolkit/guides/quick-start/)
+for manual setup.
+
+The [skills.sh collection](https://skills.sh/ChrisMarxDev/cmrx-video-toolkit) groups
+skills into Video workflow, Components, and Fluvie & effects. Listings are populated
+from CLI installations with telemetry enabled; discovery with `--list` alone is
+not an installation. See [skills.sh's listing FAQ](https://skills.sh/docs/faq).
+
 There is no new installer CLI. Skill command paths refer to the toolkit root, while video
 outputs belong in your consuming workspace. Do not install over Studio's private
 skill aliases; this command is for consuming projects.

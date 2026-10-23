@@ -1,0 +1,21 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Video workflow",
+      "description": "Start with edit-video to create or revise a video, define your visual identity, and review edits with a human.",
+      "skills": ["edit-video", "video-style", "video-review"]
+    },
+    {
+      "title": "Components",
+      "description": "Browse, configure and create reusable Flutter graphics, including shaders, 3D and dithering.",
+      "skills": ["component-select", "component-author", "component-shaders", "component-3d", "component-dithering"]
+    },
+    {
+      "title": "Fluvie & effects",
+      "description": "Compose and render with Fluvie; optionally generate media or remove a person’s background.",
+      "skills": ["fluvie-compose", "fluvie-render", "fluvie-generative-ai", "effect-background-remove"]
+    }
+  ]
+}
