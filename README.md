@@ -1,11 +1,6 @@
 ![CMRX Video Toolkit — open tools and agent skills for programmable video](docs/public/readme-banner.svg)
 
-<p align="center">
-  <a href="https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/download/walkthrough-demo/toolkit-walkthrough.mp4">
-    <img src="docs/public/walkthrough-preview.jpg" alt="Watch Chris explain the toolkit in a 1-minute-48-second video made with it" width="240">
-  </a><br>
-  <a href="https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/download/walkthrough-demo/toolkit-walkthrough.mp4">▶ Watch the toolkit walkthrough · 1:48</a>
-</p>
+https://github.com/user-attachments/assets/a097c684-fa26-4d6b-8799-c347fbc81504
 
 <p align="center">
   <a href="https://chrismarxdev.github.io/cmrx-video-toolkit/">Documentation</a> ·
