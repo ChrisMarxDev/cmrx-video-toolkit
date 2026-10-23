@@ -144,6 +144,7 @@ Tools and libraries remain shared; install/use the toolkit as one coherent bundl
 | [video-style](.skills/video-style/SKILL.md) | Define or revise a reusable visual identity. |
 | [video-review](.skills/video-review/SKILL.md) | Collect human feedback through the review editor. |
 | [component-select](.skills/component-select/SKILL.md) | Find and configure existing components. |
+| [animation-workshop](.skills/animation-workshop/SKILL.md) | Generate a throwaway widget playground and copy tuned animation parameters. |
 | [component-author](.skills/component-author/SKILL.md) | Create graphics and register reusable components. |
 | [component-shaders](.skills/component-shaders/SKILL.md) | Author and integrate deterministic shaders. |
 | [component-3d](.skills/component-3d/SKILL.md) | Capture native Flutter Scene geometry. |
@@ -185,6 +186,9 @@ applications, Flutter libraries, FFmpeg, models or MCP registrations. Keep a too
 checkout and install the requirements for the selected workflow. Tell your agent
 where that checkout is. `$edit-video` checks tooling readiness, reuses existing
 installations and follows documented setup for missing requirements before editing.
+
+The animation-workshop skill is self-contained: its disposable shell only needs
+Flutter plus dependencies of the widgets you bring into it.
 
 For a new workspace, install the skills in your consuming project, then ask your
 agent: “Use $edit-video to set up CMRX Video Toolkit and create my first video.”

@@ -10,7 +10,7 @@
     {
       "title": "Components",
       "description": "Browse, configure and create reusable Flutter graphics, including shaders, 3D and dithering.",
-      "skills": ["component-select", "component-author", "component-shaders", "component-3d", "component-dithering"]
+      "skills": ["component-select", "component-author", "component-shaders", "component-3d", "component-dithering", "animation-workshop"]
     },
     {
       "title": "Fluvie & effects",

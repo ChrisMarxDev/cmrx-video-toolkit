@@ -10,6 +10,9 @@ bundle; individual skill files are not independent software installations.
   composition integration, review coordination and delivery checks.
 - Standalone processes: video-style defines identity; video-review operates the
   existing editor and its MCP/browser handoff. Done is feedback, not publication.
+- Animation tuning: animation-workshop carries a small Flutter shell inside the
+  skill; copy it to a disposable workspace, adapt a few widgets and copy settings
+  back to the agent. It needs Flutter but no toolkit service.
 - Components: component-select finds/configures; component-author implements and
   registers; component-shaders, component-3d and component-dithering load only for
   their specialist implementation/integration knowledge.
@@ -25,6 +28,8 @@ adapter. Authoring uses the same Flutter component library. Review uses apps/edi
 and apps/review-agent. Editing/export uses scripts/video.py and Fluvie/FFmpeg.
 Background removal uses video_tools; optional external generation uses tools/fal
 or the installed Fluvie AI native resolver. Skills do not duplicate these tools.
+The animation-workshop shell is a self-contained disposable template, not a second
+shared runtime application.
 
 An existing valid selection or generated asset can be consumed directly. Requiring
 an output does not mean rerunning the skill that originally produced it. Preserve

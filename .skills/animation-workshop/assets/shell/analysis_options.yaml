@@ -1,0 +1,6 @@
+# Keep the throwaway shell SDK-only; flutter create preserves this file.
+analyzer:
+  errors:
+    unused_import: warning
+  exclude:
+    - build/**
