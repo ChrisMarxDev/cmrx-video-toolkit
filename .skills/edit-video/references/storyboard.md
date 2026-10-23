@@ -1,5 +1,9 @@
 # Video Storyboard
 
+Read the recorded style selection and per-video overrides first. If missing or
+unresolved, follow [style selection](../../video-style/SKILL.md#resolve-the-style-before-creative-decisions)
+before making creative decisions. Do not infer a style from the available components.
+
 Read flow/04-storyboard/README.md. Propose explanatory visuals using narration
 quotes and source references, then resolve output windows from the imported
 timeline. Honor the workspace's editorial/brand instructions. Record component

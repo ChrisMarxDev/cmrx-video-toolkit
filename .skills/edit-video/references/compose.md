@@ -1,5 +1,9 @@
 # Video Compose
 
+Read the recorded style selection and per-video overrides first. If missing or
+unresolved, follow [style selection](../../video-style/SKILL.md#resolve-the-style-before-creative-decisions)
+before making creative decisions. Do not infer a style from the available components.
+
 Read flow/05-compose/README.md and components/CATALOG.md. scripts/video.py
 compose creates a legacy one-scene rough-cut baseline; it is not the default
 scene-based authoring route. Author scenes directly from retained source ranges;

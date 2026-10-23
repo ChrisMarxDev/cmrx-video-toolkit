@@ -100,3 +100,16 @@ Record checks and review status in README.md, with exact specimen paths and know
 limits (for example motion not rendered or portrait not reviewed). Do not claim a
 visual or motion check from compilation alone. Completion means usable artifacts,
 not empty directories. Preserve draft work if the creator has not selected it yet.
+
+## Multiple video styles sharing a brand
+
+Use `video-styles/README.md` (or the workspace's existing index) to list stable ID,
+name, purpose, status and canonical specification path. A new style folder can
+contain README.md, VIDEO.md, interview.md, references.md and specimens as needed.
+Reference shared brand tokens/components by path instead of copying them. Store
+style-specific overrides locally; do not change the shared brand to fit one series.
+Existing single-style folders remain valid and can simply be indexed.
+
+A video's direction/manifest records the selected style ID, canonical path and
+version or Git revision, plus per-video exceptions. This is an agent handoff
+contract, not a runtime loader. Archived/draft entries are not automatic defaults.

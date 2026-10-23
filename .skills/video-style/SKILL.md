@@ -1,6 +1,6 @@
 ---
 name: video-style
-description: Interview a creator about their video style, interpret website, image and video references, and create or refine a reusable workspace-owned design system with visual direction, tokens and component recipes. Use for defining a video identity, not routine application of an established style or editing a single clip.
+description: Interview a creator about their video style, interpret website, image and video references, and create or refine a reusable workspace-owned design system with visual direction, tokens and component recipes. Use for discovering and selecting video styles, defining a new style, or revising one; established styles are applied without repeating the interview.
 ---
 
 # Video Style
@@ -10,20 +10,59 @@ creator's production workspace. The result should let another agent style a new
 video without repeating the interview. This skill supplies no default brand.
 Paths to other skills are relative to this file; output paths are workspace-relative.
 
-## Find the existing direction
+## Resolve the style before creative decisions
 
-Inspect the workspace instructions, brand/design folders and component catalog.
-Use an established identity as the starting point. Interview only for missing or
-explicitly changing decisions; never restart an approved identity automatically.
-Determine whether this is a lasting creator/series identity or a single video's
-art direction. Keep project-only deviations with that video.
+Inspect the video's direction/manifest, workspace instructions and any style index,
+then the referenced style specifications. A style is a named set of video/editorial
+rules; several styles may share one brand's colors, fonts and components. A palette,
+a component library, an archived export or a duplicate symlink is not another style.
+Count usable, current styles with an actual specification, not incomplete drafts.
 
-Use the user's destination or the workspace's existing convention. For a new
-identity, use `brand/` with a sibling `components/` in the consuming workspace;
-multiple identities can each have their own root. Keep creator assets and answers
-outside the public toolkit. If only the toolkit checkout exists, resolve an
-external or ignored production destination before writing personal material.
-Do not create another Git repository as part of this workflow.
+1. **Already selected:** honor a style explicitly named by the user or recorded for
+   this video. Revisions keep that selection; do not ask again just because the
+   workspace now has additional styles. If the path is missing, the name is
+   ambiguous or instructions conflict, resolve that with the user instead of
+   silently substituting a style.
+2. **No usable style:** start this skill's short interview. Resume an existing draft
+   if present; do not silently promote it to approved. Shared brand tokens alone
+   do not replace interviewing for the missing video behavior.
+3. **Exactly one usable style:** select and read it automatically. Mention the
+   choice briefly; do not restart its interview or add a confirmation gate.
+4. **Multiple usable styles:** present their names and one-line purposes, ask which
+   to use and wait for the answer before style-dependent editorial, storyboard or
+   composition decisions. Do not guess from the subject, sort order or last use.
+   The user may explicitly choose to define a new style instead.
+
+An explicit request for a new kind of video starts a separate style interview even
+when another style exists. Reuse shared brand facts; interview for the differences.
+Continue independent ingestion/tool preparation while waiting, but do not invent
+creative choices. Explicitly delegated choices can be recorded as delegated; silence
+is not a choice. Do not re-ask a selection already answered in this session.
+
+Record the selected style's stable ID/name, canonical path and version (or Git
+revision when no style version exists) in the video's direction.md or existing
+manifest before style-dependent work. Record shared brand references and scoped
+per-video overrides separately. Preserve that selection across stages and revisions;
+flag a missing or changed specification rather than silently adopting a new version.
+
+## Store styles without duplicating the brand
+
+Use the user's destination or existing workspace convention. Otherwise create a
+workspace-owned `video-styles/README.md` index with stable IDs, names, one-line
+purposes, status and links to canonical specifications. Each new style can live
+under `video-styles/<id>/`. Existing specs can stay where they are; index them
+rather than copying them. Register styles after review, preserving draft status
+until approved or explicitly delegated for use. Keep archived styles discoverable
+but outside automatic selection.
+
+For a brand-new creator, the [folder contract](references/folder-contract.md)
+supplies brand and component structure. Multiple styles may reference those shared
+resources and own only their video rules, interview, references and specimens.
+An independent brand can have its own root. Keep creator assets/answers outside
+the public toolkit. If only the toolkit checkout exists, resolve an external or
+ignored production destination before writing personal material. Do not create
+another Git repository. Keep a single video's deviations with that video unless
+the user asks to make them a reusable style.
 
 ## Interview in short rounds
 

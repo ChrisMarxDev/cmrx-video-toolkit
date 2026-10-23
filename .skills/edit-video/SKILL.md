@@ -13,7 +13,8 @@ generation services and third-party assets have their own terms.
 First follow [tooling readiness](references/tooling.md): locate the toolkit, reuse
 installed tools, prepare only the requested capabilities and verify them. Then
 read the toolkit README.md and docs/contracts.md. Work in an external or ignored projects/<slug>
-workspace. Load that workspace's art direction; this toolkit imposes no client brand.
+workspace. Resolve the style using “Establish video style” below before creative
+decisions; this toolkit imposes no client brand.
 Use ingest → transcribe → edit → storyboard → compose → review → render. Reuse valid
 artifacts when revising. Keep original recordings immutable and one narration audio
 stream. Review the rough cut before detailed animation unless already approved.
@@ -65,11 +66,17 @@ for ordinary editing. Tools and libraries stay shared; skills do not own copies.
 
 ## Establish video style
 
-When a creator wants to define or revise their identity, use
-[video-style](../video-style/SKILL.md) for a short interview, optional reference
-analysis and a workspace-owned design folder. Reuse established direction without
-re-interviewing. Storyboarding and composition consume the chosen specification;
-style selection does not approve edits or final delivery.
+Follow [video-style: resolve the style](../video-style/SKILL.md#resolve-the-style-before-creative-decisions)
+for every new video or resumed project before style-dependent work. Reuse an explicit
+or recorded selection; otherwise interview when no usable style exists, automatically
+use the sole usable style, or ask the user to choose when several exist. Wait for
+required answers while continuing independent preparation. A requested new style
+gets its own interview, not an overwrite of the existing style.
+
+Persist the canonical style reference and version in the video's direction/manifest.
+Editorial planning, storyboarding and composition read that selection and its scoped
+overrides. Revisions keep it unless a change is requested. Style selection does not
+approve edits, exports or final delivery.
 
 ## No-terminal user experience
 
