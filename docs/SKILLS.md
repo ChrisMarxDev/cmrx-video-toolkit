@@ -16,7 +16,6 @@ bundle; individual skill files are not independent software installations.
 - Effects: effect-background-remove transforms footage into a person alpha asset.
 - Framework: fluvie-compose and fluvie-render supply installed-version mechanics;
   fluvie-generative-ai covers optional media/spec generation and cached reuse.
-- Maintenance: git-sync governs repository synchronization outside production edits.
 
 ## Shared software
 
@@ -48,3 +47,10 @@ Fluvie guidance is adapted from a pinned upstream skill and generative-media doc
 see each Fluvie skill's provenance and MIT notice. No framework upgrade or provider
 request is performed by installing skills. Native Scene/web platform limits remain.
 A composed-video Flutter MCP live preview is future work, not shipped by this cleanup.
+
+## Distribution boundary
+
+Only user-facing video capabilities ship here. Toolkit development and repository
+maintenance skills live in the outer Studio repository. Vercel's skills CLI can
+install this collection directly from ChrisMarxDev/cmrx-video-toolkit; see the root
+README for listing/install commands and the separate toolkit-runtime requirement.

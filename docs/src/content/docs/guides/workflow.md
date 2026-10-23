@@ -51,4 +51,3 @@ validate its output in your target environment.
 - **fluvie-compose** — Author framework-specific Fluvie compositions.
 - **fluvie-render** — Preview, export and diagnose Fluvie rendering.
 - **fluvie-generative-ai** — Generate media or prompt-authored compositions.
-- **git-sync** — Synchronize software repository changes.

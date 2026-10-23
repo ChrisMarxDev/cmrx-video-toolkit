@@ -14,7 +14,7 @@ currently requires a small integration app. Metadata alone cannot load arbitrary
 Dart implementations. The Studio keeps its existing CMRX registry integration.
 
 For agent changes, read the relevant .skills entry, preserve edit precision and
-original media, validate actual output when changing visuals, and follow git-sync.
+original media, validate actual output when changing visuals, and follow the owning workspace’s Git workflow.
 If consumed as a submodule, push a reachable toolkit commit before updating its
 parent pointer. Do not assume a parent private repo is available to standalone users.
 

@@ -13,8 +13,11 @@ Run make test for cross-cutting changes; use affected package analysis/tests for
 focused work. Use deterministic frames, immutable props and explicit timeline
 mapping. No library default may imply a user's content/brand approval.
 
-Follow .skills/git-sync/SKILL.md. Push this repo before a parent Studio records its
-commit. Ask the user before UI automation when required by the host workspace.
+Repository-maintenance skills belong to the outer Studio workspace, not this
+public skill catalog. In a Studio checkout, follow its git-sync and maintenance
+instructions; publish this repo before Studio records its commit. Standalone
+contributors follow docs/DEVELOPMENT.md and their own repository workflow.
+Ask the user before UI automation when required by the host workspace.
 
 Reusable Flutter primitives live in components/, not a design system. Require
 caller-owned appearance; brand tokens, fonts and design direction belong in the

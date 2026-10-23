@@ -146,12 +146,36 @@ Tools and libraries remain shared; install/use the toolkit as one coherent bundl
 | [fluvie-compose](.skills/fluvie-compose/SKILL.md) | Author framework-specific Fluvie compositions. |
 | [fluvie-render](.skills/fluvie-render/SKILL.md) | Preview, export and diagnose Fluvie rendering. |
 | [fluvie-generative-ai](.skills/fluvie-generative-ai/SKILL.md) | Generate media or prompt-authored compositions. |
-| [git-sync](.skills/git-sync/SKILL.md) | Synchronize software repository changes. |
 
 The `$name` notation is the Codex skill invocation; other hosts may expose slash
 commands or named skills. No new shell executable is required. Host skill discovery
 may need a refresh after upgrading. See [the skill map](docs/SKILLS.md) for ownership,
 loading rules and migration from previous names.
+
+## Install agent skills
+
+Vercel's [skills CLI](https://github.com/vercel-labs/skills) discovers the public
+skills directly from this repository. From your consuming project:
+
+```sh
+# Inspect the available skills without installing.
+npx skills@latest add ChrisMarxDev/cmrx-video-toolkit --list
+
+# Install the complete video skill set for Codex.
+npx skills@latest add ChrisMarxDev/cmrx-video-toolkit --skill '*' --agent codex
+```
+
+Omit `--agent codex` to choose your agent interactively. Without `--skill '*'`,
+the installer lets you select skills. Prefer the full set for `$edit-video`, which
+routes to other skills. No npm publication or separate registry registration is
+needed. See the [CLI reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md).
+
+This installs instructions and bundled references/assets, **not** the toolkit
+applications, Flutter libraries, FFmpeg, models or MCP registrations. Keep a toolkit
+checkout and install the requirements for the selected workflow. Tell your agent
+where that checkout is: skill command paths refer to the toolkit root, while video
+outputs belong in your consuming workspace. Do not install over Studio's private
+skill aliases; this command is for consuming projects.
 
 ## Set your video style
 
