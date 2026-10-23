@@ -73,6 +73,40 @@ organize known facts. Record answers as they arrive so the interview can resume.
 Do not deliver a long mandatory questionnaire. Let the user say “you decide” and
 mark resulting choices as proposals rather than invented preferences.
 
+### Start with use case and existing sources
+
+In the first short round, establish the missing essentials rather than beginning
+with isolated color/font choices. Adapt these prompts to what is already known:
+
+- What kinds of videos will you make, for whom and for what purpose? For example:
+  tutorials, product demos, explainers, interviews, social clips or brand stories.
+- Where will they appear, and in which formats? Establish platform, aspect ratio,
+  usual length, language and available presenter/screen/product footage. One style
+  can support several formats with separate layouts; do not force a single ratio.
+- Is there a company/personal website, brand guide, existing channel or a video you
+  want these to fit? Invite a URL or local reference and what should match or change.
+
+Use sources already available in the workspace or conversation before asking for
+more. References are optional. “No website,” “no brand yet” and “you decide” must
+all have a usable path through the interview. Do not require a reference upload or
+an exhaustive brand package. If users have only a company name, resolve the correct
+company/site before attributing design choices to it.
+
+Inspect a small relevant set through permitted tools: the company homepage and
+one useful product/about page, supplied brand guidelines/assets, existing videos
+or channel examples, product screenshots/slides and liked/disliked video references.
+Expand only when a missing decision needs more evidence; this is not a broad audit
+or an automatic crawl of the company's accounts. Use the reference-handling guide
+to distinguish an authoritative brand source from optional inspiration.
+
+Return a concise synthesis before detailed style questions: what the sources
+establish, what could translate well to the intended videos, and what is still
+unknown. For example, a restrained product site may suggest its palette/type and
+clean diagrams, but it does not establish caption timing, music or presenter layout.
+Ask the next round only about meaningful gaps or conflicts. Save source evidence,
+user answers and proposed translations locally with the style so future videos
+reuse the result rather than researching and interviewing again.
+
 Cover the dimensions that materially affect this creator's videos:
 
 - Purpose, audience and desired feeling: what should viewers understand or do?

@@ -1,6 +1,7 @@
 # Working from inspiration
 
-Keep a reference ledger in `brand/references.md`. Assign each source a stable ID,
+Keep a reference ledger in the selected style folder's `references.md` (or the
+existing `brand/references.md` for a single shared identity). Assign each source a stable ID,
 URL or local path, title/creator when known, access date, inspected scope, and
 creator comments. Include exact video time ranges when observed; distinguish
 reference-video time from the production edit's source/output clocks.
@@ -13,6 +14,39 @@ For each reference, record:
 - Translation: the proposed video rule and why it helps the intended content.
 - Limits: unavailable sections, estimated colors/fonts, unseen motion/audio,
   licensing/attribution and whether an asset may be used or is inspiration only.
+
+## Sources and what they can establish
+
+Start with the creator's intended video types, audience, platforms and formats;
+use those needs to decide which source traits are relevant. Suggested sources:
+
+- Official brand guides, design tokens and supplied logo/font assets: identity,
+  permitted variants and brand constraints. Record versions and usage rights.
+- The company or creator website: positioning, voice, colors, typography, shapes,
+  image treatment and hierarchy within the actually inspected pages/assets.
+- Existing company/channel videos: recurring framing, captions, pacing, graphics,
+  transitions and audio, only to the extent actually viewed/listened to.
+- Product UI, screenshots, presentations and documents: real product terminology,
+  reusable diagram conventions and visual material relevant to demos/tutorials.
+- User-selected creators, films, images or moodboards: inspiration for named traits,
+  not authority over the user's brand. Include negative references when helpful.
+- Source footage and production constraints: feasible framing, subject movement,
+  sound quality, available assets and effort; these constrain implementation rather
+  than establishing the creator's aesthetic preferences.
+
+For each proposed rule, retain its supporting source ID and a short rationale.
+Separate user-stated requirements, observed source facts and agent proposals. An
+existing website may be dated or intentionally unlike the desired videos; ask what
+should carry over. Prefer current explicit user direction, then confirmed brand
+requirements, over inferred preferences. Resolve meaningful conflicts rather than
+silently treating the newest-looking source as authoritative.
+
+Avoid extracting a complete style from one homepage. Websites do not establish
+video pacing, aspect ratios or audio choices. Mobile video may need stronger
+contrast, larger type and different composition than the website. Propose these
+adaptations explicitly; do not blindly copy website font sizes or navigation UI.
+If evidence cannot be inspected, label it as user-described/unverified and continue
+with useful questions. Do not treat a text scrape as a visual review.
 
 ## Websites
 
