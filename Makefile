@@ -5,7 +5,7 @@ doctor:
 
 test:
 	python3 -m unittest discover -s tests -v
-	node --test tools/dither/core.test.mjs
+	node --test tools/dither/core.test.mjs tools/previewer/*.test.mjs
 	cd components && flutter pub get && flutter analyze && flutter test
 	cd examples/gallery && flutter pub get && flutter analyze && flutter test
 	python3 tools/component_browser/scripts/demo_media.py
@@ -37,7 +37,7 @@ check-local:
 	npm --prefix tools/fal test
 	python3 -m unittest discover -s tests -q
 	python3 -m unittest discover -s apps/editor/tests -q
-	node --test apps/editor/tests/*.test.mjs tools/dither/core.test.mjs
+	node --test apps/editor/tests/*.test.mjs tools/dither/core.test.mjs tools/previewer/*.test.mjs
 	npm --prefix apps/review-agent test
 	npm --prefix apps/component-browser-agent test
 	npm --prefix docs run build

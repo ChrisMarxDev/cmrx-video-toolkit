@@ -5,8 +5,10 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ReviewRuntime } from './runtime.mjs';
 import { editorResource, uiUri } from './resource.mjs';
+import { PreviewRuntime } from '../../tools/previewer/runtime.mjs';
+import { previewResource, previewUri } from '../../tools/previewer/resource.mjs';
 
-export function createServer(runtime, { decorateResource } = {}) {
+export function createServer(runtime, { decorateResource, previewRuntime } = {}) {
   const server = new McpServer({ name: 'video-review', version: '0.1.0' });
   const result = value => ({ content: [{ type: 'text', text: JSON.stringify(value) }], structuredContent: value });
   const safe = fn => async args => {
@@ -35,6 +37,31 @@ export function createServer(runtime, { decorateResource } = {}) {
     inputSchema: { sessionId: z.string().uuid(), operation: z.enum(['state', 'session', 'save', 'finish', 'abandon', 'export', 'retry', 'cancel']), body: z.record(z.string(), z.unknown()).optional() },
     annotations, _meta: { ui: { visibility: ['app'] } },
   }, safe(({ sessionId, operation, body }) => runtime.request(sessionId, operation, body)));
+  if (previewRuntime) {
+    server.registerResource('composition-previewer', previewUri, { mimeType: 'text/html;profile=mcp-app' },
+      async () => ({ contents: [previewResource(previewRuntime.origins())] }));
+    server.registerTool('open_preview', {
+      description: 'Start or reuse a live authored Fluvie composition preview without encoding a video. Runs trusted Dart source inside the configured root. Requires the JSON web preview API. Returns starting immediately; poll get_preview until ready, then call show_preview once or present browserUrl. Source edits reload automatically. No editing, notes, export or approval in this player.',
+      inputSchema: { path: z.string().min(1), project: z.string().min(1), entry: z.string().optional() }, annotations,
+    }, safe(args => previewRuntime.open(args)));
+    server.registerTool('get_preview', {
+      description: 'Read preview startup/reload status without opening a UI panel. Poll while starting; once ready call show_preview. A ready server is not proof of visual correctness.',
+      inputSchema: { sessionId: z.string().uuid() }, annotations: { ...annotations, readOnlyHint: true },
+    }, safe(({ sessionId }) => previewRuntime.get(sessionId)));
+    server.registerTool('show_preview', {
+      description: 'Show a ready composition in the minimal player once. Local iframe support is required; browserUrl is the fallback. Playback and seeking need no further host tool calls.',
+      inputSchema: { sessionId: z.string().uuid() }, annotations: { ...annotations, readOnlyHint: true },
+      _meta: { ui: { resourceUri: previewUri }, 'openai/outputTemplate': previewUri },
+    }, safe(({ sessionId }) => {
+      const state = previewRuntime.get(sessionId);
+      if (state.status !== 'ready') throw Error('Preview is not ready; use get_preview to check startup.');
+      return state;
+    }));
+    server.registerTool('close_preview', {
+      description: 'Stop a live preview and its Flutter processes. Preserve authored files; no export or review approval.',
+      inputSchema: { sessionId: z.string().uuid() }, annotations,
+    }, safe(({ sessionId }) => previewRuntime.stop(sessionId)));
+  }
   return server;
 }
 
@@ -42,12 +69,14 @@ export async function main(options = {}) {
   const args = process.argv.slice(2);
   if (args.length !== 2 || args[0] !== '--root') throw Error('Usage: node mcp.mjs --root /absolute/project');
   const runtime = new ReviewRuntime({ root: args[1] });
-  const server = createServer(runtime, options);
+  const previewRuntime = new PreviewRuntime({ root: args[1] });
+  const server = createServer(runtime, { ...options, previewRuntime });
   const transport = new StdioServerTransport();
   let closing = false;
   const close = async () => {
     if (closing) return;
     closing = true;
+    await previewRuntime.close();
     await runtime.close();
     await server.close();
   };

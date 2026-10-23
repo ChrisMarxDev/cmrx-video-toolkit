@@ -221,3 +221,11 @@ own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). No brand fonts, private reco
 or client materials are bundled.
 
 Built by [Chris Marx Studio](https://cmrx.dev).
+
+### Live composition preview
+
+[Previewer](tools/previewer/README.md) plays authored Fluvie compositions without
+encoding a full video. Use `open_preview` / `get_preview` / `show_preview` / `close_preview` through
+the existing edit/review MCP server, or its standalone Node entrypoint. The UI
+contains only the player and playback/seeking controls. Requires the newer
+Fluvie JSON web-preview API; original 0.3.1 installations need compatible tooling.

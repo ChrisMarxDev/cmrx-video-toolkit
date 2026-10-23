@@ -133,3 +133,14 @@ uses the Codex CLI to register a local marketplace/plugin. Runtime requirements
 remain Python, Node, FFmpeg and a supported local desktop host; transcription
 still needs whisper.cpp and its model. No tunnel is added. System dependencies
 are not yet bundled. A user must never be told to run these setup commands.
+
+## Live composition previewer (optional)
+
+`tools/previewer` uses Node 22+, Flutter, system FFmpeg/FFprobe and the compatible
+Fluvie JSON web-preview API. It is served through the existing review MCP server;
+there is no extra MCP registration or npm dependency for the standalone manager.
+Some published 0.3.1 installations lack that newer API despite the same version
+label. See [setup and compatibility](../tools/previewer/README.md). Source project
+pins remain explicit; this does not upgrade the toolkit component package.
+Flutter build caches and temporary audio preparation remain; no full video is
+encoded just to preview. Browser/native component support must be checked.

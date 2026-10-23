@@ -24,8 +24,14 @@ wraps the export. For direct framework work, where supported, use:
   review when supported and the extra render is useful.
 
 Follow host permission rules before opening or automating browser/UI surfaces.
-The CLI's live preview is not a toolkit Flutter MCP preview app; that integration
-is a future proposal. Never describe a preview as a verified final export.
+For the minimal toolkit player, use the edit/review MCP server's `open_preview`
+with the composition path and project directory, then `get_preview` until ready and `show_preview` once.
+Source edits reload automatically. `close_preview` releases its processes.
+See `tools/previewer/README.md` in the toolkit checkout for compatible Fluvie
+versions, setup and the standalone entrypoint. This previews actual Dart without
+encoding a full video; it can still prepare media/audio and caches. Native-only
+components need a supported preview path. Never describe a preview as a verified
+final export. Keep feedback in chat; use video-review for encoded review artifacts.
 
 Check frame count, duration, resolution, audio sync and encoded transitions.
 Inspect actual frames and changed audio; preserve editable code and prior exports.

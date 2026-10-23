@@ -1,0 +1,22 @@
+--- a/packages/fluvie_cli/lib/src/templates/preview_app_template.dart
++++ b/packages/fluvie_cli/lib/src/templates/preview_app_template.dart
+@@ -34,7 +34,7 @@
+   const token = String.fromEnvironment('FLUVIE_PREVIEW_TOKEN');
+   const projectDir = String.fromEnvironment('FLUVIE_PROJECT_DIR');
+   final endpoint = endpointText.isEmpty ? null : Uri.parse(endpointText);
+-  AssetBundle? assets = !kIsWeb && projectDir.isNotEmpty ? ProjectAssetBundle.fromProject(projectDir) : null;
++  AssetBundle? assets = !kIsWeb && projectDir.isNotEmpty ? await ProjectAssetBundle.fromProject(projectDir) : null;
+   if (kIsWeb && endpoint != null) {
+     final inventory = await http.get(endpoint.resolve('/assets'), headers: {'X-Fluvie-Token': token});
+     if (inventory.statusCode != 200) throw StateError('Could not load preview assets (${inventory.statusCode}).');
+--- a/packages/fluvie_cli/lib/src/preview_command.dart
++++ b/packages/fluvie_cli/lib/src/preview_command.dart
+@@ -11,7 +11,7 @@
+ import 'package:fluvie_cli/src/process_runner.dart';
+
+ /// Invalidates cached adapters when the package preview contract changes.
+-const String previewCliVersion = '0.3.1-preview-3';
++const String previewCliVersion = '0.3.1-preview-3-toolkit-await-1';
+
+ /// An addressable browser server is the default for humans and coding agents.
+ String defaultPreviewDevice() => 'web-server';

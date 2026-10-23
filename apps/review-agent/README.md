@@ -224,3 +224,11 @@ is aligned to this exact output; preparation generates a new transcript as neede
 After human Done, read `get_review(sessionId)` and apply the feedback in the
 rendered video's time coordinate system. The flow skills require this return to
 the editor after each authorized draft render; Done itself never renders.
+
+## Live composition preview
+
+This server also exposes `open_preview`, `get_preview`, `show_preview` and `close_preview` from
+the separate [Previewer](../../tools/previewer/README.md). It runs the authored
+Fluvie composition in a minimal player before encoding. It shares server setup
+and root scoping with review, but has no review notes, Done or export controls.
+Restart the MCP server to discover the new tools.

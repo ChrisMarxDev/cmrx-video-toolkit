@@ -21,3 +21,11 @@ Fluvie skill guidance is adapted from SimonErich/fluvie commit
 and `documentation/guides/generative-media.md`. Copyright (c) 2026 Simon Auer,
 MIT; the full notice is retained as LICENSE.txt in each fluvie-* skill. Adaptations
 split framework mechanics from toolkit orchestration and retain local media policy.
+
+## Fluvie preview compatibility patch
+
+`tools/previewer/patches/fluvie-preview-assets-await.patch` contains minimal context
+from SimonErich/fluvie revision `10e442c1bb469118516df3335547f85ec92155e6` and a
+toolkit-authored asynchronous asset-loader fix/cache-stamp change. Upstream is MIT,
+copyright 2026 Simon Auer; its notice is retained beside the patch. The previewer
+runs separately installed Fluvie software; it does not vendor that runtime.
