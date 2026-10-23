@@ -27,10 +27,19 @@ Read the [artifact contracts](/cmrx-video-toolkit/reference/contracts/) for the
 handoff structure. Use `python3 scripts/video.py --help` to inspect commands and
 read the matching stage reference before execution.
 
-## Approve cuts before adding animation
+## Build scenes, then render
 
-Approve the take selection and rough cut before building detailed animation.
-Reuse the approved cut and transcript when changing colors or animation. Keep one narration stream and preserve original media.
+Divide retained footage into coherent Fluvie scenes. Construct footage, graphics,
+captions and sound together in those scenes, then assemble one editable Video.
+Review take selection, rough-cut timing and scene joins in live Fluvie, and refine
+visuals in that same composition. Render the complete composition after an export
+request or approval. A full flattened cut video is not the starting point for graphics.
+
+Preserve source media and scene-to-source mappings. Reuse approved timing during
+visual changes and keep one coherent narration stream across scenes. Per-clip
+proxies, short diagnostic excerpts and audio preparation remain available; repeated
+full-video renders are not the editing loop. The CLI's existing `compose` generator
+is a legacy one-scene rough-cut template; author the scene sequence directly.
 
 ## Shaders and 3D scenes
 

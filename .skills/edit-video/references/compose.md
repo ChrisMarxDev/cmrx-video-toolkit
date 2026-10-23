@@ -1,9 +1,10 @@
 # Video Compose
 
 Read flow/05-compose/README.md and components/CATALOG.md. scripts/video.py
-compose creates a baseline; never replace an existing authored composition unless
-requested. Preload programs/fonts/media, then use frame-derived motion and immutable
-props. Keep the audio-bearing clip mounted throughout. Use private design-package
+compose creates a legacy one-scene rough-cut baseline; it is not the default
+scene-based authoring route. Author scenes directly from retained source ranges;
+never replace an existing authored composition unless requested. Preload programs/fonts/media, then use frame-derived motion and immutable
+props. Keep audio ownership explicit across scenes, with no duplicated narration. Use private design-package
 environment settings when generating a branded workspace. Check actual rendered
 pixels, not just compilation. Component availability is not editorial permission.
 
@@ -29,3 +30,14 @@ still use CPU/storage. Preview does not replace final export QA or encoded-video
 review. If setup fails, surface and repair the failure; never silently substitute
 an MP4. Unsupported native components require an agreed fallback. Encode only
 after preview review and explicit export approval, or an explicit export request.
+
+## Construct the scene sequence
+
+Use the imported timeline to give each scene explicit retained source ranges,
+output start/duration and local visual cues. Build its footage, graphics, captions,
+sound and transitions together. Assemble all scenes in one Fluvie Video using the
+installed API; keep scene-local and whole-video time distinct. A single source
+clip can supply multiple trimmed scene ranges without pre-encoding them. Preserve
+speech handles at boundaries and check joins in live preview. Revisions change
+the relevant scene code and timeline, then reload the same composition. Preview
+and final export use the same authored scene sequence, not separate reconstructions.

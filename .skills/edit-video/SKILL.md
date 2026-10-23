@@ -22,6 +22,19 @@ Default to live Fluvie composition preview before encoding. Render only after
 preview feedback and explicit export approval, or an explicit export request. Final approval is a human decision, not a CLI flag.
 Read only the stage reference needed for the current work before using a command. Keep media outside Git.
 
+## Core workflow: build scenes, then render
+
+Divide the edit into coherent Fluvie scenes referencing retained ranges of the
+original recording. Construct footage, graphics, captions, transitions and sound
+together in those scenes, and assemble them into one editable Fluvie Video.
+The rough cut is an early state of this same composition, reviewed in live Fluvie.
+Do not generate a full cut video first and use that flattened video as the base
+for graphics. Iterate scenes and their joins in live preview; render the assembled
+composition only for an explicitly requested or approved export. Per-clip proxies,
+short diagnostic excerpts and audio preparation are allowed when needed; repeated
+full-video encoding is not an editing stage. Preserve source-to-output mappings
+and one coherent narration stream across scene boundaries.
+
 ## Entry point and stage routing
 
 Invoke `$edit-video` to edit a recording, build a video from assets, or revise an

@@ -12,3 +12,9 @@ hold at the end. Audition every tightened join and the closing sentence before
 locking the cut; compare to the uncut phrase. If listening is unavailable, expose
 that limitation and request human listening in preview; recognition, waveform,
 frame/decode checks and successful renders cannot establish audible completeness.
+
+Implement retained ranges as source clips in Fluvie scenes. Review rough-cut
+pacing and scene joins in the live composition before refining its visuals.
+Do not require `cut` or a full rough-cut.mp4 before scene construction. The cut
+command remains an explicit export/diagnostic option, not the default handoff to
+composition; the source-to-output timeline is the handoff.

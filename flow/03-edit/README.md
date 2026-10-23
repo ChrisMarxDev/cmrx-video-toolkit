@@ -1,13 +1,17 @@
 # Edit
 
-Review the transcript with the user and record deleted word indices in edit JSON
-(see `docs/contracts.md`). Run `video.py import-edit`, then `cut`. The importer
-keeps contiguous word runs and trims leading/trailing silence. It rejects
-overlapping word timings for manual repair. Listen to joins; no unreviewed padding
-or crossfades are added.
+Review the transcript and record source-timed decisions using `docs/contracts.md`.
+Run `video.py import-edit` to produce the authoritative source-to-output timeline.
+The importer keeps contiguous word runs and trims leading/trailing silence;
+overlapping word timings require manual repair. Preserve complete speech endings
+and audition uncertain joins with source handles.
 
-Keep source-timed animation notes in `annotations.json`.
+Use the retained ranges to construct Fluvie scenes directly from original media.
+Review rough-cut timing in that live composition, then refine graphics, captions
+and sound in the same scenes. Keep source-timed notes in `annotations.json`.
+A full flattened rough-cut MP4 is not a prerequisite for composition.
 
-`composition/assets/rough-cut.mp4` has the edited audio and picture.
-`edit/narration.wav` is available independently. Use this workflow's rough cut
-and timing map for composition. Review the rough cut before detailed animation.
+`video.py cut` remains available for explicitly requested encoded cuts or targeted
+diagnostics. It produces `composition/assets/rough-cut.mp4` and
+`edit/narration.wav`; these are legacy/export artifacts, not the default scene
+handoff. Per-clip proxies and required audio preparation remain allowed.
