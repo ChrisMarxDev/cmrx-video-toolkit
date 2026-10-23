@@ -89,3 +89,14 @@ test('serializes concurrent opens and prevents upstream cache collisions', async
   await runtime.close();
   await assert.rejects(open(), /closed/);
 });
+
+test('startup failure retains diagnostics when process cleanup is denied', async t => {
+  const { runtime, open } = await fixture(t, "process.exit(1)");
+  const stop = runtime.stopProcess;
+  runtime.stopProcess = async () => { throw Error('cleanup denied'); };
+  try {
+    const initial = await open();
+    const failed = await until(runtime, initial.sessionId, 'failed');
+    assert.match(failed.error, /Preview cleanup failed: cleanup denied/);
+  } finally { runtime.stopProcess = stop; }
+});

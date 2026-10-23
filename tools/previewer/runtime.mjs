@@ -74,7 +74,9 @@ export class PreviewRuntime {
       session.status = 'failed'; session.browserUrl = null;
       session.error = `${message} Requires Fluvie's JSON web preview API; see tools/previewer/README.md.\n${diagnostics}`.trim();
       clearTimeout(session.timer);
-      void this.stopProcess(session);
+      void this.stopProcess(session).catch(error => {
+        session.error += `\nPreview cleanup failed: ${error.message}`;
+      });
     };
     child.once('error', error => fail(error.message));
     child.once('close', code => {

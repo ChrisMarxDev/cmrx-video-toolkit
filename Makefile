@@ -4,6 +4,7 @@ doctor:
 	python3 scripts/doctor.py
 
 test:
+	cd tools/previewer/flutter && flutter pub get && flutter analyze && flutter test
 	python3 -m unittest discover -s tests -v
 	node --test tools/dither/core.test.mjs tools/previewer/*.test.mjs
 	cd components && flutter pub get && flutter analyze && flutter test

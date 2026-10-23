@@ -1,0 +1,14 @@
+name: composition_previewer
+version: 0.1.0
+publish_to: none
+description: Optional read-only layer overlay for composition preview adapters.
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
