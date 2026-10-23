@@ -1,0 +1,143 @@
+--- a/packages/fluvie/lib/src/rendering/runtime/video_preview_state.dart
++++ b/packages/fluvie/lib/src/rendering/runtime/video_preview_state.dart
+@@ -8,6 +8,7 @@
+   bool _resumeWhenReady = false;
+   bool _sound = false;
+   bool _audioActivated = false;
++  bool _audioLoading = false;
+   bool _syncingAudio = false;
+   bool _audioPending = false;
+   Object? _error;
+--- a/packages/fluvie/lib/src/rendering/runtime/video_preview_audio.dart
++++ b/packages/fluvie/lib/src/rendering/runtime/video_preview_audio.dart
+@@ -26,6 +26,8 @@
+   }
+ 
+   Future<void> _toggleSound() async {
++    if (_audioLoading) return;
++    setState(() => _audioLoading = true);
+     try {
+       await widget.audio?.activate();
+       if (!mounted) return;
+@@ -35,6 +37,8 @@
+       unawaited(_synchronizeAudio());
+     } on Object catch (error) {
+       _reportError(error);
++    } finally {
++      if (mounted) setState(() => _audioLoading = false);
+     }
+   }
+ 
+@@ -43,19 +47,23 @@
+       _controller.pause();
+       return;
+     }
++    if (_controller.isComplete) _controller.seek(0);
++    _controller.play();
++    // Audio may need a cold native mix. Keep the visual clock and Pause usable
++    // during preparation, then synchronize audio to the current transport state.
++    if (widget.audio == null || _audioActivated || _audioLoading) return;
++    setState(() => _audioLoading = true);
+     try {
+-      // Browser audio activation begins in the original user gesture, before
+-      // any awaited network preparation. Visual autoplay remains muted.
+-      if (widget.audio != null && !_audioActivated) {
+-        await widget.audio!.activate();
+-        if (!mounted) return;
+-        _audioActivated = true;
+-        _sound = true;
+-      }
+-      if (_controller.isComplete) _controller.seek(0);
+-      _controller.play();
++      // Still invoked in the original user gesture for browser activation.
++      await widget.audio!.activate();
++      if (!mounted) return;
++      _audioActivated = true;
++      _setSound(true);
++      _frameChanged();
+     } on Object catch (error) {
+       _reportError(error);
++    } finally {
++      if (mounted) setState(() => _audioLoading = false);
+     }
+   }
+ }
+--- a/packages/fluvie/lib/src/rendering/runtime/video_preview_controls.dart
++++ b/packages/fluvie/lib/src/rendering/runtime/video_preview_controls.dart
+@@ -15,10 +15,13 @@
+         ),
+         if (widget.audio != null)
+           IconButton(
+-            tooltip: _sound ? 'Mute' : 'Enable sound',
++            tooltip: _audioLoading ? 'Preparing audio' : (_sound ? 'Mute' : 'Enable sound'),
+             color: Colors.white,
+-            onPressed: _toggleSound,
+-            icon: Icon(_sound ? Icons.volume_up : Icons.volume_off),
++            onPressed: _audioLoading ? null : _toggleSound,
++            icon: _audioLoading
++                ? const SizedBox(width: 18, height: 18,
++                    child: CircularProgressIndicator(strokeWidth: 2))
++                : Icon(_sound ? Icons.volume_up : Icons.volume_off),
+           ),
+         Expanded(
+           child: Slider(
+--- /dev/null
++++ b/packages/fluvie/test/rendering/runtime/preview_pending_audio_test.dart
+@@ -0,0 +1,57 @@
++import 'dart:async';
++import 'package:flutter/material.dart' hide Animation, Clip, Image, Tween;
++import 'package:flutter_test/flutter_test.dart';
++import 'package:fluvie/fluvie.dart';
++
++class PendingAudio implements PreviewAudioController {
++  final ready = Completer<void>();
++  int activations = 0;
++  bool? playing;
++  Duration? position;
++  @override
++  Future<void> activate() { activations++; return ready.future; }
++  @override
++  Future<void> synchronize({required Duration position, required bool playing, required double rate}) async {
++    this.position = position; this.playing = playing;
++  }
++  @override
++  Future<void> dispose() async {}
++}
++void main() {
++  for (final fail in [false, true]) {
++    testWidgets('pending audio does not block play, seek or pause; failure=$fail', (tester) async {
++      final audio = PendingAudio();
++      final clock = LivePlaybackController(fps: 30, totalFrames: 300);
++      await tester.pumpWidget(MaterialApp(home: VideoPreview(
++        video: Video(width: 100, height: 100, fps: 30, scenes: [Scene(duration: 300.frames, children: [const Text('Preview')])]),
++        controller: clock, audio: audio, autoplay: false,
++      )));
++      await tester.pumpAndSettle();
++      await tester.tap(find.byTooltip('Play'));
++      await tester.pump();
++      await tester.pump(const Duration(milliseconds: 200));
++      expect(clock.frame, greaterThan(0));
++      expect(find.byTooltip('Preparing audio'), findsOneWidget);
++      await tester.tap(find.byTooltip('Pause'));
++      await tester.pump();
++      clock.seek(60);
++      if (fail) { audio.ready.completeError(StateError('Audio unavailable')); }
++      else { audio.ready.complete(); }
++      await tester.pump();
++      await tester.pump(const Duration(milliseconds: 200));
++      expect(clock.state, LivePlaybackState.paused);
++      expect(clock.frame, 60);
++      expect(audio.activations, 1);
++      if (!fail) {
++        expect(audio.playing, false);
++        expect(audio.position, const Duration(seconds: 2));
++      }
++      await tester.tap(find.byTooltip('Play'));
++      await tester.pump();
++      await tester.pump(const Duration(milliseconds: 200));
++      expect(clock.frame, greaterThan(60));
++      await tester.pumpWidget(const SizedBox());
++      clock.dispose();
++    });
++  }
++}

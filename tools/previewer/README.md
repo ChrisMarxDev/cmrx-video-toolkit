@@ -35,6 +35,20 @@ git apply --check /absolute/toolkit/tools/previewer/patches/fluvie-preview-asset
 git apply /absolute/toolkit/tools/previewer/patches/fluvie-preview-assets-await.patch
 ```
 
+The same revision waits for cold audio preparation before starting visual
+playback. Apply [the playback patch](patches/fluvie-preview-playback.patch) to
+start the picture immediately and show “Preparing audio” on the sound control.
+Audio joins at the current position when ready; pausing during preparation stays
+paused. Audio failure does not prevent visual playback. This changes cold-start
+behavior: initial pictures can play silently while the audio mix is prepared.
+
+```sh
+git apply --check /absolute/toolkit/tools/previewer/patches/fluvie-preview-playback.patch
+git apply /absolute/toolkit/tools/previewer/patches/fluvie-preview-playback.patch
+# From packages/fluvie:
+flutter test test/rendering/runtime/video_preview_test.dart test/rendering/runtime/preview_pending_audio_test.dart
+```
+
 Do not apply blindly to other revisions; a future upstream fix can replace it.
 The adapter does not modify installed packages or production source automatically.
 Check APIs, not just the `0.3.1` version label. Keep a compatible upstream checkout
