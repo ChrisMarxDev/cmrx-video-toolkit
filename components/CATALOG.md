@@ -31,7 +31,7 @@ and text styles, pass `style: yourStyle` to styled widgets, and rename the old
 ## Technical drawings, diagrams and charts
 
 For authoring SVG assets or explanatory vector graphics, follow
-[component-authoring](../.skills/component-authoring/SKILL.md) and its focused
+[component-author](../.skills/component-author/SKILL.md) and its focused
 reference. Use this catalog to select existing geometry and check API limits.
 
 The catalog now has 60 entries, including 11 technical/chart families. These are Flutter

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Edit Video"
+  short_description: "Edit and revise videos through the complete workflow"
+  default_prompt: "Use $edit-video to edit this video, reusing existing work and guiding me through review."

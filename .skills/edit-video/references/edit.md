@@ -1,8 +1,3 @@
----
-name: video-edit
-description: Build source-to-output timelines from reviewed edits and audio analysis.
----
-
 # Video Edit
 
 Read flow/03-edit/README.md and docs/contracts.md. Use scripts/video.py soundmap

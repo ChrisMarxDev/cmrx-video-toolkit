@@ -1,6 +1,6 @@
 ---
 name: video-review
-description: Revise a video at the affected workflow stage without losing prior work.
+description: Run a human video review through the editor and MCP/browser lifecycle, retrieve feedback and hand it back to editing.
 ---
 
 # Video Review
@@ -17,7 +17,7 @@ explain the missing capability instead of claiming installation succeeded.
 ## Source recording review with a human
 
 Before new transcription, follow **Language-aware preparation** in
-`.skills/video-transcribe/SKILL.md`; chat language is a hint, while the recording
+`.skills/edit-video/references/transcribe.md`; chat language is a hint, while the recording
 and explicit user instructions determine recognition settings.
 
 Read `apps/review-agent/README.md`. Use a configured `open_review` MCP tool with

@@ -1,8 +1,3 @@
----
-name: video-ingest
-description: Prepare a recording workspace without changing original media.
----
-
 # Video Ingest
 
 Use scripts/video.py --help and flow/01-ingest/README.md. Record original media

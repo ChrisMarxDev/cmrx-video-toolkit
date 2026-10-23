@@ -76,7 +76,7 @@ and contribute to the footprint. Full transitive dependencies belong in lockfile
 | `@fal-ai/client` | Optional generation connector; `tools/fal/package.json` and package-lock.json. Requires `FAL_KEY` only in the local/server process; generated media remains outside Git. |
 | `express` plus MCP SDK and Zod | Synthetic MCP feasibility sample only; `apps/mcp-review-sample/package.json`; not required by full stdio adapter |
 | Flutter Pub dependencies, including `fluvie: 0.3.1` | Composition/component packages; pubspec.yaml and lockfiles; `flutter pub get` restores them |
-| `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets | Optional native GPU scene path; `.skills/flutter-scene/references/native-capture.md` |
+| `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets | Optional native GPU scene path; `.skills/component-3d/references/native-capture.md` |
 | `numpy==2.2.6`, `onnxruntime==1.23.2` | Optional person matting, isolated Python environment; `video_tools/requirements.txt` |
 | RVM MobileNetV3 FP32 ONNX model | Optional matting; setup script downloads and checks SHA-256; `video_tools/setup.sh` and README record provenance/license |
 | Astro, Starlight and their dependencies | Documentation site development/build only; `docs/package.json` and package-lock.json |

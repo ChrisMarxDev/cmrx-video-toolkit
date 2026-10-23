@@ -1,5 +1,5 @@
 ---
-name: video-dithering
+name: component-dithering
 description: Apply deterministic ordered texture to video graphics or backgrounds.
 ---
 

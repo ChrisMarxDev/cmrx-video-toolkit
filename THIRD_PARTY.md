@@ -15,3 +15,9 @@ The optional fal connector resolves `@fal-ai/client` (MIT) through its npm
 manifest and lockfile; it does not vendor the SDK. fal service/model terms and
 output rights are separate from this repository's software license. See
 [the official client](https://github.com/fal-ai/fal-js).
+
+Fluvie skill guidance is adapted from SimonErich/fluvie commit
+10e442c1bb469118516df3335547f85ec92155e6: `.agents/skills/fluvie-video/SKILL.md`
+and `documentation/guides/generative-media.md`. Copyright (c) 2026 Simon Auer,
+MIT; the full notice is retained as LICENSE.txt in each fluvie-* skill. Adaptations
+split framework mechanics from toolkit orchestration and retain local media policy.

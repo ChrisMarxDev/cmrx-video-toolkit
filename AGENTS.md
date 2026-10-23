@@ -1,7 +1,7 @@
 # CMRX Video Toolkit (public)
 
-Read README.md and .skills/video-flow/SKILL.md for video workflow work. For component
-changes read .skills/component-authoring/SKILL.md. All examples must be synthetic;
+Read README.md and .skills/edit-video/SKILL.md for video workflow work. For component
+changes read .skills/component-author/SKILL.md. All examples must be synthetic;
 keep client identity, recordings, transcripts, credentials and private knowledge
 out of this repository. Keep third-party licenses and source provenance.
 

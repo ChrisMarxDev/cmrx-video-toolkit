@@ -115,7 +115,7 @@ require an original recording.
 
 **Ingest → Transcribe → Edit → Storyboard → Compose → Review → Render**
 
-Start with [video-flow](.skills/video-flow/SKILL.md). Review the rough cut before
+Start with [edit-video](.skills/edit-video/SKILL.md). Review the rough cut before
 detailed animation. Map source cues through the edited timeline; do not guess
 animation timestamps. Keep recordings, transcripts, models and renders outside Git.
 
@@ -126,26 +126,32 @@ publishing.
 
 ## Skill overview
 
-Ask your coding agent to use a skill by name. Start with `video-flow` for the full
-workflow, or choose a focused skill below.
+Invoke **`$edit-video`** for the whole editing workflow or an existing video's
+revision. Ingest, transcription, editing, storyboarding, composition and export
+are progressively loaded references inside that skill, not separate commands.
+Use the focused skills below for standalone work or optional specialist knowledge.
+Tools and libraries remain shared; install/use the toolkit as one coherent bundle.
 
-| Skill | What it helps you do |
+| Skill | Responsibility |
 | --- | --- |
-| [video-flow](.skills/video-flow/SKILL.md) | Coordinate the full workflow from recording to reviewed render. |
-| [video-style](.skills/video-style/SKILL.md) | Define your video identity through an interview and references; create a reusable design folder. |
-| [video-ingest](.skills/video-ingest/SKILL.md) | Prepare a recording workspace while preserving original media. |
-| [video-transcribe](.skills/video-transcribe/SKILL.md) | Prepare local transcripts for review with explicit timing precision. |
-| [video-edit](.skills/video-edit/SKILL.md) | Turn reviewed edits and audio analysis into source-to-output timelines. |
-| [video-storyboard](.skills/video-storyboard/SKILL.md) | Plan explanatory visuals against the edited timeline. |
-| [video-compose](.skills/video-compose/SKILL.md) | Build editable Fluvie compositions with toolkit components. |
-| [video-review](.skills/video-review/SKILL.md) | Review and revise a video at the relevant stage while preserving prior work. |
-| [video-render](.skills/video-render/SKILL.md) | Render and verify edited videos with Fluvie and FFmpeg. |
-| [video-components](.skills/video-components/SKILL.md) | Run the browser, discover components through MCP, and add and validate widgets and presets. |
-| [component-authoring](.skills/component-authoring/SKILL.md) | Create SVG explainers, editable Flutter diagrams and reusable components. |
-| [video-dithering](.skills/video-dithering/SKILL.md) | Apply deterministic ordered texture to graphics or backgrounds. |
-| [video-shaders](.skills/video-shaders/SKILL.md) | Create deterministic Flutter shaders and capture their output. |
-| [flutter-scene](.skills/flutter-scene/SKILL.md) | Render procedural or imported 3D geometry with Flutter Scene. |
-| [git-sync](.skills/git-sync/SKILL.md) | Commit, rebase, push and verify synchronization on the current branch. |
+| [edit-video](.skills/edit-video/SKILL.md) | Coordinate editing, revisions and delivery. |
+| [video-style](.skills/video-style/SKILL.md) | Define or revise a reusable visual identity. |
+| [video-review](.skills/video-review/SKILL.md) | Collect human feedback through the review editor. |
+| [component-select](.skills/component-select/SKILL.md) | Find and configure existing components. |
+| [component-author](.skills/component-author/SKILL.md) | Create graphics and register reusable components. |
+| [component-shaders](.skills/component-shaders/SKILL.md) | Author and integrate deterministic shaders. |
+| [component-3d](.skills/component-3d/SKILL.md) | Capture native Flutter Scene geometry. |
+| [component-dithering](.skills/component-dithering/SKILL.md) | Implement deterministic component dither textures. |
+| [effect-background-remove](.skills/effect-background-remove/SKILL.md) | Create person cutouts from existing footage. |
+| [fluvie-compose](.skills/fluvie-compose/SKILL.md) | Author framework-specific Fluvie compositions. |
+| [fluvie-render](.skills/fluvie-render/SKILL.md) | Preview, export and diagnose Fluvie rendering. |
+| [fluvie-generative-ai](.skills/fluvie-generative-ai/SKILL.md) | Generate media or prompt-authored compositions. |
+| [git-sync](.skills/git-sync/SKILL.md) | Synchronize software repository changes. |
+
+The `$name` notation is the Codex skill invocation; other hosts may expose slash
+commands or named skills. No new shell executable is required. Host skill discovery
+may need a refresh after upgrading. See [the skill map](docs/SKILLS.md) for ownership,
+loading rules and migration from previous names.
 
 ## Set your video style
 

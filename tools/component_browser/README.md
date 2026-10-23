@@ -36,7 +36,7 @@ For hot reload, generate them first, then run `flutter run -d web-server --web-p
 
 ## Agent skill and MCP extension
 
-Use [video-components](../../.skills/video-components/SKILL.md) for setup, choosing
+Use [component-select](../../.skills/component-select/SKILL.md) for setup, choosing
 components, adding widgets/presets and validation.
 
 The [local MCP adapter](../../apps/component-browser-agent/README.md) exposes
@@ -191,7 +191,7 @@ snapshots the current preset and edited properties. Later edits do not silently
 change a selection; use Update selection again. Each component has one entry.
 
 The bottom bar shows the selected count, clear, **Copy selection** and
-**Export selection** buttons. Export downloads `video-components.json`; copy uses
+**Export selection** buttons. Export downloads `component-select.json`; copy uses
 the same JSON. A selectable dialog is the fallback when unavailable. The
 `component-selection` document contains `schemaVersion: 1`, the browser
 `previewTheme` name, and ordered `components` with `component`, `variant`, `props`.

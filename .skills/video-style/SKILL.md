@@ -83,8 +83,8 @@ intended video dimensions. Use synthetic or user-provided sample content. For a
 motion-led direction, also make a short deterministic motion sample when the
 renderer is available. Record any unrendered/uninspected parts honestly.
 
-Use [component-authoring](../component-authoring/SKILL.md) for actual SVG/Flutter
-graphics and [video-compose](../video-compose/SKILL.md) for motion specimens.
+Use [component-author](../component-author/SKILL.md) for actual SVG/Flutter
+graphics and [compose stage](../edit-video/references/compose.md) for motion specimens.
 Prefer existing toolkit primitives with caller-owned styling. Component recipes
 are required; implement the small representative set needed for the specimen,
 not an invented full widget library. Label each recipe as specification, prototype
@@ -107,5 +107,5 @@ Once chosen, record the version, decision/date and scoped exceptions. Add a shor
 workspace instruction or local style skill that points to the canonical folder,
 using the workspace's discovery convention; do not duplicate the whole spec.
 Link the chosen identity/version from the video's direction or manifest using its
-existing format. `video-storyboard` and `video-compose` consume this direction;
+existing format. The storyboard stage and the compose stage consume this direction;
 style exploration does not approve a script, cut, soundtrack license or final video.

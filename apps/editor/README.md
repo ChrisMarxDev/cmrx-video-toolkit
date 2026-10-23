@@ -118,7 +118,7 @@ python3 apps/editor/review.py /path/video.mp4 --workspace /path/review --transcr
 The app opens the resulting `/path/review/review.json` directly. An existing
 `review.json` may also supply a transcript if its source fingerprint matches.
 See [the shared contract](FORMAT.md) and
-[video-transcribe](../../.skills/video-transcribe/SKILL.md). Neither path invents
+[transcribe stage](../../.skills/edit-video/references/transcribe.md). Neither path invents
 word timing from Whisper segments.
 
 ## Export

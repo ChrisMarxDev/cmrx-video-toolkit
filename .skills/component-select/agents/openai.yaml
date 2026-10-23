@@ -1,0 +1,4 @@
+interface:
+  display_name: "Select Components"
+  short_description: "Find and configure existing video components"
+  default_prompt: "Use $component-select to find and configure components for this video."

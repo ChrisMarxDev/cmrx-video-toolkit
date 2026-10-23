@@ -1,8 +1,3 @@
----
-name: video-transcribe
-description: Prepare local video transcripts in the shared review format with explicit timing precision.
----
-
 # Video Transcribe
 
 Use apps/editor/review.py for standalone transcription and apps/editor/server.py

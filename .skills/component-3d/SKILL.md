@@ -1,5 +1,5 @@
 ---
-name: flutter-scene
+name: component-3d
 description: Render procedural or imported 3D geometry with Flutter Scene.
 ---
 

@@ -1,8 +1,3 @@
----
-name: video-storyboard
-description: Plan useful visuals against an imported edit timeline.
----
-
 # Video Storyboard
 
 Read flow/04-storyboard/README.md. Propose explanatory visuals using narration
