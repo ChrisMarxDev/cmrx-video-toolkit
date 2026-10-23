@@ -49,6 +49,23 @@ git apply /absolute/toolkit/tools/previewer/patches/fluvie-preview-playback.patc
 flutter test test/rendering/runtime/video_preview_test.dart test/rendering/runtime/preview_pending_audio_test.dart
 ```
 
+Declared project shaders also need linking into the generated preview host.
+Apply [the shader patch](patches/fluvie-preview-shaders.patch) after the await patch:
+
+```sh
+git apply --check /absolute/toolkit/tools/previewer/patches/fluvie-preview-shaders.patch
+git apply /absolute/toolkit/tools/previewer/patches/fluvie-preview-shaders.patch
+# From packages/fluvie_cli:
+dart test test/preview_app_test.dart
+```
+
+This links declared shader files, preserves live source updates and bumps the host
+cache stamp. Before launch, verify every `flutter.shaders` path exists relative to
+the project. Keep shaders under a separate `shaders/` directory; do not also include
+them as ordinary assets (including an enclosing `assets/` directory). Compile the
+actual project preview and check shader loading before timing review. This bundled
+compatibility patch is not a claim that upstream has merged the fix.
+
 Do not apply blindly to other revisions; a future upstream fix can replace it.
 The adapter does not modify installed packages or production source automatically.
 Check APIs, not just the `0.3.1` version label. Keep a compatible upstream checkout

@@ -17,7 +17,8 @@ For framework-specific mechanics, read [fluvie-compose](../../fluvie-compose/SKI
 ## Review the composition before encoding
 
 Run [fluvie-validate](../../fluvie-validate/SKILL.md) on changed composition files first.
-For compatible Fluvie projects, prefer the minimal Previewer for iteration:
+Author a shared Fluvie composition for preview and export. Default to the actual
+live Previewer for iteration before any full encode:
 `open_preview(path: <authored dart>, project: <project directory>)` on the existing
 edit/review MCP server, followed by `get_preview` until ready and `show_preview` once. Show the player or
 local browser URL, collect feedback in chat and edit the original composition.
@@ -25,4 +26,6 @@ Source edits reload. Close unused sessions with `close_preview`. Setup and
 compatibility are in `tools/previewer/README.md`; do not replace project pins
 silently. This saves full intermediate encodes, but media/audio preparation can
 still use CPU/storage. Preview does not replace final export QA or encoded-video
-review; unsupported native components need an explicitly identified fallback.
+review. If setup fails, surface and repair the failure; never silently substitute
+an MP4. Unsupported native components require an agreed fallback. Encode only
+after preview review and explicit export approval, or an explicit export request.

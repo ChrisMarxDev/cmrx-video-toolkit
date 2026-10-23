@@ -34,6 +34,23 @@ def obj(start, end, identifier='object'):
 
 
 class ContractTests(unittest.TestCase):
+    def test_missing_recognizer_fails_before_media_preparation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'input.mp4'
+            source.write_bytes(b'synthetic source')
+            doc = document()
+            doc['source']['sha256'] = review.fingerprint(source)
+            doc['transcript']['status'] = 'pending'
+            review.write(root / 'review.json', doc)
+            with patch.object(review.shutil, 'which', side_effect=lambda name: None if name == 'whisper-cli' else name), patch.object(review, 'run') as run:
+                with patch.dict(review.os.environ, {'WHISPER_CLI': 'whisper-cli'}):
+                    with self.assertRaisesRegex(ValueError, 'whisper.cpp'):
+                        review.prepare(source, root)
+                run.assert_not_called()
+            self.assertEqual(source.read_bytes(), b'synthetic source')
+            self.assertTrue((root / 'review.json').exists())
+
     def test_ranges_union_and_silence(self):
         doc=document();doc['marks']=[mark('bad',2,4),mark('bad',3,6,'other'),mark('comment',8,9,'note')]
         self.assertEqual(review.retained_ranges(doc),[dict(source_start=0,source_end=2),dict(source_start=6,source_end=10)])

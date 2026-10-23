@@ -18,7 +18,8 @@ Use ingest → transcribe → edit → storyboard → compose → review → ren
 artifacts when revising. Keep original recordings immutable and one narration audio
 stream. Review the rough cut before detailed animation unless already approved.
 Resolve source cues through scripts/video.py import-edit; never guess timestamps.
-Drafts can be rendered for review. Final approval is a human decision, not a CLI flag.
+Default to live Fluvie composition preview before encoding. Render only after
+preview feedback and explicit export approval, or an explicit export request. Final approval is a human decision, not a CLI flag.
 Read only the stage reference needed for the current work before using a command. Keep media outside Git.
 
 ## Entry point and stage routing

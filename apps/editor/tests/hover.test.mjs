@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 // Exercise the browser controller with event targets and a deterministic frame
 // scheduler: no browser or media decoder is needed for its seek/restore contract.
-test('hover restores playback, click commits, and touch/drag never hover-seek', async () => {
+test('hover only seeks while paused, click commits, and touch/drag never hover-seek', async () => {
   const source = await readFile(new URL('../web/app.js', import.meta.url), 'utf8');
   const handlers = new Map();
   const target = name => ({ hidden: true, style: {}, classList: { add() {}, remove() {} },
@@ -26,12 +26,15 @@ test('hover restores playback, click commits, and touch/drag never hover-seek', 
     source.slice(source.indexOf('const timelineSurface ='), source.indexOf('function renderRuler()')), context);
   const move = extra => { handlers.get('surface:pointermove')({ clientX: 300, buttons: 0, pointerType: 'mouse', ...extra }); if (frame) { const run = frame; frame = null; run(); } };
   move();
-  assert.equal(video.currentTime, 5);
-  assert.equal(video.paused, true);
-  assert.equal(nodes['timeline-origin'].hidden, false);
-  handlers.get('surface:pointerleave')();
   assert.equal(video.currentTime, 2);
   assert.equal(video.paused, false);
+  assert.equal(frame, undefined);
+  video.pause();
+  move();
+  assert.equal(video.currentTime, 5);
+  handlers.get('surface:pointerleave')();
+  assert.equal(video.currentTime, 2);
+  assert.equal(video.paused, true);
   video.pause();
   move();
   handlers.get('surface:pointerdown')({ clientX: 340, button: 0 });
@@ -52,4 +55,16 @@ test('hover restores playback, click commits, and touch/drag never hover-seek', 
   handlers.get('surface:pointerleave')();
   assert.equal(frame, null);
   assert.equal(video.currentTime, 6);
+});
+
+
+test('expected play interruptions are quiet but real failures surface', async () => {
+  const source = await readFile(new URL('../web/app.js', import.meta.url), 'utf8');
+  const errors = [];
+  const context = vm.createContext({ error: message => errors.push(message) });
+  vm.runInContext(source.slice(source.indexOf('function playbackFailure('), source.indexOf('$("play").onclick')), context);
+  vm.runInContext("playbackFailure({name: 'AbortError', message: 'interrupted'})", context);
+  assert.deepEqual(errors, []);
+  vm.runInContext("playbackFailure({name: 'NotSupportedError', message: 'unsupported media'})", context);
+  assert.deepEqual(errors, ['unsupported media']);
 });

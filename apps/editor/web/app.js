@@ -593,24 +593,22 @@ function endHover(commit = false) {
   timelineSurface.classList.remove('hover-preview');
   if (!previous || commit) return;
   previewTime(previous.time);
-  if (previous.playing) video.play().catch(e => error(e.message));
 }
 function timelineTime(clientX) {
   const bounds = $('timeline').getBoundingClientRect();
   return clamp((clientX - bounds.left) / bounds.width, 0, 1) * doc.source.duration;
 }
 timelineSurface.addEventListener('pointermove', e => {
-  if (!doc || busy || dragging || e.buttons || e.pointerType === 'touch') return;
+  if (!doc || !video.paused || busy || dragging || e.buttons || e.pointerType === 'touch') return;
   if (!hoverPreview) {
-    hoverPreview = { time: video.currentTime, playing: !video.paused };
-    video.pause();
+    hoverPreview = { time: video.currentTime };
     $('timeline-origin').style.left = hoverPreview.time / doc.source.duration * 100 + '%';
     $('timeline-origin').hidden = false;
     timelineSurface.classList.add('hover-preview');
   }
   if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
   const time = timelineTime(e.clientX);
-  hoverFrame = requestAnimationFrame(() => { hoverFrame = null; previewTime(time); });
+  hoverFrame = requestAnimationFrame(() => { hoverFrame = null; if (video.paused) previewTime(time); });
 });
 timelineSurface.addEventListener('pointerleave', () => endHover());
 timelineSurface.addEventListener('pointerdown', e => {
@@ -670,13 +668,18 @@ function playbackIcon() {
   );
   $("play").title = paused ? "Play (Space)" : "Pause (Space)";
 }
-video.onplay = playbackIcon;
+video.onplay = () => { endHover(true); playbackIcon(); };
 video.onpause = playbackIcon;
 video.onerror = () =>
   error("Could not play the prepared video. Try preparing it again.");
+function playbackFailure(e) {
+  // pause()/seek/load can legitimately interrupt a pending play() promise.
+  if (e.name !== 'AbortError') error(e.message);
+}
 $("play").onclick = () => {
   if (!doc) return;
-  video.paused ? video.play().catch((e) => error(e.message)) : video.pause();
+  endHover(true);
+  video.paused ? video.play().catch(playbackFailure) : video.pause();
 };
 $("seek").oninput = () => {
   video.currentTime = Number($("seek").value);
@@ -850,7 +853,11 @@ async function poll() {
   busy = state.job.busy;
   $("retry").hidden = busy || !state.job.error || !state.last_open;
   $("job").hidden = !busy && !state.job.error;
-  $("job-text").textContent = state.job.message;
+  $("job-text").textContent = state.job.error || state.job.message;
+  $("job-spinner").hidden = !busy;
+  $("job").setAttribute('aria-busy', String(busy));
+  $("job-elapsed").textContent = busy && state.job.started_at
+    ? `Elapsed ${Math.max(0, Math.floor(Date.now() / 1000 - state.job.started_at))}s` : '';
   $("cancel").hidden = !busy;
   $("open-button").disabled = busy;
   $("begin").disabled = busy;

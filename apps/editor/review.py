@@ -147,6 +147,9 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
     source, workspace = Path(source).expanduser().resolve(), Path(workspace).expanduser().resolve()
     if not source.is_file():
         raise ValueError(f'Video not found: {source}')
+    for tool in ('ffmpeg', 'ffprobe'):
+        if not shutil.which(tool):
+            raise ValueError(f'Preparation needs {tool}. Ask your agent to install it, then Retry; your recording is preserved.')
     workspace.mkdir(parents=True, exist_ok=True)
     target = workspace / 'review.json'
     progress('Checking source recording')
@@ -186,6 +189,12 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
             doc['marks'].append(dict(id='legacy-note-' + note['id'], kind='comment', text=note['intent'], source_start=note['source_start'], source_end=note['source_end']))
         write(target, validate(doc))
         write(workspace / 'transcript/segments.json', doc['transcript'])
+    # Fail before expensive extraction/encoding, retaining the selected source.
+    if doc['transcript']['status'] != 'ready' and not transcript:
+        cli = os.environ.get('WHISPER_CLI', 'whisper-cli')
+        if not shutil.which(cli):
+            raise ValueError('Local transcription needs whisper.cpp. Ask your agent to install it, then Retry; your recording is preserved.')
+        model = resolve_model(model, progress, cancel)
     media = workspace / 'source'
     media.mkdir(exist_ok=True)
     jobs = [
@@ -217,10 +226,6 @@ def prepare(source, workspace, model=None, transcript=None, progress=lambda text
                 doc['transcript'] = normalize_whisper(imported, doc['source']['duration'])
             write(raw_path, imported)
         else:
-            cli = os.environ.get('WHISPER_CLI', 'whisper-cli')
-            if not shutil.which(cli):
-                raise ValueError('Local transcription needs whisper.cpp. Ask your agent to install it, then Retry; your recording is preserved.')
-            model = resolve_model(model, progress, cancel)
             progress('Transcribing locally with whisper.cpp')
             raw_path.parent.mkdir(exist_ok=True)
             if not raw_path.exists():

@@ -743,3 +743,10 @@ body { overflow: hidden; }
 .bar { height: 40px; border-radius: 7px; padding: 7px 12px; }
 .bar .edge { height: 100%; }
 .timeline-empty { font-size: 12px; }
+
+#job { display: flex; align-items: center; gap: 12px; padding: 16px; }
+#job[hidden], #job-spinner[hidden] { display: none; }
+#job-spinner { flex: 0 0 24px; width: 24px; height: 24px; border: 3px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: job-spin 1s linear infinite; }
+#job-elapsed { font-variant-numeric: tabular-nums; }
+@keyframes job-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #job-spinner { animation: none; } }

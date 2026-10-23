@@ -104,3 +104,17 @@ requested work once its requirements pass; do not wait for unrelated optional to
 For a failure, diagnose the reported cause and retry after correcting it. If the
 same failure persists, report the exact missing capability and continue independent
 work instead of repeatedly reinstalling or claiming success.
+
+## Recording-entry preflight
+
+Before opening recording selection for new recognition, check FFmpeg/ffprobe and
+whisper.cpp, resolve the model with apps/editor/models.py's documented discovery,
+and run a short known speech sample through that exact CLI/model with timestamped
+JSON output. Install/repair missing requirements before the user waits on media
+preparation. Ready or imported transcripts do not need new recognition.
+Then make Select Video the first user-facing step: call open_review() without a
+path unless the user supplied one; supplied paths open directly. Never invent a
+path or require the user to paste one. An optional existing-path choice is fine.
+Check live tool discovery, not just registration files. If open_review/get_review
+are missing, use the documented browser picker fallback and preserve Done and
+receipt verification. A configured server may require a host/session restart.

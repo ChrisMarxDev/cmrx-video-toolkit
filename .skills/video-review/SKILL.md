@@ -69,12 +69,18 @@ requirements are listed in `docs/EXTERNAL-REQUIREMENTS.md`.
 
 ## Reviewing an existing composition
 
+First validate and open the actual live Fluvie player using edit-video's compose
+reference and tools/previewer/README.md. Source edits must reload there. Collect
+composition feedback in chat; do not render an MP4 merely to enter review. Repair
+preview startup failures rather than rerouting silently. The following exact-export
+review applies only after an explicit export request or approval.
+
 After rendering a draft, open that MP4 in the same review editor using
 `open_review` (or the CLI flow above), with a separate review workspace for that
 render revision. Let the user highlight ranges and comment, then wait for Done
 and retrieve the saved feedback. Comments refer to times in that rendered video;
 use them to revise the original composition, not as source-recording cut ranges.
-Render the revision and repeat as needed before final approval and rendering.
+Return revisions to live preview; render again only when requested or approved.
 
 Read flow/06-review/README.md. Preserve prior reviewed exports. Visual changes
 reuse timing/audio; cut changes rebuild the timeline and resolve cues again. Record
@@ -95,5 +101,5 @@ supply one explicitly aligned to that rendered revision. Wait for human Done,
 then call `get_review(sessionId)` and apply its notes to that revision of the
 composition. Its times are rendered-video times, not original source times;
 map through the edit timeline when changing source cuts. Repeat the authorized
-edit → draft render → direct review loop until the human approves. Done submits
+preview → approved export → direct review loop until the human approves. Done submits
 feedback; it does not independently authorize a render or final publication.

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import secrets
 import threading
+import time
 import urllib.parse
 import uuid
 
@@ -104,7 +105,7 @@ class Session:
             if self.job['busy']:
                 raise ValueError('A job is running; wait or cancel it first')
             self.cancel.clear()
-            self.job = dict(busy=True, message='Starting', error=None, export=None)
+            self.job = dict(busy=True, message='Starting', error=None, export=None, started_at=time.time())
         def worker():
             try:
                 operation()

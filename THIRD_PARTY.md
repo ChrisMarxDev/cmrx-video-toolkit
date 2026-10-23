@@ -29,6 +29,9 @@ from SimonErich/fluvie revision `10e442c1bb469118516df3335547f85ec92155e6` and a
 toolkit-authored asynchronous asset-loader fix/cache-stamp change. Upstream is MIT,
 copyright 2026 Simon Auer; its notice is retained beside the patch. The previewer
 runs separately installed Fluvie software; it does not vendor that runtime.
+The sibling playback and shader patches use the same upstream revision and MIT
+notice. The shader patch adds declared-file linking, a cache stamp and a synthetic
+regression test.
 
 ## Creator walkthrough
 

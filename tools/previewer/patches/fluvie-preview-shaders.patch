@@ -1,0 +1,47 @@
+--- a/packages/fluvie_cli/lib/src/preview_app.dart
++++ b/packages/fluvie_cli/lib/src/preview_app.dart
+@@ -319,6 +319,9 @@
+         : null;
+     if (path is String && !path.startsWith('packages/')) paths.add(path);
+   }
++  for (final shader in (flutter?['shaders'] as List?) ?? const []) {
++    if (shader is String && !shader.startsWith('packages/')) paths.add(shader);
++  }
+   for (final family in (flutter?['fonts'] as List?) ?? const []) {
+     if (family is! Map) continue;
+     for (final font in (family['fonts'] as List?) ?? const []) {
+--- a/packages/fluvie_cli/test/preview_app_test.dart
++++ b/packages/fluvie_cli/test/preview_app_test.dart
+@@ -335,6 +335,21 @@
+           isA<CliFailure>().having((e) => e.message, 'message', contains('no package name')),
+         ),
+       );
++    });
++
++    test('declared top-level shaders are bundled and remain live', () async {
++      stubFlutter();
++      File(p.join(project.path, 'pubspec.yaml')).writeAsStringSync(
++        '\nflutter:\n  shaders:\n    - shaders/effect.frag\n', mode: FileMode.append);
++      final shader = File(p.join(project.path, 'shaders', 'effect.frag'))
++        ..createSync(recursive: true)
++        ..writeAsStringSync('first');
++      final dir = await ensure(targetAt(p.join('lib', 'example_video.dart')));
++      final bundled = File(p.join(dir, 'shaders', 'effect.frag'));
++      expect(bundled.readAsStringSync(), 'first');
++      shader.writeAsStringSync('second');
++      expect(bundled.readAsStringSync(), 'second');
++      expect(File(p.join(dir, 'pubspec.yaml')).readAsStringSync(), contains('shaders/effect.frag'));
+     });
+
+     test('the project assets are linked into the app so Flutter bundles them', () async {
+--- a/packages/fluvie_cli/lib/src/preview_command.dart
++++ b/packages/fluvie_cli/lib/src/preview_command.dart
+@@ -11,7 +11,7 @@
+ import 'package:fluvie_cli/src/process_runner.dart';
+
+ /// Invalidates cached adapters when the package preview contract changes.
+-const String previewCliVersion = '0.3.1-preview-3-toolkit-await-1';
++const String previewCliVersion = '0.3.1-preview-3-toolkit-shaders-1';
+
+ /// An addressable browser server is the default for humans and coding agents.
+ String defaultPreviewDevice() => 'web-server';
