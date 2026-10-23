@@ -173,7 +173,9 @@ needed. See the [CLI reference](https://github.com/vercel-labs/skills/blob/main/
 This installs instructions and bundled references/assets, **not** the toolkit
 applications, Flutter libraries, FFmpeg, models or MCP registrations. Keep a toolkit
 checkout and install the requirements for the selected workflow. Tell your agent
-where that checkout is: skill command paths refer to the toolkit root, while video
+where that checkout is. `$edit-video` checks tooling readiness, reuses existing
+installations and follows documented setup for missing requirements before editing.
+There is no new installer CLI. Skill command paths refer to the toolkit root, while video
 outputs belong in your consuming workspace. Do not install over Studio's private
 skill aliases; this command is for consuming projects.
 

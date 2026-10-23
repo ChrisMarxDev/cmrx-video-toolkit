@@ -5,7 +5,9 @@ description: Orchestrate a local video workflow with source integrity, reviewed 
 
 # Edit Video
 
-Read README.md and docs/contracts.md. Work in an external or ignored projects/<slug>
+First follow [tooling readiness](references/tooling.md): locate the toolkit, reuse
+installed tools, prepare only the requested capabilities and verify them. Then
+read the toolkit README.md and docs/contracts.md. Work in an external or ignored projects/<slug>
 workspace. Load that workspace's art direction; this toolkit imposes no client brand.
 Use ingest → transcribe → edit → storyboard → compose → review → render. Reuse valid
 artifacts when revising. Keep original recordings immutable and one narration audio
