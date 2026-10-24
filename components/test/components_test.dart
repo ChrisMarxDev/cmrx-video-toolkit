@@ -1,4 +1,5 @@
 import 'test_style.dart';
+import 'package:video_components/technical_samples.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_components/video_components.dart';
@@ -11,10 +12,6 @@ void main() {
     expect(code.lines, hasLength(1));
     expect(
       () => VideoCode(style: demoStyle, lines: ['x'], focusLine: 1),
-      throwsArgumentError,
-    );
-    expect(
-      () => VideoLayers(style: demoStyle, expansion: double.nan),
       throwsArgumentError,
     );
   });
@@ -73,7 +70,11 @@ void main() {
                 child: Column(
                   children: [
                     Expanded(
-                      child: VideoLayers(style: demoStyle, expansion: progress),
+                      child: technicalDiagramExample(
+                        DiagramExample.pipeline,
+                        style: demoStyle,
+                        progress: progress,
+                      ),
                     ),
                     VideoCode(
                       style: demoStyle,

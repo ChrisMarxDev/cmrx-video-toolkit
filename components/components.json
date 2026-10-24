@@ -746,174 +746,6 @@
       ]
     },
     {
-      "id": "video.layer-stack",
-      "name": "Layer stack",
-      "widget": "TechnicalStack",
-      "category": "Technical diagrams",
-      "source": "components/lib/src/diagrams/technical.dart",
-      "motion": true,
-      "description": "Exploded layers with labeled and compact three-layer layouts.",
-      "parameters": {
-        "presentation": {
-          "type": "choice",
-          "label": "Presentation",
-          "default": "video.layer-stack",
-          "options": [
-            "video.layer-stack",
-            "video.layers"
-          ]
-        }
-      },
-      "variants": [
-        {
-          "id": "software",
-          "props": {},
-          "presentation": "video.layer-stack",
-          "sourceVariant": "software"
-        },
-        {
-          "id": "packet",
-          "props": {
-            "text": "Payload\nTransport\nNetwork",
-            "active": 1
-          },
-          "presentation": "video.layer-stack",
-          "sourceVariant": "packet"
-        },
-        {
-          "id": "assembly",
-          "props": {
-            "text": "Base\nBoard\nCover",
-            "active": 1
-          },
-          "presentation": "video.layer-stack",
-          "sourceVariant": "assembly"
-        },
-        {
-          "id": "layers/middle",
-          "props": {},
-          "presentation": "video.layers",
-          "sourceVariant": "middle"
-        },
-        {
-          "id": "layers/top",
-          "props": {
-            "activeLayer": 2
-          },
-          "presentation": "video.layers",
-          "sourceVariant": "top"
-        },
-        {
-          "id": "layers/bottom",
-          "props": {
-            "activeLayer": 0
-          },
-          "presentation": "video.layers",
-          "sourceVariant": "bottom"
-        }
-      ],
-      "usage": "Use exploded layers for containment and composition. Layer order is bottom to top; labels remain legible when collapsed.",
-      "examples": [
-        {
-          "title": "Inside a network packet",
-          "description": "Separate payload, transport and network layers while preserving their order.",
-          "variant": "packet"
-        }
-      ],
-      "expanded": false,
-      "presentations": {
-        "video.layer-stack": {
-          "id": "video.layer-stack",
-          "name": "Exploded layer stack",
-          "widget": "TechnicalStack",
-          "category": "Technical diagrams",
-          "source": "components/lib/src/diagrams/technical.dart",
-          "motion": true,
-          "description": "A labeled stack whose separation can be scrubbed without losing the labels.",
-          "parameters": {
-            "text": {
-              "label": "Layers, bottom to top",
-              "type": "text",
-              "default": "Storage\nLogic\nInterface"
-            },
-            "active": {
-              "label": "Active layer (zero-based)",
-              "type": "number",
-              "default": 1,
-              "min": 0,
-              "max": 5,
-              "step": 1
-            }
-          },
-          "variants": [
-            {
-              "id": "software",
-              "props": {}
-            },
-            {
-              "id": "packet",
-              "props": {
-                "text": "Payload\nTransport\nNetwork",
-                "active": 1
-              }
-            },
-            {
-              "id": "assembly",
-              "props": {
-                "text": "Base\nBoard\nCover",
-                "active": 1
-              }
-            }
-          ],
-          "usage": "Use exploded layers for containment and composition. Layer order is bottom to top; labels remain legible when collapsed.",
-          "examples": [
-            {
-              "title": "Inside a network packet",
-              "description": "Separate payload, transport and network layers while preserving their order.",
-              "variant": "packet"
-            }
-          ]
-        },
-        "video.layers": {
-          "id": "video.layers",
-          "name": "Exploded layers",
-          "widget": "VideoLayers",
-          "category": "Diagrams",
-          "description": "Three connected layers separate to explain a structure. Scrub the preview to inspect motion.",
-          "source": "components/lib/src/components.dart",
-          "motion": true,
-          "parameters": {
-            "activeLayer": {
-              "label": "Active layer",
-              "type": "number",
-              "default": 1,
-              "min": 0,
-              "max": 2,
-              "step": 1
-            }
-          },
-          "variants": [
-            {
-              "id": "middle",
-              "props": {}
-            },
-            {
-              "id": "top",
-              "props": {
-                "activeLayer": 2
-              }
-            },
-            {
-              "id": "bottom",
-              "props": {
-                "activeLayer": 0
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
       "id": "video.tensor-grid",
       "name": "Matrix / memory grid",
       "widget": "TechnicalGrid",
@@ -1025,17 +857,17 @@
       "category": "Technical diagrams",
       "source": "components/lib/src/diagrams/technical.dart",
       "motion": true,
-      "description": "Crosshair and leader annotations over any child widget, shown on an exploded layer example.",
+      "description": "Crosshair and leader annotations over any child widget, shown on a grid example.",
       "parameters": {
         "label": {
           "label": "Callout label",
           "type": "text",
-          "default": "Selected layer"
+          "default": "Selected row"
         }
       },
       "variants": [
         {
-          "id": "layer",
+          "id": "grid",
           "props": {}
         },
         {

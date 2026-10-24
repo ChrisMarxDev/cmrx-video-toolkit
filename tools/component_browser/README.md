@@ -66,14 +66,13 @@ review before approving a video. The browser is not a video compositor.
 
 Example request:
 
-> Use `video.layers`, variant `top`, while I explain the three stages. Reveal the
-> layers one at a time and keep the presenter in the lower-right corner.
+> Use `video.caption`, variant `single-line`, for the narration. Keep the text readable and keep the presenter in the lower-right corner.
 
 ```json
 {
-  "component": "video.layers",
-  "variant": "top",
-  "props": {"activeLayer": 2}
+  "component": "video.caption",
+  "variant": "single-line",
+  "props": {"text": "Your footage. Your edit."}
 }
 ```
 
@@ -155,7 +154,7 @@ library does not bundle brand fonts or export default typography.
 ## Technical visuals
 
 Filter **Technical diagrams** or **Charts** for nodes, connectors, flowcharts,
-architecture recipes, layer stacks, grids, sequences, annotations and four
+architecture recipes, grids, sequences, annotations and four
 Fluvie-backed charts. Detail pages show usage notes and contextual sample presets
 alongside the editable preview and copyable Dart constructor. Chart data is
 edited as one `Label: value` per line; invalid input displays an explanation.

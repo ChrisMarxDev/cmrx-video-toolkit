@@ -50,8 +50,6 @@ String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
     'video.caption' => 'VideoCaption($text, fontSize: ${p['fontSize']})',
     'video.code' =>
       'VideoCode(lines: ${literal((p['text'] as String).split('\n'))},\n  focusLine: ${effectiveFocus(p)})',
-    'video.layers' =>
-      'VideoLayers(expansion: progress, activeLayer: ${p['activeLayer']})',
     'video.texture' =>
       'VideoTexture(programs: programs, seconds: outputSeconds,\n  animated: ${p['animated']}, strong: ${p['strong']}, accentPalette: ${p['accentPalette']})',
     'video.dither-background' =>

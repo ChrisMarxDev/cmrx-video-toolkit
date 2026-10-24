@@ -143,14 +143,6 @@ Widget specimen(
         focusLine: effectiveFocus(p),
       ),
     ),
-    'video.layers' => Padding(
-      padding: const EdgeInsets.all(24),
-      child: VideoLayers(
-        style: style,
-        expansion: progress,
-        activeLayer: (p['activeLayer'] as num).toInt(),
-      ),
-    ),
     'video.texture' =>
       programs == null
           ? shaderUnavailable()

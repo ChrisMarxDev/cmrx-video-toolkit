@@ -220,10 +220,10 @@ void main() {
         ComponentBrowser(catalog: (await tester.runAsync(loadCatalog))!),
       );
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).first, 'video.layers');
+      await tester.enterText(find.byType(TextField).first, 'video.caption');
       await tester.pumpAndSettle();
       expect(find.text('1 component'), findsOneWidget);
-      expect(find.text('Layer stack'), findsOneWidget);
+      expect(find.text('Speech caption'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, 'missing-widget');
       await tester.pumpAndSettle();
       expect(find.textContaining('No matching components'), findsOneWidget);
@@ -319,17 +319,17 @@ void main() {
     await tester.pumpWidget(
       ComponentBrowser(
         catalog: catalog,
-        initialRoute: '/video.layers?variant=top',
+        initialRoute: '/video.flowchart?variant=pipeline',
       ),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final initial = tester
-        .widget<VideoLayers>(find.byType(VideoLayers))
-        .expansion;
+        .widget<TechnicalDiagram>(find.byType(TechnicalDiagram))
+        .progress;
     await tester.pump(const Duration(seconds: 1));
     expect(
-      tester.widget<VideoLayers>(find.byType(VideoLayers)).expansion,
+      tester.widget<TechnicalDiagram>(find.byType(TechnicalDiagram)).progress,
       initial,
     );
     await tester.drag(find.byType(ListView).last, const Offset(0, -500));
@@ -338,7 +338,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expect(
-      tester.widget<VideoLayers>(find.byType(VideoLayers)).expansion,
+      tester.widget<TechnicalDiagram>(find.byType(TechnicalDiagram)).progress,
       isNot(initial),
     );
     await tester.tap(find.byTooltip('Pause preview'));

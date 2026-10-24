@@ -6,15 +6,6 @@ import 'catalog.dart';
 
 bool isTechnical(ComponentSpec spec) =>
     spec.category == 'Technical diagrams' || spec.category == 'Charts';
-List<String> technicalLayers(Map<String, dynamic> p) {
-  final rows = (p['text'] as String)
-      .split('\n')
-      .where((s) => s.trim().isNotEmpty)
-      .take(6)
-      .toList();
-  return rows.isEmpty ? ['Layer'] : rows;
-}
-
 List<List<String>> technicalCells(String example) => List.generate(
   4,
   (r) => List.generate(
@@ -97,15 +88,6 @@ Widget technicalSpecimen(
         vertical: p['vertical'] == true,
         progress: progress,
       ),
-      'layer-stack' => TechnicalStack(
-        style: style,
-        layers: technicalLayers(p),
-        activeLayer: (p['active'] as num).toInt().clamp(
-          0,
-          technicalLayers(p).length - 1,
-        ),
-        expansion: progress,
-      ),
       'tensor-grid' => TechnicalGrid(
         style: style,
         cells: technicalCells(p['example']),
@@ -130,11 +112,13 @@ Widget technicalSpecimen(
           ),
         ],
         progress: progress,
-        child: TechnicalStack(
+        child: TechnicalGrid(
           style: style,
-          layers: const ['Storage', 'Logic', 'Interface'],
-          activeLayer: 1,
-          expansion: 0.7,
+          cells: const [
+            ['Input', 'Output'],
+            ['Raw', 'Edited'],
+          ],
+          activeRow: 1,
         ),
       ),
       _ => TechnicalChart(
@@ -179,14 +163,12 @@ String technicalDartExample(ComponentSpec spec, Map<String, dynamic> p) {
       '''TechnicalDiagram(style: style, designSize: const Size(800, 280), nodes: [DiagramNode(id: 'a', label: 'Producer', bounds: const Rect.fromLTWH(20, 100, 200, 80)), DiagramNode(id: 'b', label: 'Consumer', bounds: const Rect.fromLTWH(580, 100, 200, 80), active: true)], edges: [DiagramEdge(from: 'a', to: 'b', label: ${literal(p['label'])}, dashed: ${p['dashed']}, active: true)], progress: progress)''',
     'flowchart' || 'architecture' =>
       '''technicalDiagramExample(DiagramExample.${p['example']}, style: style, vertical: ${p['vertical'] == true}, progress: progress)''',
-    'layer-stack' =>
-      '''TechnicalStack(style: style, layers: ${literal(technicalLayers(p))}, activeLayer: ${(p['active'] as num).toInt().clamp(0, technicalLayers(p).length - 1)}, expansion: progress)''',
     'tensor-grid' =>
       '''TechnicalGrid(style: style, cells: ${literal(technicalCells(p['example']))}, activeRow: ${p['axis'] == 'row' ? p['active'] : null}, activeColumn: ${p['axis'] == 'column' ? p['active'] : null})''',
     'sequence' =>
       '''TechnicalSequence(style: style, participants: ${literal(sequenceActors(p['example']))}, messages: [${sequenceSteps(p['example']).map((m) => 'SequenceMessage(from: ${m.from}, to: ${m.to}, label: ${literal(m.label)}, response: ${m.response})').join(', ')}], progress: progress)''',
     'annotation' =>
-      '''TechnicalAnnotation(style: style, notes: [TechnicalNote(target: const Offset(370, 300), labelPosition: const Offset(480, 65), text: ${literal(p['label'])})], progress: progress, child: TechnicalStack(style: style, layers: const ['Storage', 'Logic', 'Interface'], activeLayer: 1, expansion: 0.7))''',
+      '''TechnicalAnnotation(style: style, notes: [TechnicalNote(target: const Offset(370, 300), labelPosition: const Offset(480, 65), text: ${literal(p['label'])})], progress: progress, child: TechnicalGrid(style: style, cells: const [['Input', 'Output'], ['Raw', 'Edited']], activeRow: 1))''',
     _ =>
       '''TechnicalChart(style: style, kind: TechnicalChartKind.${id.substring(6)}, data: parseTechnicalChartData(${literal(p['text'])}), unit: ${literal(p['unit'])}, source: ${literal(p['source'])}, progress: progress)''',
   };

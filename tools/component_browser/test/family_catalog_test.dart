@@ -11,11 +11,11 @@ void main() {
     () async {
       TestWidgetsFlutterBinding.ensureInitialized();
       final catalog = await loadCatalog();
-      expect(catalog.length, 62);
+      expect(catalog.length, 61);
       final families = catalog
           .where((s) => s.presentations.isNotEmpty)
           .toList();
-      expect(families.length, 10);
+      expect(families.length, 9);
       final ids = catalog.map((s) => s.id).toSet();
       expect(ids, isNot(contains('video.episode-title')));
       expect(ids, isNot(contains('video.screenshot-fan')));

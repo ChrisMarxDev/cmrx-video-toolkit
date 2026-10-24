@@ -1,8 +1,8 @@
 # Consolidated catalog families
 
-The public browser now lists **60 entries**, down from 72. Ten families absorb
-highly overlapping standalone entries. Named presets preserve the useful layouts;
-existing Dart constructors remain supported. Other component groups are unchanged.
+Nine families group overlapping standalone entries. Named presets preserve their
+useful layouts and constructors. The layer-stack family and its compact/labeled
+implementations have been removed; unrelated media stacks remain available.
 
 | Family (canonical ID) | Presentations available through presets |
 | --- | --- |
@@ -12,7 +12,6 @@ existing Dart constructors remain supported. Other component groups are unchange
 | Title card (`video.editorial-title`) | Editorial, Episode, Chapter ticket |
 | Closing card (`video.next-episode`) | Next episode, Product sign-off, Event closing |
 | Code panel (`video.code-walkthrough`) | Walkthrough, Compact code focus |
-| Layer stack (`video.layer-stack`) | Labeled stack, Compact three-layer graphic |
 | Quote card (`video.quote-card`) | Single quote, Testimonial stack |
 | Typography (`video.type`) | Individual text roles, Combined specimen |
 | Trend chart (`video.chart-line`) | Line, Filled area |

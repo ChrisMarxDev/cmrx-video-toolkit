@@ -46,7 +46,6 @@ data, selected states or animation must remain editable.
 | `video.connector` | `TechnicalDiagram`, `DiagramEdge` | Labeled arrow, dashed response |
 | `video.flowchart` | `technicalDiagramExample` | Pipeline, portrait pipeline, decision, feedback |
 | `video.architecture` | `technicalDiagramExample` | Service map, retrieval pipeline, worker fan-out |
-| `video.layer-stack` | `TechnicalStack` | Software layers, packet layers, exploded assembly |
 | `video.tensor-grid` | `TechnicalGrid` | Matrix, memory addresses, illustrative weights |
 | `video.sequence` | `TechnicalSequence` | Request/response, agent/tool call |
 | `video.annotation` | `TechnicalAnnotation` | Crosshair and leader over any child |

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/widgets.dart';
 
 import 'style.dart';
@@ -255,82 +253,4 @@ class VideoDitherBackground extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Technical exploded layers; explicit progress supports reverse seeks.
-class VideoLayers extends StatelessWidget {
-  VideoLayers({
-    super.key,
-    this.style,
-    this.expansion = 0,
-    this.activeLayer = 1,
-  }) {
-    if (!expansion.isFinite ||
-        expansion < 0 ||
-        expansion > 1 ||
-        activeLayer < 0 ||
-        activeLayer > 2) {
-      throw ArgumentError('expansion 0..1; activeLayer 0..2');
-    }
-  }
-  final VideoStyle? style;
-  final double expansion;
-  final int activeLayer;
-  @override
-  Widget build(BuildContext context) {
-    final style = VideoThemeScope.resolve(context, this.style);
-    return CustomPaint(
-      painter: _Layers(expansion, activeLayer, style),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _Layers extends CustomPainter {
-  const _Layers(this.expansion, this.active, this.style);
-  final VideoStyle style;
-  final double expansion;
-  final int active;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = math.min(size.width / 400, size.height / 360);
-    canvas.save();
-    canvas.translate(size.width / 2, size.height / 2 + 52 * scale);
-    canvas.scale(scale);
-    final line = Paint()
-      ..color = style.foreground
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    for (var i = 0; i < 3; i++) {
-      final y = -i * (18 + 60 * expansion);
-      final path = Path()
-        ..moveTo(-148, y)
-        ..lineTo(0, y - 74)
-        ..lineTo(148, y)
-        ..lineTo(0, y + 74)
-        ..close();
-      canvas.drawPath(
-        path,
-        Paint()..color = i == active ? style.accent : style.background,
-      );
-      canvas.drawPath(path, line);
-      if (i < 2) {
-        canvas.drawLine(
-          Offset(-148, y),
-          Offset(-148, y - (18 + 60 * expansion)),
-          line,
-        );
-        canvas.drawLine(
-          Offset(148, y),
-          Offset(148, y - (18 + 60 * expansion)),
-          line,
-        );
-      }
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_Layers old) =>
-      old.expansion != expansion || old.active != active || old.style != style;
 }
