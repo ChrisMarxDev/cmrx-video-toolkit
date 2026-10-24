@@ -16,9 +16,15 @@ brand/
   specimens/                # Editable source plus generated review output
   assets/                   # Owned/licensed logos, imagery, fonts when used
   archive/                  # Superseded directions when needed
-components/
-  CATALOG.md                # Recipes and their implementation status
-  ...                       # Actual workspace-owned implementation, if created
+video-styles/
+  README.md                 # Style index; distinguishes bases from selectable styles
+  base/                     # Optional shared style foundation
+    components/             # Shared designed components, assets and catalog
+  <style-id>/
+    style.md                # Video rules and optional extends reference
+    components/             # Components specific to this style
+    references.md           # Style-specific evidence
+    interview.md            # Style-specific answers
 ```
 
 ## README.md and interview.md
@@ -71,7 +77,7 @@ and which effects to avoid. Record sound preferences separately from permission
 to use particular recordings. Captions stay faithful to speech; style does not
 change approved words or cuts. Use frame-derived animation when implemented.
 
-## components/CATALOG.md and IMPLEMENTATION.md
+## Style components/CATALOG.md and IMPLEMENTATION.md
 
 For each selected recurring component (for example caption, title, callout, lower
 third or diagram), include purpose, when to use/avoid it, anatomy, token roles,
@@ -106,7 +112,11 @@ not empty directories. Preserve draft work if the creator has not selected it ye
 Use `video-styles/README.md` (or the workspace's existing index) to list stable ID,
 name, purpose, status and canonical specification path. A new style folder can
 contain README.md, VIDEO.md, interview.md, references.md and specimens as needed.
-Reference shared brand tokens/components by path instead of copying them. Store
+Style-specific component implementations belong in that style’s `components/`.
+Shared designed components belong in an explicitly declared base style’s
+`components/`; keep generic toolkit primitives external. Mark bases as non-selectable
+and record inherited paths/versions. Reference shared brand tokens by path instead
+of copying them. Store
 style-specific overrides locally; do not change the shared brand to fit one series.
 Existing single-style folders remain valid and can simply be indexed.
 

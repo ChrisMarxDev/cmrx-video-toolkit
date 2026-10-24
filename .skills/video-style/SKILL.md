@@ -16,7 +16,8 @@ Inspect the video's direction/manifest, workspace instructions and any style ind
 then the referenced style specifications. A style is a named set of video/editorial
 rules; several styles may share one brand's colors, fonts and components. A palette,
 a component library, an archived export or a duplicate symlink is not another style.
-Count usable, current styles with an actual specification, not incomplete drafts.
+Count usable, current concrete styles with an actual specification, not incomplete
+drafts or base-only styles. Bases are inherited dependencies, not selection choices.
 
 1. **Already selected:** honor a style explicitly named by the user or recorded for
    this video. Revisions keep that selection; do not ask again just because the
@@ -57,7 +58,10 @@ but outside automatic selection.
 
 For a brand-new creator, the [folder contract](references/folder-contract.md)
 supplies brand and component structure. Multiple styles may reference those shared
-resources and own only their video rules, interview, references and specimens.
+resources. A style owns its designed components, defaults, recipes, effects, video
+rules, interview, references and specimens. Shared designed components can live in
+a base style; child styles reference that base instead of copying them. Toolkit
+primitives remain generic dependencies.
 An independent brand can have its own root. Keep creator assets/answers outside
 the public toolkit. If only the toolkit checkout exists, resolve an external or
 ignored production destination before writing personal material. Do not create
@@ -191,3 +195,19 @@ using the workspace's discovery convention; do not duplicate the whole spec.
 Link the chosen identity/version from the video's direction or manifest using its
 existing format. The storyboard stage and the compose stage consume this direction;
 style exploration does not approve a script, cut, soundtrack license or final video.
+
+## Inheritance and linked design review
+
+Declare a base through an explicit `extends` ID/path and mark base-only entries in
+the local index. Resolve shared design → base(s) → selected style → per-video
+overrides, reading each source once. Keep inheritance acyclic; resolve conflicting
+parent rules explicitly rather than guessing a merge order. Record base versions
+alongside the chosen style. This is an authoring contract, not a runtime loader.
+
+Keep a workspace design-link map for shared guides/tokens, generated adapters,
+base and child components, and other consumers such as websites. Add comments or
+nearby documentation pointing to that map: when one changes, review the affected
+linked files, update those needing changes and record intentional exceptions.
+JSON and binary assets use map entries/companion docs rather than invalid comments.
+Review links do not require identical styling or automatic changes to every child;
+generate shared token adapters from one source rather than synchronizing copies.
