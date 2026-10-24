@@ -64,19 +64,28 @@ ignored production destination before writing personal material. Do not create
 another Git repository. Keep a single video's deviations with that video unless
 the user asks to make them a reusable style.
 
-## Interview in short rounds
+## Interview in one optional batch
 
-Start with what is already known. Ask one to three related questions at a time,
-using everyday language and concrete choices when helpful. Wait for answers to
-questions that determine the direction; meanwhile inspect supplied references or
-organize known facts. Record answers as they arrive so the interview can resume.
-Do not deliver a long mandatory questionnaire. Let the user say “you decide” and
-mark resulting choices as proposals rather than invented preferences.
+Use the [starter questionnaire](references/interview-questionnaire.md) as one compact
+batch, normally 8–10 questions. Omit questions already answered by the workspace or
+conversation; summarize those known facts instead. Every interview question is
+optional. Invite numbered answers, a free-form brief, partial answers or “you decide.”
+Explain that more detail helps tailor the result and reduces guesswork; do not
+promise a guaranteed quality improvement or require every field to be completed.
+
+Wait for the user's response or explicit skip/delegation; silence is not approval.
+After a partial response, proceed with a concrete proposed style using known facts
+and clearly labelled defaults for unanswered preferences. Record actual answers,
+proposals and open choices separately so the interview can resume. Do not chase
+skipped questions through repeated rounds. Ask a focused follow-up only for a
+material conflict or a decision that cannot reasonably be proposed, or when the
+user requests deeper exploration. Optional interview answers do not remove the
+separate choice between multiple saved styles or required export permissions.
 
 ### Start with use case and existing sources
 
-In the first short round, establish the missing essentials rather than beginning
-with isolated color/font choices. Adapt these prompts to what is already known:
+In the single batch, establish use case and sources alongside creative preferences.
+Adapt these prompts to what is already known:
 
 - What kinds of videos will you make, for whom and for what purpose? For example:
   tutorials, product demos, explainers, interviews, social clips or brand stories.
@@ -99,11 +108,11 @@ Expand only when a missing decision needs more evidence; this is not a broad aud
 or an automatic crawl of the company's accounts. Use the reference-handling guide
 to distinguish an authoritative brand source from optional inspiration.
 
-Return a concise synthesis before detailed style questions: what the sources
+After the response and source inspection, return a concise synthesis: what the sources
 establish, what could translate well to the intended videos, and what is still
 unknown. For example, a restrained product site may suggest its palette/type and
 clean diagrams, but it does not establish caption timing, music or presenter layout.
-Ask the next round only about meaningful gaps or conflicts. Save source evidence,
+Use labelled proposals for gaps and ask only about material conflicts. Save source evidence,
 user answers and proposed translations locally with the style so future videos
 reuse the result rather than researching and interviewing again.
 
