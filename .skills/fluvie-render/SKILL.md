@@ -34,12 +34,12 @@ components need a supported preview path. Never describe a preview as a verified
 final export. Keep feedback in chat; use video-review for encoded review artifacts.
 
 Check frame count, duration, resolution, audio sync and encoded transitions.
-Inspect actual frames and changed audio; preserve editable code and prior exports.
+Inspect actual frames and changed audio; preserve editable code and the current deliverable. Prior exports need not be archived.
 Native-only shader/Scene behavior must be tested on the chosen capture platform.
 If generated media is present, use cached/offline assets for repeat renders; do not
 silently invoke paid providers. Read [fluvie-generative-ai](../fluvie-generative-ai/SKILL.md).
 
 Report output paths and validation limits. Return authorized drafts through
-[video-review](../video-review/SKILL.md) with a separate revision workspace; human
+[video-review](../video-review/SKILL.md) with a fresh temporary review workspace; human
 Done submits feedback and does not authorize publication.
 Reference: https://docs.fluvie.dev/guides/reviewing-a-video/ .

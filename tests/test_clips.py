@@ -62,6 +62,19 @@ class ClipMediaTests(unittest.TestCase):
     def asset(self, clip):
         return self.p / 'composition' / clip['asset']
 
+    def test_flattened_export_uses_prepared_media_and_full_qa(self):
+        video.cut(self.args())
+        self.assertTrue((self.p / 'edit/clips.json').exists())
+        video.qa(self.args(file=str(self.p / 'composition/assets/rough-cut.mp4'), draft=False))
+        report = video.read(self.p / 'review/media-check.json')
+        self.assertTrue(report['passed'], report)
+        self.assertTrue(report['checks']['full_decode'])
+        self.assertIn('speech/lip sync', report['manual_checks_pending'])
+        config = video.read(self.p / 'project.json'); config['width'] = 320
+        video.write(self.p / 'project.json', config)
+        with self.assertRaisesRegex(ValueError, 'Media checks failed'):
+            video.qa(self.args(file=str(self.p / 'composition/assets/rough-cut.mp4'), draft=False))
+
     def test_adjust_reuses_unchanged_media_and_remaps_scene_data(self):
         before = self.prepare()
         stamps = [self.asset(c).stat().st_mtime_ns for c in before['clips']]

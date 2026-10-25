@@ -19,7 +19,7 @@ graphics in main.dart or other authored files; generated clip data is disposable
 Use `sourceClip('intro')` to address a named clip. After boundary edits prepare
 again, reconcile the authored scenes/cues, and update their timeline manifest.
 Existing main.dart is protected from accidental regeneration. The explicit
-`--legacy-rough-cut` flag retains old flattened scaffolding. Preview and export
+flattened scaffold has been removed; compose uses clips. Preview and export
 share the authored composition; the default path needs no full cut MP4.
 
 Commands run from the toolkit root; `video.py` means `python3 scripts/video.py`.

@@ -139,8 +139,11 @@ guess them. IDs are project-local, unique, start with a letter, and contain at m
 It rejects out-of-source, reversed and overlapping ranges before writing, keeps
 the clip ID, recalculates all output positions and remaps source annotations.
 It converts word edits to explicit range decisions, retaining imported evidence
-in `provenance`; range edits provide no word alignment. Reconcile any word-based
-caption cues against the retained transcript. It does not rewrite authored Dart,
+in `provenance`. Whole measured words are remapped from that evidence; cut-through
+words are excluded and recorded in `partial_word_ids`. Source segment captions
+and SRT are rebuilt on every import/adjustment. Partial segments remain flagged
+in JSON and are excluded from SRT until reconciled; missing source timing clears
+stale captions rather than leaving them attached to the old edit. It does not rewrite authored Dart,
 approve an edit, stretch existing footage or encode a final video.
 
 `prepare-clips` writes H.264/AAC MP4s to `composition/assets/clips/` and records
@@ -155,10 +158,17 @@ files are retained locally; remove the clips directory to reclaim space, then
 prepare again. Never remove files while a preview/render uses them.
 
 Encoding currently uses source dimensions, project fps, libx264 fast/CRF 18,
-yuv420p and AAC at 48 kHz. It requires video plus audio and performs no HDR tone
-mapping, loudness processing or background removal. Tagged HLG/PQ HDR is rejected
-before encoding to avoid silently washing out footage. Use an explicit color/audio
-preparation workflow when needed, preserving provenance to the original source.
+yuv420p and AAC at 48 kHz, rounding odd source dimensions down to even pixels.
+It requires video plus audio. Tagged HLG/PQ HDR is rejected unless the project
+explicitly enables `media.hdr_to_sdr` in project.json. That setting uses linear-light
+zscale, Hable tone mapping and BT.709 output tags; select a zscale-capable executable
+with `media.ffmpeg`. Defaults preserve source color and gain. Optional
+`media.video_filter` and `media.audio_filter` accept approved FFmpeg filters, e.g.
+a measured fixed audio gain. These settings are included in cache identity and
+are reused by editor exports and the optional flattened `cut` command. They are
+technical preparation, not inferred creative grading or automatic normalization.
+Original-source hashes and timestamps remain authoritative. Inspect/listen to
+converted media; the tool does not choose a creator's color or loudness policy.
 Frame/AAC packet rounding can make the container slightly longer than the requested
 range. Metadata retains exact requested duration; generated scenes trim to it.
 Check joins and accumulated final-output timing; media probes do not establish
@@ -176,6 +186,30 @@ updating `composition/manifest.json` to the new timeline revision. Add
 set `clips_digest` using `scripts.video.digest()` on the parsed `edit/clips.json`.
 This also detects changed source/profile inputs even when cut times are unchanged.
 
-`cut` remains an optional flattened export/diagnostic. The old scaffold is only
-available with `compose --legacy-rough-cut`; existing legacy compositions continue
-to use their cut manifest. No existing production videos are automatically migrated.
+`cut` remains an optional flattened export/diagnostic. The obsolete flattened scaffold has been removed. New compositions use clips;
+existing authored compositions remain protected and can be migrated explicitly. No existing production videos are automatically migrated.
+
+
+## Runtime and export checks
+
+`project.json` may set `composition_project` to an existing Flutter project
+directory inside the video workspace (default `composition`). Clip generation,
+scaffolding, freshness checks and export all use that directory. Its
+`fluvie.json` selects `path`, `entry`, `draftEntry`, and `executable`
+for the agent's preview/validate/export tools. Defaults are lib/main.dart, build,
+buildDraft and FLUVIE_BIN (then fluvie on PATH). Relative executable paths resolve
+from the Flutter project. Use one patched upstream checkout for CLI and package
+path overrides; see tools/previewer/README.md. New scaffolds pin fluvie and
+fluvie_media to the tested modern source revision. Existing pubspecs are preserved,
+including shaders/assets/overrides; the agent must add missing dependencies and
+asset declarations rather than replacing them. Any existing authored Dart prevents
+scaffolding without --replace, even if it uses a different filename.
+
+Pipeline exports save static validation to review/validation.json and stop on an
+invalid/unavailable result. QA saves full-decode, duration, frame-count, frame-rate,
+resolution and audio-duration checks. `passed` means these mechanical checks only;
+manual_checks_pending lists sync, transitions, captions and creative acceptance.
+Boundary samples include the frames before/at/after each cut; use --draft when
+checking the half-size draft entry. One current draft/final output is sufficient;
+review feedback is tied to exact bytes in a disposable review workspace, not a
+mandatory deliverable history. Never replace a file during its active review.

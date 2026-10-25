@@ -72,7 +72,7 @@ Check APIs, not just the `0.3.1` version label. Keep a compatible upstream check
 outside your video project and toolkit. Run `flutter pub get` in that checkout;
 a small local executable can forward arguments to
 `dart /absolute/fluvie/packages/fluvie_cli/bin/fluvie.dart "$@"`.
-Set `FLUVIE_PREVIEW_BIN` to that executable (a path, not a shell command).
+Set `FLUVIE_BIN` to that executable (a path, not a shell command).
 For preview audio, include `flutter_test: {sdk: flutter}` in the composition
 project’s dev dependencies and run `flutter pub get`; upstream builds its audio
 mix through Flutter’s test harness and needs the SDK-pinned test API.
@@ -192,3 +192,35 @@ host needs this explicit integration; a custom host must be retained/reapplied i
 its generated cache is rebuilt.
 
 Validate with `flutter pub get`, `flutter analyze` and `flutter test` in `flutter/`.
+
+## Shared project configuration
+
+Preview, validation and pipeline export read `composition/fluvie.json` (or
+`fluvie.json` at the selected Flutter project root):
+
+```json
+{"path":"lib/video.dart","entry":"build","draftEntry":"buildDraft","executable":"/absolute/bin/fluvie"}
+```
+
+For a nonstandard Flutter project folder, set `composition_project` in the video
+workspace project.json; the pipeline then reads fluvie.json from that directory.
+Project executable wins over `FLUVIE_BIN`; the default is `fluvie` on PATH.
+Explicit preview file/entry and validator executable arguments override defaults.
+The old preview-only environment variable is removed. CLI and package must use
+the same pinned source checkout with the compatibility patches. Scaffold pins
+that source revision rather than the incompatible original hosted release;
+existing manifests, shaders and dependency overrides are never overwritten.
+Use path overrides to the patched checkout for preview fixes in the Dart package.
+
+Apply `patches/fluvie-preview-scene-warmup.patch` after the three patches above.
+It opts interactive previews into first-frame warming of future clips and bounded
+sequential decoding. Default/export behavior is unchanged. This is a reconstructed
+shared fix, tested against the pinned revision, not a recovered production patch
+or an upstream-merged change. It trades initial preparation and one retained frame
+per future source for avoiding cold boundary lookups. Source geometry limits
+active decode batches to 32 MiB (at least one frame). Test with:
+
+```sh
+cd packages/fluvie
+flutter test test/rendering/preview_clip_frames_test.dart test/rendering/runtime/preview_pending_audio_test.dart
+```

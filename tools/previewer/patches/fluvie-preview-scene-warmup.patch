@@ -1,0 +1,135 @@
+diff --git a/packages/fluvie/lib/src/rendering/composition_session.dart b/packages/fluvie/lib/src/rendering/composition_session.dart
+index bb4ebdc..3be9302 100644
+--- a/packages/fluvie/lib/src/rendering/composition_session.dart
++++ b/packages/fluvie/lib/src/rendering/composition_session.dart
+@@ -93,6 +93,7 @@ final class CompositionSession {
+     this.hostFrameCount = 1,
+     this.onGenerativeProgress,
+     this.clipLookaheadFrames = 0,
++    this.warmFutureClips = false,
+     this.cancellation,
+   }) : mountKey = mountKey ?? GlobalKey(debugLabel: 'fluvie prepared composition');
+
+@@ -135,6 +136,9 @@ final class CompositionSession {
+   /// Sequential source decode-ahead. Zero favors seeks; exports use 15 frames.
+   final int clipLookaheadFrames;
+
++  /// Opt-in first-frame warming for interactive preview only.
++  final bool warmFutureClips;
++
+   /// Cancellation owner shared with preparation backends and frame capture.
+   final RenderCancellation? cancellation;
+
+diff --git a/packages/fluvie/lib/src/rendering/composition_session_resources.dart b/packages/fluvie/lib/src/rendering/composition_session_resources.dart
+index ce0b007..931bf4f 100644
+--- a/packages/fluvie/lib/src/rendering/composition_session_resources.dart
++++ b/packages/fluvie/lib/src/rendering/composition_session_resources.dart
+@@ -163,6 +163,7 @@ extension _SessionPreparation on CompositionSession {
+       clipPlans,
+       fps: fps,
+       lookaheadFrames: clipLookaheadFrames,
++      warmFutureClips: warmFutureClips,
+     );
+     if (decodeImages) {
+       final images = [..._images];
+diff --git a/packages/fluvie/lib/src/rendering/preview_clip_frames.dart b/packages/fluvie/lib/src/rendering/preview_clip_frames.dart
+index 671b99e..d8b545b 100644
+--- a/packages/fluvie/lib/src/rendering/preview_clip_frames.dart
++++ b/packages/fluvie/lib/src/rendering/preview_clip_frames.dart
+@@ -12,7 +12,9 @@ import 'package:fluvie/src/rendering/collect_composition_media.dart';
+ /// ten-minute source never needs ten minutes of decoded RGBA before editing.
+ final class PreviewClipFrames {
+   /// Collects clip timing from [composition] and caches frames in [resolver].
+-  PreviewClipFrames(this.resolver, this.composition) : lookaheadFrames = 0;
++  PreviewClipFrames(this.resolver, this.composition, {
++    this.lookaheadFrames = 0, this.warmFutureClips = false,
++  });
+
+   /// Uses clip windows discovered from actual mounted Flutter elements.
+   PreviewClipFrames.fromPlans(
+@@ -20,6 +22,7 @@ final class PreviewClipFrames {
+     Iterable<ClipPlan> plans, {
+     required int fps,
+     this.lookaheadFrames = 0,
++    this.warmFutureClips = false,
+   })
+     // Keep the public named fps argument while storing the private clock.
+     : composition = const SizedBox.shrink(),
+@@ -37,6 +40,9 @@ final class PreviewClipFrames {
+
+   /// Bounded sequential decode-ahead; preview seeks use zero, exports use 15.
+   final int lookaheadFrames;
++
++  /// Preview-only opt-in: retain the first picture of future clip windows.
++  final bool warmFutureClips;
+   final List<ClipPlan> _plans = [];
+   final Map<MediaSource, Set<int>> _ready = {};
+   int _fps = 30;
+@@ -71,7 +77,7 @@ final class PreviewClipFrames {
+     final wanted = <MediaSource, Set<int>>{};
+     final active = <MediaSource>{};
+     for (final plan in _plans) {
+-      if (plan.windowLength <= 0 || frame < plan.windowStart) continue;
++      if (plan.windowLength <= 0 || (frame < plan.windowStart && !warmFutureClips)) continue;
+       final meta = resolver.clipMetadataFor(plan.source);
+       final timeline = clipTimelineFor(resolver, plan.source);
+       final bounds = resolveClipTrimBounds(plan.trim, meta, timeline: timeline);
+@@ -97,7 +103,7 @@ final class PreviewClipFrames {
+       // only probed geometry until they become visible.
+       final current = at(frame.clamp(plan.windowStart, end));
+       requested.add(current);
+-      if (frame <= end) active.add(plan.source);
++      if (frame >= plan.windowStart && frame <= end) active.add(plan.source);
+       if (frame >= plan.windowStart &&
+           frame <= end &&
+           !(_ready[plan.source]?.contains(current) ?? false)) {
+diff --git a/packages/fluvie/lib/src/rendering/runtime/preview_media_scope.dart b/packages/fluvie/lib/src/rendering/runtime/preview_media_scope.dart
+index e33b6d2..53738c5 100644
+--- a/packages/fluvie/lib/src/rendering/runtime/preview_media_scope.dart
++++ b/packages/fluvie/lib/src/rendering/runtime/preview_media_scope.dart
+@@ -286,6 +286,8 @@ class _PreviewMediaScopeState extends State<PreviewMediaScope> {
+             context.getInheritedWidgetOfExactType<DefaultAssetBundle>()?.bundle;
+         final session = CompositionSession(
+           composition: composition,
++          clipLookaheadFrames: widget.frames == null ? 0 : 15,
++          warmFutureClips: widget.frames != null,
+           resolver: scope.resolver,
+           mountKey: _compositionKey,
+           generative: widget.generative ?? const NoGenerativeResolver(),
+@@ -325,7 +327,8 @@ class _PreviewMediaScopeState extends State<PreviewMediaScope> {
+       } else {
+         await scope.resolver.preResolveAll(collectCompositionMedia(composition));
+         if (widget.frames != null) {
+-          preview = PreviewClipFrames(scope.resolver, composition);
++          preview = PreviewClipFrames(scope.resolver, composition,
++            lookaheadFrames: 15, warmFutureClips: true);
+           await preview.initialize();
+           await preview.prepare(widget.frames!.value);
+         } else {
+diff --git a/packages/fluvie/test/rendering/preview_clip_frames_test.dart b/packages/fluvie/test/rendering/preview_clip_frames_test.dart
+index 765895c..b97e6b0 100644
+--- a/packages/fluvie/test/rendering/preview_clip_frames_test.dart
++++ b/packages/fluvie/test/rendering/preview_clip_frames_test.dart
+@@ -38,6 +38,22 @@ Future<_RecordingResolver> _resolver({int width = 160, int height = 90}) async {
+ }
+
+ void main() {
++  test('preview warms future boundary and retains it across seeks', () async {
++    final resolver = await _resolver();
++    final frames = PreviewClipFrames.fromPlans(resolver,
++      [_plan(start: 20, length: 10)], fps: 30,
++      lookaheadFrames: 15, warmFutureClips: true);
++    await frames.prepare(0);
++    expect(resolver.requests, [[0]]);
++    await frames.prepare(20);
++    expect(resolver.requests, hasLength(1));
++    await frames.prepare(21);
++    expect(resolver.requests.last, [1,2,3,4,5,6,7,8,9]);
++    await frames.prepare(0);
++    expect(frames.ready[_source], contains(0));
++    expect(frames.ready[_source], hasLength(1));
++  });
++
+   test('sixty sequential frames use four bounded batches and retain current pictures', () async {
+     final resolver = await _resolver();
+     final frames = PreviewClipFrames.fromPlans(resolver, [_plan()], fps: 30, lookaheadFrames: 15);

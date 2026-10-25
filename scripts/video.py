@@ -9,9 +9,13 @@ import re
 import shutil
 import subprocess
 import tempfile
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from fluvie_project import settings, PIN
+from validate_fluvie import validate
 
 
 def read(path):
@@ -155,6 +159,62 @@ def import_cut(data, duration):
     return result
 
 
+def remap_words(timeline, evidence):
+    """Retain only whole, measured source words; never invent cut-word timing."""
+    while evidence.get('provenance'):
+        evidence = evidence['provenance']
+    if evidence.get('version') != 1:
+        return
+    words, partial = [], []
+    for i, word in enumerate(evidence.get('words', [])):
+        a, b = word['start'], word['end']
+        for span in timeline['spans']:
+            if max(a, span['source_start']) >= min(b, span['source_end']):
+                continue
+            if a < span['source_start'] or b > span['source_end']:
+                partial.append(f'w{i:06d}')
+                continue
+            offset = span['output_start'] - span['source_start']
+            words.append(dict(id=f'w{i:06d}', text=word['word'], source_start=a,
+                              source_end=b, start=a+offset, end=b+offset))
+    timeline['words'] = words
+    timeline['partial_word_ids'] = partial
+    timeline['revision'] = digest({k: v for k, v in timeline.items() if k != 'revision'})
+
+
+def remap_transcript(p, timeline):
+    source = p / 'transcript/segments.json'
+    mapped = []
+    if source.exists():
+        for segment in read(source)['segments']:
+            for span in timeline['spans']:
+                a = max(segment['source_start'], span['source_start'])
+                b = min(segment['source_end'], span['source_end'])
+                if a < b:
+                    mapped.append(dict(**segment,
+                        output_start=span['output_start'] + a - span['source_start'],
+                        output_end=span['output_start'] + b - span['source_start'],
+                        partial=a != segment['source_start'] or b != segment['source_end']))
+    # Always replace derived artifacts, including when source timing is absent.
+    write(p / 'transcript/output-segments.json', dict(time_base='output',
+          timeline_revision=timeline['revision'], granularity='segment', segments=mapped,
+          status='needs-caption-review' if any(x['partial'] for x in mapped) else
+                 ('mapped' if source.exists() else 'source-transcript-unavailable')))
+    def stamp(seconds):
+        ms = round(seconds * 1000)
+        return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
+    # A truncated segment's full text is evidence, not a valid subtitle.
+    cues = [x for x in mapped if not x['partial']]
+    if not source.exists():
+        cues = [dict(text=w['text'], output_start=w['start'], output_end=w['end'])
+                for w in timeline['words']]
+    target = p / 'transcript/output.srt'
+    temporary = target.with_suffix('.srt.tmp')
+    temporary.write_text(''.join(f"{i+1}\n{stamp(x['output_start'])} --> {stamp(x['output_end'])}\n{x['text']}\n\n"
+                                 for i, x in enumerate(cues)), encoding='utf-8')
+    temporary.replace(target)
+
+
 def map_annotations(annotations, timeline):
     if annotations.get('version') != 1:
         raise ValueError('Expected annotations version 1')
@@ -180,6 +240,14 @@ def project_dir(value):
     if not (p / 'project.json').exists():
         raise ValueError(f'Not a video project: {p}')
     return p
+
+
+def composition_dir(p):
+    relative = read(p / 'project.json').get('composition_project', 'composition')
+    root = (p / relative).resolve()
+    if root == p or not root.is_relative_to(p):
+        raise ValueError('composition_project must name a directory inside the video workspace')
+    return root
 
 
 def init(args):
@@ -229,7 +297,9 @@ def import_edit(args):
                 span['clip_id'] = identity
         identify_spans(timeline['spans'], timeline['spans'])
         timeline['revision'] = digest({k: v for k, v in timeline.items() if k != 'revision'})
+    remap_words(timeline, data)
     mapped = map_annotations(read(p / 'annotations.json'), timeline)
+    remap_transcript(p, timeline)
     write(p / 'edit/decisions.json', data)
     write(p / 'edit/timeline.json', timeline)
     write(p / 'storyboard/annotations.resolved.json', mapped)
@@ -259,19 +329,25 @@ def adjust_clip(args):
     data = dict(version=2, videoPath=config['source'], retainedRanges=ranges,
                 provenance=decisions.get('provenance', decisions))
     updated = import_cut(data, duration)  # validates source bounds and neighbors
+    remap_words(updated, data)
     mapped = map_annotations(read(p / 'annotations.json'), updated)
+    remap_transcript(p, updated)
     write(p / 'edit/decisions.json', data)
     write(p / 'edit/timeline.json', updated)
     write(p / 'storyboard/annotations.resolved.json', mapped)
-    print(f"Updated {args.clip_id}; {updated['duration']:.3f}s total. Run prepare-clips, then reconcile scene durations and cues. Range edits do not supply word alignment.")
+    print(f"Updated {args.clip_id}; {updated['duration']:.3f}s total. Run prepare-clips, then reconcile scene durations and cues. Measured words and source captions have been remapped; partial cues need review.")
 
 
 def clip_profile(config):
     fps = config['fps']
     if not finite(fps) or fps <= 0:
         raise ValueError('Project fps must be positive and finite')
-    return dict(version=1, fps=fps, video_codec='libx264', preset='fast', crf=18,
-                pixel_format='yuv420p', audio_codec='aac', sample_rate=48000)
+    return dict(version=2, fps=fps, video_codec='libx264', preset='fast', crf=18,
+                pixel_format='yuv420p', audio_codec='aac', sample_rate=48000,
+                video_filter=config.get('media', {}).get('video_filter', ''),
+                audio_filter=config.get('media', {}).get('audio_filter', ''),
+                hdr_to_sdr=config.get('media', {}).get('hdr_to_sdr', False),
+                ffmpeg=config.get('media', {}).get('ffmpeg', 'ffmpeg'))
 
 
 def write_clip_dart(p, clips):
@@ -280,7 +356,7 @@ def write_clip_dart(p, clips):
         '  SourceClip(' + ', '.join([dart_string(c['clip_id']), dart_string(c['asset']),
                                    *[str(float(c[k])) for k in ('source_start', 'source_end', 'output_start', 'output_end')]]) + '),'
         for c in clips)
-    target = p / 'composition/lib/source_clips.dart'
+    target = composition_dir(p) / 'lib/source_clips.dart'
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix('.dart.tmp')
     temporary.write_text('''// Generated by prepare-clips. Author visuals in other files.
@@ -308,10 +384,10 @@ def prepare_clips(args):
     source_hash = file_digest(source)
     profile = clip_profile(config)
     source_info = probe(source)
-    if any(s.get('color_transfer') in ('arib-std-b67', 'smpte2084') for s in source_info['streams']):
+    if any(s.get('color_transfer') in ('arib-std-b67', 'smpte2084') for s in source_info['streams']) and not profile['hdr_to_sdr']:
         raise ValueError('HDR footage needs explicit color-managed preparation before the SDR clip encoder; preserve original-source provenance')
     clips, encoded = [], 0
-    folder = p / 'composition/assets/clips'
+    folder = composition_dir(p) / 'assets/clips'
     folder.mkdir(parents=True, exist_ok=True)
     for span in timeline['spans']:
         start, end = span['source_start'], span['source_end']
@@ -333,9 +409,17 @@ def prepare_clips(args):
             # requested boundary when transcoding. Each proxy starts at local zero.
             temporary = folder / f'{key}.pending.mp4'
             try:
-                run(['ffmpeg', '-v', 'error', '-y', '-ss', start, '-i', source,
+                vf = []
+                if profile['hdr_to_sdr']:
+                    vf.append('zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv')
+                if profile['video_filter']:
+                    vf.append(profile['video_filter'])
+                vf.append(f'scale=trunc(iw/2)*2:trunc(ih/2)*2,fps={profile["fps"]}')
+                audio_args = ['-af', profile['audio_filter']] if profile['audio_filter'] else []
+                color_args = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709'] if profile['hdr_to_sdr'] else []
+                run([profile['ffmpeg'], '-nostdin', '-v', 'error', '-y', '-ss', start, '-i', source,
                      '-t', end - start, '-map', '0:v:0', '-map', '0:a:0',
-                     '-vf', f'fps={profile["fps"]}', '-c:v', profile['video_codec'], '-preset', profile['preset'],
+                     '-vf', ','.join(vf), *audio_args, *color_args, '-c:v', profile['video_codec'], '-preset', profile['preset'],
                      '-crf', profile['crf'], '-pix_fmt', profile['pixel_format'],
                      '-c:a', profile['audio_codec'], '-ar', profile['sample_rate'],
                      '-movflags', '+faststart', temporary])
@@ -372,7 +456,7 @@ def checked_clips(p, timeline):
             manifest['source_sha256'] != file_digest(config['source'])):
         raise ValueError('Prepared clips are stale; run prepare-clips and reconcile the composition')
     for clip in manifest['clips']:
-        if file_digest(p / 'composition' / clip['asset']) != clip['sha256']:
+        if file_digest(composition_dir(p) / clip['asset']) != clip['sha256']:
             raise ValueError('Prepared clip changed; run prepare-clips')
     return manifest
 
@@ -394,18 +478,21 @@ def annotate(args):
 def cut(args):
     p = project_dir(args.project)
     config, timeline = read(p / 'project.json'), read(p / 'edit/timeline.json')
-    filters, streams = [], []
-    for i, s in enumerate(timeline['spans']):
-        a, b = s['source_start'], s['source_end']
-        filters += [f'[0:v:0]trim=start={a}:end={b},setpts=PTS-STARTPTS,fps={config["fps"]}[v{i}]',
-                    f'[0:a:0]atrim=start={a}:end={b},asetpts=PTS-STARTPTS[a{i}]']
+    prepare_clips(args)
+    clips = checked_clips(p, timeline)['clips']
+    inputs, filters, streams = [], [], []
+    for i, clip in enumerate(clips):
+        inputs += ['-i', composition_dir(p) / clip['asset']]
+        duration = clip['source_end'] - clip['source_start']
+        filters += [f'[{i}:v]trim=duration={duration},setpts=PTS-STARTPTS[v{i}]',
+                    f'[{i}:a]atrim=duration={duration},asetpts=PTS-STARTPTS[a{i}]']
         streams.append(f'[v{i}][a{i}]')
     filters.append(''.join(streams) + f'concat=n={len(streams)}:v=1:a=1[v][a]')
     graph = p / 'edit/filtergraph.txt'
     graph.write_text(';\n'.join(filters))
-    target = p / 'composition/assets/rough-cut.mp4'
+    target = composition_dir(p) / 'assets/rough-cut.mp4'
     temporary = target.with_name('rough-cut.pending.mp4')
-    run(['ffmpeg', '-v', 'error', '-y', '-i', config['source'], *filter_graph_args(graph),
+    run(['ffmpeg', '-nostdin', '-v', 'error', '-y', *inputs, *filter_graph_args(graph),
          '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
          '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '48000', '-movflags', '+faststart', temporary])
     temporary.replace(target)
@@ -423,31 +510,45 @@ def compose(args):
     p = project_dir(args.project)
     config = read(p / 'project.json')
     timeline = read(p / 'edit/timeline.json')
-    composition = p / 'composition'
-    main = composition / 'lib/main.dart'
-    if main.exists() and not args.replace:
+    composition = composition_dir(p)
+    runtime = settings(composition)
+    main = Path(runtime['path'])
+    authored = [f for f in (composition / 'lib').rglob('*.dart') if f.name != 'source_clips.dart']
+    if (main.exists() or authored) and not args.replace:
         raise ValueError('Composition exists. Edit it directly, or explicitly pass --replace to regenerate.')
-    legacy = getattr(args, 'legacy_rough_cut', False)
-    if legacy:
-        if read(p / 'edit/cut-manifest.json')['timeline_revision'] != timeline['revision']:
-            raise ValueError('Rough cut is stale; run cut first')
-    else:
-        clips = checked_clips(p, timeline)
+    clips = checked_clips(p, timeline)
     main.parent.mkdir(parents=True, exist_ok=True)
     package = Path(os.environ.get('CMRX_COMPONENT_PACKAGE', str(ROOT / 'components')))
     package_name = os.environ.get('CMRX_COMPONENT_NAME', 'video_components')
     token_class = os.environ.get('CMRX_TOKEN_CLASS')
     background = f'{token_class}.ink' if token_class else 'const Color(0xFF000000)'
-    (composition / 'pubspec.yaml').write_text(f'''name: video_composition
+    pubspec = composition / 'pubspec.yaml'
+    if not pubspec.exists():
+        pubspec.write_text(f'''name: video_composition
 publish_to: none
 environment:
   sdk: '>=3.12.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
-  fluvie: 0.3.1
+  fluvie:
+    git:
+      url: https://github.com/SimonErich/fluvie.git
+      ref: {PIN}
+      path: packages/fluvie
   {package_name}:
     path: {package}
+dependency_overrides:
+  fluvie:
+    git:
+      url: https://github.com/SimonErich/fluvie.git
+      ref: {PIN}
+      path: packages/fluvie
+  fluvie_media:
+    git:
+      url: https://github.com/SimonErich/fluvie.git
+      ref: {PIN}
+      path: packages/fluvie_media
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -456,39 +557,33 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-{'' if legacy else '    - assets/clips/'}
+    - assets/clips/
 ''')
-    if legacy:
-        scene_code = f'''Scene(
-    duration: {timeline['duration']}.seconds,
-    background: Background.color({background}),
-    children: [Clip.asset('assets/rough-cut.mp4', fit: BoxFit.contain)],
-  )'''
-    else:
-        scene_code = f'''for (final clip in sourceClips) Scene(
+    scene_code = f'''for (final clip in sourceClips) Scene(
     duration: clip.duration.seconds,
     background: Background.color({background}),
     children: [Clip.asset(clip.asset,
       trim: 0.seconds.to(clip.duration.seconds), fit: BoxFit.contain)],
   )'''
+    clip_import = os.path.relpath(composition / 'lib/source_clips.dart', main.parent).replace(os.sep, '/')
     main.write_text(f'''import 'package:flutter/widgets.dart' hide Animation, Clip, Image, Tween;
 import 'package:fluvie/fluvie.dart';
 import 'package:{package_name}/{package_name}.dart';
-{'' if legacy else "import 'source_clips.dart';"}
+import '{clip_import}';
 
 // Baseline composition. Author scene visuals here; source_clips.dart is generated.
 // Keep each scene's narration-bearing Clip mounted under its graphics.
-Video buildDraft() => draftVideo(build());
+Video {runtime['draftEntry']}() => draftVideo({runtime['entry']}());
 
-Video build() => Video(
+Video {runtime['entry']}() => Video(
   size: const VideoSize({config.get('width', 1920)}, {config.get('height', 1080)}),
   fps: {config['fps']},
   scenes: [{scene_code}],
 );
 ''')
     write(composition / 'manifest.json', dict(timeline_revision=timeline['revision'],
-                                             media_mode='rough-cut' if legacy else 'clips',
-                                             clips_digest=None if legacy else digest(clips),
+                                             media_mode='clips',
+                                             clips_digest=digest(clips),
                                              note='Baseline footage; agent authors animations from storyboard.'))
     print(main)
 
@@ -496,8 +591,8 @@ Video build() => Video(
 def fluvie(args):
     p = project_dir(args.project)
     timeline = read(p / 'edit/timeline.json')
-    manifest = read(p / 'composition/manifest.json')
-    files = ['composition/manifest.json']
+    manifest = read(composition_dir(p) / 'manifest.json')
+    files = [composition_dir(p) / 'manifest.json']
     if manifest.get('media_mode') == 'clips':
         clips = checked_clips(p, timeline)
         if manifest.get('clips_digest') != digest(clips):
@@ -509,8 +604,16 @@ def fluvie(args):
             raise ValueError(f'{file} is stale. Reconcile narration and animation before proceeding.')
     if args.command == 'render' and args.final and not args.approved:
         raise ValueError('Final export needs --approved after the user approves the preview. Use draft otherwise.')
-    command = ['fluvie', 'preview' if args.command == 'preview' else 'render', 'lib/main.dart']
+    runtime = settings(composition_dir(p))
+    command = [runtime['executable'], 'preview' if args.command == 'preview' else 'render',
+               runtime['path'], '--project', str(composition_dir(p)), '--entry', runtime['entry']]
+    if args.command == 'preview':
+        command += ['--device', 'web-server', '--toolchain', 'system', '--no-download']
     if args.command == 'render':
+        validation = validate(runtime['path'], project=composition_dir(p), fluvie_bin=runtime['executable'])
+        write(p / 'review/validation.json', validation)
+        if not validation['ok']:
+            raise ValueError('Static validation failed or unavailable; inspect review/validation.json')
         config = read(p / 'project.json')
         scale = 1 if args.final else .5
         estimate = config.get('width', 1920) * config.get('height', 1080) * scale ** 2 * 4 * config['fps'] * timeline['duration']
@@ -520,21 +623,46 @@ def fluvie(args):
         target = p / 'renders' / ('final.mp4' if args.final else 'draft.mp4')
         command += ['--out', str(target), '--quality', 'high' if args.final else 'low']
         if not args.final:
-            command += ['--entry', 'buildDraft']
-    run(command, cwd=p / 'composition')
+            command[command.index('--entry') + 1] = runtime['draftEntry']
+    run(command, cwd=composition_dir(p))
 
 
 def qa(args):
     p = project_dir(args.project)
     target = Path(args.file).resolve()
     info, timeline = probe(target), read(p / 'edit/timeline.json')
-    kinds = {s['codec_type'] for s in info['streams']}
+    config = read(p / 'project.json')
+    counted = json.loads(run(['ffprobe', '-v', 'error', '-count_frames', '-show_streams',
+                              '-of', 'json', target], capture_output=True, text=True).stdout)
+    picture = next((x for x in counted['streams'] if x['codec_type'] == 'video'), {})
+    audio = next((x for x in info['streams'] if x['codec_type'] == 'audio'), {})
+    scale = .5 if getattr(args, 'draft', False) else 1
+    expected_frames = round(timeline['duration'] * config['fps'])
+    def rate(value):
+        a, b = value.split('/')
+        return float(a) / float(b) if float(b) else 0
+    decode = subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-i', str(target),
+                             '-map', '0:v:0', '-map', '0:a:0', '-f', 'null', '-'],
+                            capture_output=True, text=True)
+    tolerance = max(1 / config['fps'], 1024 / 48000) + .005
     delta = abs(float(info['format']['duration']) - timeline['duration'])
-    result = dict(file=str(target), duration_delta=delta, has_video='video' in kinds,
-                  has_audio='audio' in kinds, passed=delta < .15 and {'video', 'audio'} <= kinds)
+    checks = dict(full_decode=decode.returncode == 0, has_video=bool(picture), has_audio=bool(audio),
+        duration=delta <= tolerance,
+        frame_count=abs(int(picture.get('nb_read_frames', -999)) - expected_frames) <= 1,
+        fps=abs(rate(picture.get('avg_frame_rate', '0/1')) - config['fps']) < .001,
+        resolution=(picture.get('width'), picture.get('height')) ==
+                   (int(config.get('width', 1920)*scale), int(config.get('height', 1080)*scale)),
+        audio_duration=abs(float(audio.get('duration', -999)) - timeline['duration']) <= tolerance)
+    result = dict(file=str(target), timeline_revision=timeline['revision'], duration_delta=delta,
+        checks=checks, passed=all(checks.values()), expected_frames=expected_frames,
+        measured_frames=picture.get('nb_read_frames'), decode_error=decode.stderr[-2000:],
+        manual_checks_pending=['speech/lip sync', 'visual transitions', 'caption correctness', 'creative acceptance'])
     write(p / 'review/media-check.json', result)
-    for i, fraction in enumerate([.1, .5, .9]):
-        run(['ffmpeg', '-v', 'error', '-y', '-ss', str(timeline['duration'] * fraction), '-i', target,
+    samples = sorted(set([timeline['duration'] * f for f in (.1, .5, .9)] +
+        [max(0, min(timeline['duration'] - 1/config['fps'], span['output_start'] + offset/config['fps']))
+         for span in timeline['spans'][1:] for offset in (-1, 0, 1)]))
+    for i, seconds in enumerate(samples):
+        run(['ffmpeg', '-v', 'error', '-y', '-ss', str(seconds), '-i', target,
              '-frames:v', '1', p / f'review/frame-{i}.png'])
     print(json.dumps(result, indent=2))
     if not result['passed']:
@@ -559,6 +687,8 @@ def main():
     for name, fn in [('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
         p = commands.add_parser(name); p.add_argument('project'); p.set_defaults(func=fn)
         if name in ['qa', 'import-edit']: p.add_argument('file')
+        if name == 'qa':
+            p.add_argument('--draft', action='store_true', help='Expect half-resolution draft output')
         if name == 'soundmap':
             p.add_argument('--transcript')
             p.add_argument('--transcript-time-base', choices=['source'])
@@ -567,7 +697,6 @@ def main():
             p.add_argument('--padding', type=float, default=.08)
         if name == 'compose':
             p.add_argument('--replace', action='store_true')
-            p.add_argument('--legacy-rough-cut', action='store_true', help='Explicit compatibility with a flattened cut')
         if name == 'adjust-clip':
             p.add_argument('clip_id')
             p.add_argument('--start', type=float, help='New start in original-source seconds')

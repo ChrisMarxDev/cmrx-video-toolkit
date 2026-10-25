@@ -86,14 +86,14 @@ class MediaIntegrationTests(unittest.TestCase):
             (p / 'composition/lib').mkdir(parents=True)
             def call(*args):
                 return subprocess.run(['python3', str(ROOT / 'scripts/video.py'), *map(str, args)], capture_output=True, text=True)
-            for command in [('import-edit', p, p / 'edit.json'), ('cut', p), ('compose', p, '--legacy-rough-cut')]:
+            for command in [('import-edit', p, p / 'edit.json'), ('cut', p), ('compose', p)]:
                 result = call(*command)
                 self.assertEqual(result.returncode, 0, result.stderr)
             info = video.probe(p / 'composition/assets/rough-cut.mp4')
             self.assertLess(abs(float(info['format']['duration']) - 1.1), .1)
             self.assertEqual({s['codec_type'] for s in info['streams']}, {'audio', 'video'})
             self.assertTrue((p / 'edit/narration.wav').exists())
-            self.assertIn("Clip.asset('assets/rough-cut.mp4'", (p / 'composition/lib/main.dart').read_text())
+            self.assertIn("Clip.asset(clip.asset", (p / 'composition/lib/main.dart').read_text())
             self.assertIn(str(ROOT / 'components'), (p / 'composition/pubspec.yaml').read_text())
             self.assertIn('Background.color(const Color(0xFF000000))', (p / 'composition/lib/main.dart').read_text())
             self.assertNotEqual(call('compose', p).returncode, 0)

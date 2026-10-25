@@ -16,10 +16,17 @@ class WorkspaceAdapterTests(unittest.TestCase):
                 (p/name).mkdir(parents=True)
             (p/'project.json').write_text(json.dumps({'fps':30,'width':540,'height':960}))
             (p/'edit/timeline.json').write_text(json.dumps({'duration':2,'revision':'fixture'}))
-            (p/'edit/cut-manifest.json').write_text(json.dumps({'timeline_revision':'fixture'}))
+            (p/'source').write_bytes(b'fixture')
+            import hashlib
+            config=json.loads((p/'project.json').read_text()); config['source']=str(p/'source')
+            (p/'project.json').write_text(json.dumps(config))
+            import sys
+            sys.path.insert(0,str(ROOT/'scripts'))
+            import video
+            (p/'edit/clips.json').write_text(json.dumps(dict(timeline_revision='fixture', profile=video.clip_profile(config), source_sha256=hashlib.sha256(b'fixture').hexdigest(), clips=[])))
             env = dict(os.environ, CMRX_COMPONENT_NAME='private_design',
                        CMRX_COMPONENT_PACKAGE=str(p/'private_design'), CMRX_TOKEN_CLASS='PrivateTokens')
-            cmd = ['python3',str(ROOT/'scripts/video.py'),'compose',str(p),'--legacy-rough-cut']
+            cmd = ['python3',str(ROOT/'scripts/video.py'),'compose',str(p)]
             result = subprocess.run(cmd,env=env,capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             main=(p/'composition/lib/main.dart').read_text()

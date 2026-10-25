@@ -68,3 +68,8 @@ Browser saves use optimistic `revision` plus source fingerprint. Source metadata
 and transcript timing are immutable through the annotation endpoint. Save writes
 are atomic. Projects use ordinary local files; no database or server account is
 needed. Export does not mutate the saved review or original recording.
+
+Export uses the shared pipeline transcript mapper and clip preparation. Derived
+output-segments.json records the timeline revision; partial segment text is
+evidence only and is omitted from output.srt pending caption reconciliation.
+Later import-edit/adjust-clip calls rebuild those artifacts from source timing.

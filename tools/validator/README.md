@@ -31,7 +31,8 @@ exec dart /absolute/fluvie/packages/fluvie_cli/bin/fluvie.dart "$@"
 ```
 
 Make the launcher executable and pass its path with `--fluvie-bin`, or set
-`FLUVIE_BIN`. This is an executable path, not a command string. The upstream
+`FLUVIE_BIN`. Without an explicit --fluvie-bin, the project fluvie.json executable
+takes precedence over the environment, matching preview/export. This is an executable path, not a command string. The upstream
 checkout must have its own dependencies resolved. No FFmpeg, browser, model or
 provider key is needed by the validation operation.
 

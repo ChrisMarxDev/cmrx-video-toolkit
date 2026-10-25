@@ -42,7 +42,7 @@ export function createServer(runtime, { decorateResource, previewRuntime } = {})
       async () => ({ contents: [previewResource(previewRuntime.origins())] }));
     server.registerTool('open_preview', {
       description: 'Start or reuse a live authored Fluvie composition preview without encoding a video. Runs trusted Dart source inside the configured root. Requires the JSON web preview API. Returns starting immediately; poll get_preview until ready, then call show_preview once or present browserUrl. Source edits reload automatically. No editing, notes, export or approval in this player.',
-      inputSchema: { path: z.string().min(1), project: z.string().min(1), entry: z.string().optional() }, annotations,
+      inputSchema: { path: z.string().min(1).optional(), project: z.string().min(1), entry: z.string().optional() }, annotations,
     }, safe(args => previewRuntime.open(args)));
     server.registerTool('get_preview', {
       description: 'Read preview startup/reload status without opening a UI panel. Poll while starting; once ready call show_preview. A ready server is not proof of visual correctness.',

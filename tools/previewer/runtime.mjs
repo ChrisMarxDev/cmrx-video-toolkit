@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { realpath, stat } from 'node:fs/promises';
+import { realpath, stat, readFile } from 'node:fs/promises';
 import { resolve, relative, isAbsolute, extname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createInterface } from 'node:readline';
@@ -16,7 +16,7 @@ export function previewUrl(value) {
 // No rendering, copying compositions, or browser launch. Fluvie owns the Flutter
 // app, source watching, asset bridge, bounded frame decoding and audio playback.
 export class PreviewRuntime {
-  constructor({ root = process.cwd(), command = process.env.FLUVIE_PREVIEW_BIN || 'fluvie',
+  constructor({ root = process.cwd(), command = null,
     prefixArgs = [], timeoutMs = 300000, maxSessions = 3 } = {}) {
     Object.assign(this, { root: resolve(root), command, prefixArgs, timeoutMs, maxSessions });
     this.sessions = new Map();
@@ -39,8 +39,17 @@ export class PreviewRuntime {
     return next;
   }
 
-  async openOne({ path, project, entry = 'build' }) {
+  async openOne({ path, project, entry }) {
     if (this.closed) throw Error('Previewer is closed.');
+    const projectRoot = await this.scoped(project);
+    let config = {};
+    try { config = JSON.parse(await readFile(join(projectRoot, 'fluvie.json'), 'utf8')); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (!config || typeof config !== 'object' || Array.isArray(config)) throw Error('fluvie.json must contain an object');
+    path ??= join(projectRoot, config.path || 'lib/main.dart');
+    entry ??= config.entry || 'build';
+    let command = this.command || config.executable || process.env.FLUVIE_BIN || 'fluvie';
+    if (command.includes('/') || command.includes('\\')) command = resolve(projectRoot, command);
     if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(entry)) throw Error('Invalid Dart entry function.');
     const source = await this.scoped(path);
     const projectDir = await this.scoped(project);
@@ -62,7 +71,7 @@ export class PreviewRuntime {
     const id = randomUUID();
     const session = { id, path: source, project: projectDir, entry, status: 'starting', browserUrl: null, error: null, reloads: 0 };
     this.sessions.set(id, session);
-    const child = spawn(this.command, [...this.prefixArgs, 'preview', source, '--project', projectDir,
+    const child = spawn(command, [...this.prefixArgs, 'preview', source, '--project', projectDir,
       '--entry', entry, '--device', 'web-server', '--json', '--toolchain', 'system', '--no-download'],
     { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', shell: false });
     session.child = child;

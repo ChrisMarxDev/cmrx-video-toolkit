@@ -7,6 +7,7 @@ import math
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import uuid
@@ -121,19 +122,27 @@ def run(args, cancel=None):
     # Logs go to disk, not an unbounded pipe; cancellation works during long jobs.
     import tempfile
     with tempfile.TemporaryFile() as log:
-        proc = subprocess.Popen([str(a) for a in args], stdout=log, stderr=log)
+        proc = subprocess.Popen([str(a) for a in args], stdout=log, stderr=log, start_new_session=os.name != 'nt')
         while True:
             try:
                 code = proc.wait(timeout=.2)
                 break
             except subprocess.TimeoutExpired:
                 if cancel and cancel.is_set():
-                    proc.terminate()
+                    if os.name == 'nt':
+                        subprocess.run(['taskkill', '/pid', str(proc.pid), '/T', '/F'], capture_output=True)
+                    else:
+                        os.killpg(proc.pid, signal.SIGTERM)
                     try:
                         proc.wait(timeout=3)
                     except subprocess.TimeoutExpired:
                         proc.kill()
                         proc.wait()
+                    if os.name != 'nt':
+                        try:
+                            os.killpg(proc.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
                     raise ValueError('Cancelled. Completed preparation stages are kept for retry.')
         if code:
             log.seek(0, 2)
@@ -305,20 +314,7 @@ def export(doc, workspace, render=False, progress=lambda text: None, cancel=None
     write(target / 'annotations.json', annotations)
     write(target / 'storyboard/annotations.resolved.json', resolved)
     write(target / 'transcript/segments.json', doc['transcript'])
-    mapped_segments = []
-    for segment in doc['transcript']['segments']:
-        for span in timeline['spans']:
-            a, b = max(segment['source_start'], span['source_start']), min(segment['source_end'], span['source_end'])
-            if a < b:
-                mapped_segments.append(dict(**segment, output_start=span['output_start'] + a - span['source_start'],
-                                           output_end=span['output_start'] + b - span['source_start'],
-                                           partial=a != segment['source_start'] or b != segment['source_end']))
-    write(target / 'transcript/output-segments.json', dict(time_base='output', granularity='segment', segments=mapped_segments))
-    # Segment text cannot be split truthfully without alignment. Partial cues are flagged above.
-    def stamp(seconds):
-        ms = round(seconds * 1000)
-        return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
-    (target / 'transcript/output.srt').write_text('\n'.join(f"{i+1}\n{stamp(s['output_start'])} --> {stamp(s['output_end'])}\n{s['text']}\n" for i, s in enumerate(mapped_segments)), encoding='utf-8')
+    video.remap_transcript(target, timeline)
     for folder in ('composition/assets', 'composition/lib', 'renders', 'review'):
         (target / folder).mkdir(parents=True, exist_ok=True)
     (target / 'HANDOFF.md').write_text('''# Single-video review handoff
@@ -336,26 +332,14 @@ use edit/decisions.json and the pipeline import-edit command to rebuild mappings
 Never silently discard conflicting requests: removed-by-edit objects need review.
 Rectangles use normalized displayed source-video coordinates, excluding letterbox.
 Transcript timestamps have segment precision, not word alignment. Partial output
-segments retain the whole segment text and are flagged; review captions at cuts.
+segments retain evidence text in JSON but are omitted from SRT until reconciled.
 Source and output clocks remain distinct. Original media is never modified.
 The project references local original media; copy/relink that media when moving it.
 ''', encoding='utf-8')
     if render:
         progress('Rendering rough cut')
-        filters, streams = [], []
-        for i, span in enumerate(timeline['spans']):
-            a, b = span['source_start'], span['source_end']
-            filters.extend([f'[0:v]trim=start={a}:end={b},setpts=PTS-STARTPTS,scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=30[v{i}]', f'[0:a]atrim=start={a}:end={b},asetpts=PTS-STARTPTS[a{i}]'])
-            streams.append(f'[v{i}][a{i}]')
-        filters.append(''.join(streams) + f'concat=n={len(streams)}:v=1:a=1[v][a]')
-        graph = target / 'edit/filtergraph.txt'
-        graph.write_text(';\n'.join(filters), encoding='utf-8')
-        cut = target / 'composition/assets/rough-cut.mp4'
-        run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', source, *video.filter_graph_args(graph), '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-c:a', 'aac', '-movflags', '+faststart', cut], cancel)
-        if abs(float(video.probe(cut)['format']['duration']) - timeline['duration']) > .15:
-            raise ValueError(f'Render timing drift exceeds 150 ms; inspect {target}')
-        run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', cut, '-vn', '-c:a', 'pcm_s16le', target / 'edit/narration.wav'], cancel)
-        write(target / 'edit/cut-manifest.json', dict(timeline_revision=timeline['revision'], output=str(cut)))
+        # Run the canonical pipeline in a child so editor cancellation still stops it.
+        run([sys.executable, str(video.ROOT / 'scripts/video.py'), 'cut', str(target)], cancel)
     progress('Export complete')
     return str(target)
 

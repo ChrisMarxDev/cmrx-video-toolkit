@@ -38,7 +38,8 @@ test('starts web preview, reuses session, tracks reloads, stops process without 
   const initial = await open();
   assert.equal(initial.status, 'starting');
   const ready = await until(runtime, initial.sessionId, 'ready');
-  assert.equal(ready.reloads, 1);
+  for (let i = 0; i < 100 && runtime.get(initial.sessionId).reloads < 1; i++) await new Promise(r => setTimeout(r, 10));
+  assert.equal(runtime.get(initial.sessionId).reloads, 1);
   assert.equal((await open()).sessionId, initial.sessionId);
   assert.deepEqual(runtime.origins(), ['http://127.0.0.1:9876']);
   assert.equal((await runtime.stop(initial.sessionId)).status, 'closed');
@@ -99,4 +100,16 @@ test('startup failure retains diagnostics when process cleanup is denied', async
     const failed = await until(runtime, initial.sessionId, 'failed');
     assert.match(failed.error, /Preview cleanup failed: cleanup denied/);
   } finally { runtime.stopProcess = stop; }
+});
+
+test('project config selects executable, source and entry together', async t => {
+  const { root, runtime } = await fixture(t, `
+    import assert from 'node:assert/strict';
+    assert.equal(process.argv[process.argv.indexOf('--entry')+1], 'film');
+    console.log(JSON.stringify({schemaVersion:1,event:'ready',device:'web-server',url:'http://127.0.0.1:9876/'}));
+    setInterval(()=>{},1000);
+  `, { command: null });
+  await writeFile(join(root, 'fluvie.json'), JSON.stringify({executable:process.execPath,path:'video.dart',entry:'film'}));
+  const session = await runtime.open({project:'.'});
+  assert.equal((await until(runtime, session.sessionId, 'ready')).status, 'ready');
 });

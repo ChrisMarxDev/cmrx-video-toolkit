@@ -7,13 +7,15 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fluvie_project import settings
 
 
 class ValidationUnavailable(ValueError):
     pass
 
 
-def validate(path, *, project=None, fluvie_bin='fluvie', strict=False, timeout=120):
+def validate(path, *, project=None, fluvie_bin=None, strict=False, timeout=120):
     """Return a schema-1 report. Never execute authored Dart or change dependencies."""
     source = Path(path).expanduser().resolve()
     report = dict(schemaVersion=1, path=str(source), status='unavailable', ok=False,
@@ -34,6 +36,7 @@ def validate(path, *, project=None, fluvie_bin='fluvie', strict=False, timeout=1
             raise ValidationUnavailable('Timeout must be a positive finite number of seconds.')
         # Paths are arguments, never shell interpolation. A path-like executable is
         # resolved before changing cwd; bare commands are resolved through PATH.
+        fluvie_bin = fluvie_bin or settings(root)['executable']
         executable = str(Path(fluvie_bin).expanduser().resolve()) if '/' in fluvie_bin or '\\' in fluvie_bin else fluvie_bin
         result = subprocess.run(
             [executable, 'validate', str(source), '--project', str(root), '--json'],
@@ -65,7 +68,7 @@ def validate(path, *, project=None, fluvie_bin='fluvie', strict=False, timeout=1
             raise ValidationUnavailable('Fluvie exit status and diagnostics disagree; validation is inconclusive.')
         ok = not counts['error'] and not (strict and counts['warning'])
         report.update(status='valid' if ok else 'invalid', ok=ok, diagnostics=diagnostics, counts=counts)
-    except (OSError, subprocess.TimeoutExpired, ValidationUnavailable) as error:
+    except (OSError, subprocess.TimeoutExpired, ValueError) as error:
         report['error'] = str(error)
     return report
 
@@ -74,7 +77,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('path', help='Authored Dart file; relative imports stay in place')
     parser.add_argument('--project', help='Project directory (default: nearest pubspec.yaml)')
-    parser.add_argument('--fluvie-bin', default=os.environ.get('FLUVIE_BIN', 'fluvie'), help='Compatible Fluvie executable path, not a shell command')
+    parser.add_argument('--fluvie-bin', default=None, help='Compatible Fluvie executable path, not a shell command')
     parser.add_argument('--strict', action='store_true', help='Treat warnings as a failed check too')
     parser.add_argument('--json', action='store_true', help='Print one machine-readable report')
     parser.add_argument('--timeout', type=float, default=120, help='Analyzer timeout in seconds (default: 120)')

@@ -31,12 +31,13 @@ The file is copied to the local engine, not attached to chat or sent through MCP
 Do not pass workspace/transcript without a path. Both routes wait for human Done.
 
 Do not infer lack of UI support from session data in a tool response. If the
-host cannot render MCP Apps, open the returned URL in the user's browser.
+host cannot render MCP Apps, provide browserUrl for the user to open. Launch or
+automate a browser only with permission required by the host/workspace.
 
 Without MCP, run from the toolkit root:
 
 ```sh
-python3 apps/editor/agent_session.py VIDEO --workspace WORKSPACE --open --wait
+python3 apps/editor/agent_session.py VIDEO --workspace WORKSPACE --wait
 ```
 
 Omit VIDEO to start the CLI with its file picker instead.
@@ -76,26 +77,27 @@ preview startup failures rather than rerouting silently. The following exact-exp
 review applies only after an explicit export request or approval.
 
 After rendering a draft, open that MP4 in the same review editor using
-`open_review` (or the CLI flow above), with a separate review workspace for that
-render revision. Let the user highlight ranges and comment, then wait for Done
+`open_review` (or the CLI flow above), with a fresh temporary review workspace for that output. Let the user highlight ranges and comment, then wait for Done
 and retrieve the saved feedback. Comments refer to times in that rendered video;
 use them to revise the original composition, not as source-recording cut ranges.
 Return revisions to live preview; render again only when requested or approved.
 
-Read flow/06-review/README.md. Preserve prior reviewed exports. Visual changes
+Read flow/06-review/README.md. Keep one current deliverable; prior exports need not be archived. Visual changes
 reuse timing/audio; cut changes rebuild the timeline and resolve cues again. Record
-feedback and artifact versions. Validate against the selected workspace direction;
+feedback against the exact reviewed file hash. Validate against the selected workspace direction;
 report what was actually inspected, and distinguish review drafts from approval.
 
 ## Return edited videos to the human
 
 After each authorized edit/draft render finishes, call `open_review` yourself with
-`path` set to that exact rendered video and `workspace` set to a separate revision
-folder, for example `reviews/revision-02`. This opens the video directly: do not
+`path` set to that exact rendered video and `workspace` set to a fresh temporary directory. After retrieving feedback and
+closing its session, remove that temporary review when no longer needed. This opens the video directly: do not
 ask the user to upload it again, find it in the picker, or paste a path. Use the
 same MCP editor for the initial recording and every subsequent draft.
 
-Keep the prior recording review and render immutable. Do not reuse a source
+Keep the original recording and its source review unchanged. Close an active
+output review before replacing its video. Do not reuse a completed review directory
+for different bytes: source fingerprints and completion receipts belong to one file. Do not reuse a source
 transcript for a cut/rendered video: omit `transcript` for fresh preparation, or
 supply one explicitly aligned to that rendered revision. Wait for human Done,
 then call `get_review(sessionId)` and apply its notes to that revision of the

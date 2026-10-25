@@ -93,7 +93,7 @@ explain the missing capability instead of claiming installation succeeded.
 
 Use [video-review](../video-review/SKILL.md) for the editor's MCP/browser lifecycle,
 including setup, waiting for explicit Done, retrieving canonical feedback and
-returning rendered drafts directly with separate revision workspaces. Read it
+returning rendered drafts directly with temporary review workspaces for the current output. Read it
 before starting a review; do not reproduce or bypass that lifecycle here.
 
 After feedback, continue only the authorized next stage. Keep original reviews and
