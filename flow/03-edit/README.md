@@ -6,7 +6,11 @@ The importer keeps contiguous word runs and trims leading/trailing silence;
 overlapping word timings require manual repair. Preserve complete speech endings
 and audition uncertain joins with source handles.
 
-Use the retained ranges to construct Fluvie scenes directly from original media.
+Run `video.py prepare-clips` after import to prepare reusable footage files with
+stable IDs and source/output ranges in `edit/clips.json`. Use `video.py adjust-clip
+<project> <clip_id> --start <source-seconds> --end <source-seconds>` to change a
+boundary, then prepare again; unchanged clips are reused. See docs/contracts.md
+for identity, timing and cache limits. Use those clips to construct Fluvie scenes.
 Review rough-cut timing in that live composition, then refine graphics, captions
 and sound in the same scenes. Keep source-timed notes in `annotations.json`.
 A full flattened rough-cut MP4 is not a prerequisite for composition.

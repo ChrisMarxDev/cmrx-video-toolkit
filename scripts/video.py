@@ -48,6 +48,29 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
+def file_digest(path):
+    value = hashlib.sha256()
+    with Path(path).open('rb') as source:
+        for block in iter(lambda: source.read(1024 * 1024), b''):
+            value.update(block)
+    return value.hexdigest()
+
+
+def identify_spans(spans, ranges=None):
+    """IDs are editorial identity, not media-cache keys or output positions."""
+    seen = set()
+    for i, span in enumerate(spans):
+        supplied = ranges[i].get('clip_id') if ranges is not None else None
+        identity = supplied if supplied is not None else 'clip_' + digest(
+            [float(span['source_start']), float(span['source_end'])])[:12]
+        if not isinstance(identity, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,63}', identity):
+            raise ValueError('clip_id must start with a letter and contain at most 64 letters, digits, _ or -')
+        if identity in seen:
+            raise ValueError(f'Duplicate clip_id: {identity}')
+        seen.add(identity)
+        span['clip_id'] = identity
+
+
 def finite(value):
     return isinstance(value, (float, int)) and not isinstance(value, bool) and math.isfinite(value)
 
@@ -77,6 +100,7 @@ def import_cut(data, duration):
                               output_start=cursor, output_end=cursor+end-start))
             cursor += end-start
             previous_end = end
+        identify_spans(spans, ranges)
         result = dict(version=1, source_duration=duration, duration=cursor,
                       spans=spans, words=[], granularity='audio-ranges',
                       edit_digest=digest(data))
@@ -124,6 +148,7 @@ def import_cut(data, duration):
         retained.append(dict(id=f'w{i:06d}', text=w['word'], source_start=w['start'],
                              source_end=w['end'], start=span['output_start'] + w['start'] - span['source_start'],
                              end=span['output_start'] + w['end'] - span['source_start']))
+    identify_spans(spans)
     result = dict(version=1, source_duration=duration, duration=cursor, spans=spans, words=retained,
                   edit_digest=digest(data))
     result['revision'] = digest(result)
@@ -191,10 +216,165 @@ def import_edit(args):
         raise ValueError(f'Edit source {imported_source} differs from project source {source}')
     duration = float(probe(source)['format']['duration'])
     timeline = import_cut(data, duration)
+    # Preserve identities of exact surviving ranges on ID-less reimports. Do not
+    # guess identity from overlap (splits/merges need explicit editorial IDs).
+    previous_path = p / 'edit/timeline.json'
+    if previous_path.exists():
+        old = read(previous_path)
+        by_range = {(s['source_start'], s['source_end']): s.get('clip_id') for s in old['spans']}
+        explicit = {i for i, r in enumerate(data.get('retainedRanges', [])) if 'clip_id' in r}
+        for i, span in enumerate(timeline['spans']):
+            identity = by_range.get((span['source_start'], span['source_end']))
+            if i not in explicit and identity:
+                span['clip_id'] = identity
+        identify_spans(timeline['spans'], timeline['spans'])
+        timeline['revision'] = digest({k: v for k, v in timeline.items() if k != 'revision'})
+    mapped = map_annotations(read(p / 'annotations.json'), timeline)
     write(p / 'edit/decisions.json', data)
     write(p / 'edit/timeline.json', timeline)
-    write(p / 'storyboard/annotations.resolved.json', map_annotations(read(p / 'annotations.json'), timeline))
-    print(f"Imported {len(timeline['spans'])} spans; {timeline['duration']:.3f}s. Rebuild cut and composition after changes.")
+    write(p / 'storyboard/annotations.resolved.json', mapped)
+    print(f"Imported {len(timeline['spans'])} clips; {timeline['duration']:.3f}s. Run prepare-clips and reconcile the composition.")
+
+
+def adjust_clip(args):
+    """Change source boundaries, preserving clip identity and remapping all cues."""
+    p = project_dir(args.project)
+    timeline = read(p / 'edit/timeline.json')
+    ranges = [{k: s[k] for k in ('clip_id', 'source_start', 'source_end')}
+              for s in timeline['spans']]
+    selected = next((s for s in ranges if s['clip_id'] == args.clip_id), None)
+    if selected is None:
+        raise ValueError(f'Unknown clip_id: {args.clip_id}')
+    if args.start is None and args.end is None:
+        raise ValueError('Supply --start and/or --end in original-source seconds')
+    if args.start is not None:
+        selected['source_start'] = args.start
+    if args.end is not None:
+        selected['source_end'] = args.end
+    config = read(p / 'project.json')
+    duration = float(probe(config['source'])['format']['duration'])
+    decisions = read(p / 'edit/decisions.json')
+    # Preserve imported evidence. Boundary edits are now explicit range decisions;
+    # the original word decisions remain attached as provenance, not mixed input.
+    data = dict(version=2, videoPath=config['source'], retainedRanges=ranges,
+                provenance=decisions.get('provenance', decisions))
+    updated = import_cut(data, duration)  # validates source bounds and neighbors
+    mapped = map_annotations(read(p / 'annotations.json'), updated)
+    write(p / 'edit/decisions.json', data)
+    write(p / 'edit/timeline.json', updated)
+    write(p / 'storyboard/annotations.resolved.json', mapped)
+    print(f"Updated {args.clip_id}; {updated['duration']:.3f}s total. Run prepare-clips, then reconcile scene durations and cues. Range edits do not supply word alignment.")
+
+
+def clip_profile(config):
+    fps = config['fps']
+    if not finite(fps) or fps <= 0:
+        raise ValueError('Project fps must be positive and finite')
+    return dict(version=1, fps=fps, video_codec='libx264', preset='fast', crf=18,
+                pixel_format='yuv420p', audio_codec='aac', sample_rate=48000)
+
+
+def write_clip_dart(p, clips):
+    """Generated data only; never rewrite the agent's authored scene widgets."""
+    rows = '\n'.join(
+        '  SourceClip(' + ', '.join([dart_string(c['clip_id']), dart_string(c['asset']),
+                                   *[str(float(c[k])) for k in ('source_start', 'source_end', 'output_start', 'output_end')]]) + '),'
+        for c in clips)
+    target = p / 'composition/lib/source_clips.dart'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix('.dart.tmp')
+    temporary.write_text('''// Generated by prepare-clips. Author visuals in other files.
+class SourceClip {
+  const SourceClip(this.id, this.asset, this.sourceStart, this.sourceEnd, this.outputStart, this.outputEnd);
+  final String id, asset;
+  final double sourceStart, sourceEnd, outputStart, outputEnd;
+  double get duration => sourceEnd - sourceStart;
+}
+
+const sourceClips = <SourceClip>[
+''' + rows + '''
+];
+SourceClip sourceClip(String id) => sourceClips.firstWhere((clip) => clip.id == id);
+''', encoding='utf-8')
+    temporary.replace(target)
+
+
+def prepare_clips(args):
+    p = project_dir(args.project)
+    config, timeline = read(p / 'project.json'), read(p / 'edit/timeline.json')
+    if any('clip_id' not in s for s in timeline['spans']):
+        raise ValueError('Timeline predates clip IDs; reimport edit/decisions.json first')
+    source = Path(config['source']).resolve()
+    source_hash = file_digest(source)
+    profile = clip_profile(config)
+    source_info = probe(source)
+    if any(s.get('color_transfer') in ('arib-std-b67', 'smpte2084') for s in source_info['streams']):
+        raise ValueError('HDR footage needs explicit color-managed preparation before the SDR clip encoder; preserve original-source provenance')
+    clips, encoded = [], 0
+    folder = p / 'composition/assets/clips'
+    folder.mkdir(parents=True, exist_ok=True)
+    for span in timeline['spans']:
+        start, end = span['source_start'], span['source_end']
+        interval(start, end, timeline['source_duration'])
+        key = digest(dict(source_sha256=source_hash, source_start=float(start),
+                          source_end=float(end), profile=profile))
+        target, sidecar = folder / f'{key}.mp4', folder / f'{key}.json'
+        cached = None
+        if target.exists() and sidecar.exists():
+            try:
+                candidate = read(sidecar)
+                if (candidate['key'] == key and finite(candidate.get('media_duration')) and
+                        candidate['sha256'] == file_digest(target)):
+                    cached = candidate
+            except (ValueError, KeyError, TypeError):
+                pass
+        if cached is None:
+            # Seek before decoding; accurate input seek discards frames before the
+            # requested boundary when transcoding. Each proxy starts at local zero.
+            temporary = folder / f'{key}.pending.mp4'
+            try:
+                run(['ffmpeg', '-v', 'error', '-y', '-ss', start, '-i', source,
+                     '-t', end - start, '-map', '0:v:0', '-map', '0:a:0',
+                     '-vf', f'fps={profile["fps"]}', '-c:v', profile['video_codec'], '-preset', profile['preset'],
+                     '-crf', profile['crf'], '-pix_fmt', profile['pixel_format'],
+                     '-c:a', profile['audio_codec'], '-ar', profile['sample_rate'],
+                     '-movflags', '+faststart', temporary])
+                info = probe(temporary)
+                streams = info['streams']
+                if not {'audio', 'video'} <= {s['codec_type'] for s in streams}:
+                    raise ValueError('Clip preparation requires source video and audio')
+                media_duration = float(info['format']['duration'])
+                if abs(media_duration - (end - start)) > max(1 / profile['fps'], 1024 / 48000) + .005:
+                    raise ValueError(f'Clip duration mismatch for {span["clip_id"]}')
+                cached = dict(key=key, sha256=file_digest(temporary), media_duration=media_duration)
+                temporary.replace(target)
+                write(sidecar, cached)
+                encoded += 1
+            finally:
+                temporary.unlink(missing_ok=True)
+        clips.append({**span, 'asset': f'assets/clips/{key}.mp4', 'cache_key': key,
+                      'sha256': cached['sha256'], 'media_duration': cached['media_duration']})
+    if file_digest(source) != source_hash:
+        raise ValueError('Original source changed during clip preparation; retry with stable media')
+    manifest = dict(version=1, timeline_revision=timeline['revision'],
+                    source=str(source), source_sha256=source_hash, profile=profile, clips=clips)
+    write_clip_dart(p, clips)
+    write(p / 'edit/clips.json', manifest)
+    print(json.dumps(dict(manifest=str(p / 'edit/clips.json'), encoded=encoded,
+                          reused=len(clips) - encoded, clips=len(clips))))
+
+
+def checked_clips(p, timeline):
+    manifest = read(p / 'edit/clips.json')
+    config = read(p / 'project.json')
+    if (manifest['timeline_revision'] != timeline['revision'] or
+            manifest['profile'] != clip_profile(config) or
+            manifest['source_sha256'] != file_digest(config['source'])):
+        raise ValueError('Prepared clips are stale; run prepare-clips and reconcile the composition')
+    for clip in manifest['clips']:
+        if file_digest(p / 'composition' / clip['asset']) != clip['sha256']:
+            raise ValueError('Prepared clip changed; run prepare-clips')
+    return manifest
 
 
 def annotate(args):
@@ -243,12 +423,17 @@ def compose(args):
     p = project_dir(args.project)
     config = read(p / 'project.json')
     timeline = read(p / 'edit/timeline.json')
-    if read(p / 'edit/cut-manifest.json')['timeline_revision'] != timeline['revision']:
-        raise ValueError('Rough cut is stale; run cut first')
     composition = p / 'composition'
     main = composition / 'lib/main.dart'
     if main.exists() and not args.replace:
         raise ValueError('Composition exists. Edit it directly, or explicitly pass --replace to regenerate.')
+    legacy = getattr(args, 'legacy_rough_cut', False)
+    if legacy:
+        if read(p / 'edit/cut-manifest.json')['timeline_revision'] != timeline['revision']:
+            raise ValueError('Rough cut is stale; run cut first')
+    else:
+        clips = checked_clips(p, timeline)
+    main.parent.mkdir(parents=True, exist_ok=True)
     package = Path(os.environ.get('CMRX_COMPONENT_PACKAGE', str(ROOT / 'components')))
     package_name = os.environ.get('CMRX_COMPONENT_NAME', 'video_components')
     token_class = os.environ.get('CMRX_TOKEN_CLASS')
@@ -271,28 +456,39 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+{'' if legacy else '    - assets/clips/'}
 ''')
+    if legacy:
+        scene_code = f'''Scene(
+    duration: {timeline['duration']}.seconds,
+    background: Background.color({background}),
+    children: [Clip.asset('assets/rough-cut.mp4', fit: BoxFit.contain)],
+  )'''
+    else:
+        scene_code = f'''for (final clip in sourceClips) Scene(
+    duration: clip.duration.seconds,
+    background: Background.color({background}),
+    children: [Clip.asset(clip.asset,
+      trim: 0.seconds.to(clip.duration.seconds), fit: BoxFit.contain)],
+  )'''
     main.write_text(f'''import 'package:flutter/widgets.dart' hide Animation, Clip, Image, Tween;
 import 'package:fluvie/fluvie.dart';
 import 'package:{package_name}/{package_name}.dart';
+{'' if legacy else "import 'source_clips.dart';"}
 
-// Baseline composition. Add narration-synchronized overlays from storyboard/.
-// Keep this Clip mounted throughout so original narration continues under graphics.
+// Baseline composition. Author scene visuals here; source_clips.dart is generated.
+// Keep each scene's narration-bearing Clip mounted under its graphics.
 Video buildDraft() => draftVideo(build());
 
 Video build() => Video(
   size: const VideoSize({config.get('width', 1920)}, {config.get('height', 1080)}),
   fps: {config['fps']},
-  scenes: [Scene(
-    duration: {timeline['duration']}.seconds,
-    background: Background.color({background}),
-    children: [
-      Clip.asset('assets/rough-cut.mp4', fit: BoxFit.contain),
-    ],
-  )],
+  scenes: [{scene_code}],
 );
 ''')
     write(composition / 'manifest.json', dict(timeline_revision=timeline['revision'],
+                                             media_mode='rough-cut' if legacy else 'clips',
+                                             clips_digest=None if legacy else digest(clips),
                                              note='Baseline footage; agent authors animations from storyboard.'))
     print(main)
 
@@ -300,7 +496,15 @@ Video build() => Video(
 def fluvie(args):
     p = project_dir(args.project)
     timeline = read(p / 'edit/timeline.json')
-    for file in ['edit/cut-manifest.json', 'composition/manifest.json']:
+    manifest = read(p / 'composition/manifest.json')
+    files = ['composition/manifest.json']
+    if manifest.get('media_mode') == 'clips':
+        clips = checked_clips(p, timeline)
+        if manifest.get('clips_digest') != digest(clips):
+            raise ValueError('Composition clip inputs are stale; reconcile the composition and its clips_digest')
+    else:
+        files.append('edit/cut-manifest.json')
+    for file in files:
         if read(p / file)['timeline_revision'] != timeline['revision']:
             raise ValueError(f'{file} is stale. Reconcile narration and animation before proceeding.')
     if args.command == 'render' and args.final and not args.approved:
@@ -352,7 +556,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     p = commands.add_parser('init'); p.add_argument('name'); p.add_argument('--source', required=True); p.set_defaults(func=init)
-    for name, fn in [('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
+    for name, fn in [('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
         p = commands.add_parser(name); p.add_argument('project'); p.set_defaults(func=fn)
         if name in ['qa', 'import-edit']: p.add_argument('file')
         if name == 'soundmap':
@@ -361,7 +565,13 @@ def main():
             p.add_argument('--threshold-db', type=float, default=-35)
             p.add_argument('--min-pause', type=float, default=.35)
             p.add_argument('--padding', type=float, default=.08)
-        if name == 'compose': p.add_argument('--replace', action='store_true')
+        if name == 'compose':
+            p.add_argument('--replace', action='store_true')
+            p.add_argument('--legacy-rough-cut', action='store_true', help='Explicit compatibility with a flattened cut')
+        if name == 'adjust-clip':
+            p.add_argument('clip_id')
+            p.add_argument('--start', type=float, help='New start in original-source seconds')
+            p.add_argument('--end', type=float, help='New end in original-source seconds')
         if name == 'render':
             p.add_argument('--final', action='store_true'); p.add_argument('--approved', action='store_true')
         if name == 'annotate':

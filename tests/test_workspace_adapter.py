@@ -19,7 +19,7 @@ class WorkspaceAdapterTests(unittest.TestCase):
             (p/'edit/cut-manifest.json').write_text(json.dumps({'timeline_revision':'fixture'}))
             env = dict(os.environ, CMRX_COMPONENT_NAME='private_design',
                        CMRX_COMPONENT_PACKAGE=str(p/'private_design'), CMRX_TOKEN_CLASS='PrivateTokens')
-            cmd = ['python3',str(ROOT/'scripts/video.py'),'compose',str(p)]
+            cmd = ['python3',str(ROOT/'scripts/video.py'),'compose',str(p),'--legacy-rough-cut']
             result = subprocess.run(cmd,env=env,capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             main=(p/'composition/lib/main.dart').read_text()

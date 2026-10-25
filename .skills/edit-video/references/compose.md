@@ -5,8 +5,9 @@ unresolved, follow [style selection](../../video-style/SKILL.md#resolve-the-styl
 before making creative decisions. Do not infer a style from the available components.
 
 Read flow/05-compose/README.md and components/CATALOG.md. scripts/video.py
-compose creates a legacy one-scene rough-cut baseline; it is not the default
-scene-based authoring route. Author scenes directly from retained source ranges;
+prepare-clips creates reusable per-range media and generated source_clips.dart;
+compose scaffolds one Fluvie scene per clip. Use stable clip IDs to address footage
+and keep custom visuals outside the generated data file. Author scenes from this handoff;
 never replace an existing authored composition unless requested. Preload programs/fonts/media, then use frame-derived motion and immutable
 props. Keep audio ownership explicit across scenes, with no duplicated narration. Use private design-package
 environment settings when generating a branded workspace. Check actual rendered
@@ -41,7 +42,7 @@ Use the imported timeline to give each scene explicit retained source ranges,
 output start/duration and local visual cues. Build its footage, graphics, captions,
 sound and transitions together. Assemble all scenes in one Fluvie Video using the
 installed API; keep scene-local and whole-video time distinct. A single source
-clip can supply multiple trimmed scene ranges without pre-encoding them. Preserve
+clip can supply multiple trimmed scene ranges when deliberately authored. Preserve
 speech handles at boundaries and check joins in live preview. Revisions change
 the relevant scene code and timeline, then reload the same composition. Preview
 and final export use the same authored scene sequence, not separate reconstructions.

@@ -26,7 +26,9 @@ Read only the stage reference needed for the current work before using a command
 ## Core workflow: build scenes, then render
 
 Divide the edit into coherent Fluvie scenes referencing retained ranges of the
-original recording. Construct footage, graphics, captions, transitions and sound
+original recording. Prepare reusable per-range footage with `video.py prepare-clips`;
+keep stable clip IDs and source/output metadata, and use `adjust-clip` for boundary
+changes (see the edit reference). Construct footage, graphics, captions, transitions and sound
 together in those scenes, and assemble them into one editable Fluvie Video.
 The rough cut is an early state of this same composition, reviewed in live Fluvie.
 Do not generate a full cut video first and use that flattened video as the base

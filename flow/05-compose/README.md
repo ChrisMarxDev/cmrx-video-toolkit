@@ -12,10 +12,14 @@ those same scenes, and reload. Render the assembled Video after an explicit expo
 request or approval. Do not encode a full video first and add graphics afterward.
 Short excerpts, per-clip proxies and audio preparation are allowed when needed.
 
-`video.py compose projects/<slug>` currently creates a legacy one-scene baseline
-using a rendered rough cut. That generator has not been converted to scene-based
-authoring: do not run it as a prerequisite for this workflow. Author the scene
-sequence directly using the installed Fluvie API. Existing main.dart is protected
-from accidental regeneration. Preview and export share the authored composition.
+`video.py prepare-clips projects/<slug>` prepares each retained source range and
+generates `source_clips.dart` with stable IDs, asset paths and source/output times.
+`video.py compose projects/<slug>` creates one scene per prepared clip. Author
+graphics in main.dart or other authored files; generated clip data is disposable.
+Use `sourceClip('intro')` to address a named clip. After boundary edits prepare
+again, reconcile the authored scenes/cues, and update their timeline manifest.
+Existing main.dart is protected from accidental regeneration. The explicit
+`--legacy-rough-cut` flag retains old flattened scaffolding. Preview and export
+share the authored composition; the default path needs no full cut MP4.
 
 Commands run from the toolkit root; `video.py` means `python3 scripts/video.py`.

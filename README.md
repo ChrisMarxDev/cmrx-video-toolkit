@@ -124,7 +124,10 @@ require an original recording.
 **Ingest → Transcribe → Edit → Storyboard → Compose → Review → Render**
 
 Start with [edit-video](.skills/edit-video/SKILL.md). Review the rough cut before
-detailed animation. Map source cues through the edited timeline; do not guess
+detailed animation in the live scene composition. `prepare-clips` creates reusable
+footage clips with stable IDs; `adjust-clip` changes their original-source bounds.
+See [clip metadata and commands](docs/contracts.md#addressable-footage-clips).
+Map source cues through the edited timeline; do not guess
 animation timestamps. Keep recordings, transcripts, models and renders outside Git.
 
 The toolkit is in early development and runs locally. Use the browser editor to

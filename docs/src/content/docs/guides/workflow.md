@@ -38,8 +38,11 @@ request or approval. A full flattened cut video is not the starting point for gr
 Preserve source media and scene-to-source mappings. Reuse approved timing during
 visual changes and keep one coherent narration stream across scenes. Per-clip
 proxies, short diagnostic excerpts and audio preparation remain available; repeated
-full-video renders are not the editing loop. The CLI's existing `compose` generator
-is a legacy one-scene rough-cut template; author the scene sequence directly.
+full-video renders are not the editing loop. Run `prepare-clips` after importing
+the edit to prepare reusable footage with stable IDs and source/output metadata.
+The `compose` generator scaffolds one scene per clip. Change named source ranges
+with `adjust-clip`, prepare again, and reconcile authored cues; unchanged footage
+files are reused. See the pipeline contracts for command details and cache limits.
 
 ## Shaders and 3D scenes
 

@@ -86,7 +86,7 @@ class MediaIntegrationTests(unittest.TestCase):
             (p / 'composition/lib').mkdir(parents=True)
             def call(*args):
                 return subprocess.run(['python3', str(ROOT / 'scripts/video.py'), *map(str, args)], capture_output=True, text=True)
-            for command in [('import-edit', p, p / 'edit.json'), ('cut', p), ('compose', p)]:
+            for command in [('import-edit', p, p / 'edit.json'), ('cut', p), ('compose', p, '--legacy-rough-cut')]:
                 result = call(*command)
                 self.assertEqual(result.returncode, 0, result.stderr)
             info = video.probe(p / 'composition/assets/rough-cut.mp4')

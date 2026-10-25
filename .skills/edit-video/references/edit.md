@@ -13,6 +13,11 @@ locking the cut; compare to the uncut phrase. If listening is unavailable, expos
 that limitation and request human listening in preview; recognition, waveform,
 frame/decode checks and successful renders cannot establish audible completeness.
 
+Run `prepare-clips <project>` to create reusable per-range footage and metadata.
+Give retained ranges stable `clip_id` values; use `adjust-clip <project> <clip_id>
+--start <source-seconds> --end <source-seconds>` for later boundary changes.
+Prepare again to encode only changed ranges, then reconcile all shifted scene and
+caption cues. Read docs/contracts.md for cache and word-to-range conversion limits.
 Implement retained ranges as source clips in Fluvie scenes. Review rough-cut
 pacing and scene joins in the live composition before refining its visuals.
 Do not require `cut` or a full rough-cut.mp4 before scene construction. The cut
