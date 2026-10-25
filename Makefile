@@ -42,3 +42,15 @@ check-local:
 	npm --prefix apps/review-agent test
 	npm --prefix apps/component-browser-agent test
 	npm --prefix docs run build
+
+.PHONY: visual-map visual-map-test
+# Analyze pixel changes in isolation; OUTPUT must be new and outside Git.
+# Usage: make visual-map VIDEO="/path/to/video.mp4" OUTPUT="/path/to/new/analysis"
+visual-map:
+	$(if $(strip $(VIDEO)),,$(error VIDEO is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 tools/visual_map/visual_map.py "$(VIDEO)" --output "$(OUTPUT)"
+
+# Run synthetic visual-map checks: make visual-map-test
+visual-map-test:
+	python3 -m unittest discover -s tools/visual_map -v

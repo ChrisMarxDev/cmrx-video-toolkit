@@ -11,9 +11,12 @@ No Python packages, downloaded models, APIs or browser are needed.
 From the toolkit root:
 
 ```sh
-python3 tools/visual_map/visual_map.py /absolute/recording.mp4 \
-  --output /absolute/workspace/visual-map-run-01
+make visual-map VIDEO="/absolute/recording.mp4" \
+  OUTPUT="/absolute/workspace/visual-map-run-01"
 ```
+
+Both Make variables are required; use absolute paths, especially through a parent
+workspace forwarding target. The direct Python CLI remains available for tuning.
 
 The output directory must not exist. Originals are read-only. Keep recordings and
 analysis artifacts outside source control. Outputs:
@@ -102,7 +105,7 @@ camera/background changes or compression. Small eye movements may be missed.
 ## Verification
 
 ```sh
-python3 -m unittest discover -s tools/visual_map -v
+make visual-map-test
 ```
 
 Synthetic tests cover spatial/region measurements, invalid settings, held changes,
