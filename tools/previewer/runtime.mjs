@@ -17,8 +17,8 @@ export function previewUrl(value) {
 // app, source watching, asset bridge, bounded frame decoding and audio playback.
 export class PreviewRuntime {
   constructor({ root = process.cwd(), command = null,
-    prefixArgs = [], timeoutMs = 300000, maxSessions = 3 } = {}) {
-    Object.assign(this, { root: resolve(root), command, prefixArgs, timeoutMs, maxSessions });
+    prefixArgs = [], onEvent = () => {}, timeoutMs = 300000, maxSessions = 3 } = {}) {
+    Object.assign(this, { root: resolve(root), command, prefixArgs, onEvent, timeoutMs, maxSessions });
     this.sessions = new Map();
     this.closed = false;
   }
@@ -98,6 +98,7 @@ export class PreviewRuntime {
       let event;
       try { event = JSON.parse(line); } catch { diagnostics = (diagnostics + '\n' + line).slice(-6000); return; }
       if (event.schemaVersion !== 1) return;
+      this.onEvent(session, event);
       if (event.event === 'ready') {
         try {
           if (event.device !== 'web-server') throw Error('Expected web-server preview.');

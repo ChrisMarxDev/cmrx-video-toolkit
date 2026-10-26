@@ -44,7 +44,7 @@ export function createServer(runtime, { decorateResource, previewRuntime,
     server.registerResource('composition-previewer', previewUri, { mimeType: 'text/html;profile=mcp-app' },
       async () => ({ contents: [previewResource(previewRuntime.origins())] }));
     server.registerTool('open_preview', {
-      description: 'Start or reuse a live authored Fluvie composition preview without encoding a video. Runs trusted Dart source inside the configured root. Requires the JSON web preview API. Returns starting immediately; poll get_preview until ready, then call show_preview once or present browserUrl. Source edits reload automatically. No editing, notes, export or approval in this player.',
+      description: 'Start or reuse a live authored Fluvie composition preview without encoding a video. Runs trusted Dart source inside the configured root. Requires the JSON web preview API. Returns starting immediately; poll get_preview until ready, then call show_preview once or present browserUrl. Source edits reload automatically. The configured host determines available review controls; a preview is never export approval.',
       inputSchema: { path: z.string().min(1).optional(), project: z.string().min(1), entry: z.string().optional() }, annotations,
     }, safe(args => previewRuntime.open(args)));
     server.registerTool('get_preview', {
@@ -52,11 +52,11 @@ export function createServer(runtime, { decorateResource, previewRuntime,
       inputSchema: { sessionId: z.string().uuid() }, annotations: { ...annotations, readOnlyHint: true },
     }, safe(({ sessionId }) => previewRuntime.get(sessionId)));
     server.registerTool('show_preview', {
-      description: 'Show a ready composition in the minimal player once. Local iframe support is required; browserUrl is the fallback. Playback and seeking need no further host tool calls.',
+      description: 'Show a ready composition in the configured review surface once. Local iframe support is required; browserUrl is the fallback. Playback and seeking need no further host tool calls.',
       inputSchema: { sessionId: z.string().uuid() }, annotations: { ...annotations, readOnlyHint: true },
       _meta: { ui: { resourceUri: previewUri }, 'openai/outputTemplate': previewUri },
-    }, safe(({ sessionId }) => {
-      const state = previewRuntime.get(sessionId);
+    }, safe(async ({ sessionId }) => {
+      const state = await previewRuntime.get(sessionId);
       if (state.status !== 'ready') throw Error('Preview is not ready; use get_preview to check startup.');
       return state;
     }));
@@ -72,7 +72,8 @@ export async function main(options = {}) {
   const args = process.argv.slice(2);
   if (args.length !== 2 || args[0] !== '--root') throw Error('Usage: node mcp.mjs --root /absolute/project');
   const runtime = new ReviewRuntime({ root: args[1] });
-  const previewRuntime = new PreviewRuntime({ root: args[1] });
+  const previewRuntime = options.previewRuntimeFactory
+    ? options.previewRuntimeFactory(args[1]) : new PreviewRuntime({ root: args[1] });
   const server = createServer(runtime, { ...options, previewRuntime });
   const transport = new StdioServerTransport();
   let closing = false;

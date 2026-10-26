@@ -113,3 +113,30 @@ test('project config selects executable, source and entry together', async t => 
   const session = await runtime.open({project:'.'});
   assert.equal((await until(runtime, session.sessionId, 'ready')).status, 'ready');
 });
+
+test('app frame accepts opaque child feedback only from its own window', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const resource = previewResource(['http://localhost:9876']);
+  const script = resource.text.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const sent = [], replies = [];
+  const child = { postMessage: (value, origin) => replies.push({ value, origin }) };
+  const parent = { postMessage: value => sent.push(value) };
+  const frame = { contentWindow: child, hidden: true };
+  let receive;
+  runInNewContext(script, { URL, parent, document: {
+    getElementById: id => id === 'player' ? frame : {},
+  }, addEventListener: (_, callback) => { receive = callback; } });
+  receive({ source: parent, data: { jsonrpc: '2.0', method: 'ui/notifications/tool-result',
+    params: { structuredContent: { status: 'ready', sessionId: 'outer-session', browserUrl: 'http://localhost:9876/' } } } });
+  const feedback = { type: 'review-feedback', id: 'child-call', result: { status: 'completed', artifactSha256: 'receipt' } };
+  receive({ source: {}, origin: 'null', data: feedback });
+  assert.equal(sent.filter(value => value.method === 'ui/message').length, 0);
+  receive({ source: child, origin: 'null', data: feedback });
+  const request = sent.find(value => value.method === 'ui/message');
+  assert.ok(request.params.content[0].text.includes('outer-session'));
+  receive({ source: parent, data: { jsonrpc: '2.0', id: request.id, result: {} } });
+  assert.equal(replies[0].value.id, 'child-call');
+  assert.equal(replies[0].origin, '*');
+  receive({ source: child, origin: 'null', data: feedback });
+  assert.equal(sent.filter(value => value.method === 'ui/message').length, 1);
+});

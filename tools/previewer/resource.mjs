@@ -4,21 +4,37 @@ export function previewResource(origins) {
   return { uri: previewUri, mimeType: 'text/html;profile=mcp-app',
     _meta: { ui: { prefersBorder: true, csp: { frameDomains: origins, connectDomains: origins, resourceDomains: origins } } },
     text: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Previewer</title><style>html,body{margin:0;height:100%;background:#111;color:#eee;font:14px system-ui}iframe{display:block;width:100%;height:560px;border:0}iframe[hidden]{display:none}p{padding:20px}</style></head>
+<title>Previewer</title><style>html,body{margin:0;height:100%;background:#111;color:#eee;font:14px system-ui}iframe{display:block;width:100%;height:700px;border:0}iframe[hidden]{display:none}p{padding:20px}</style></head>
 <body><p id="status" role="status">Preparing preview…</p><iframe id="player" title="Composition preview" allow="autoplay; fullscreen" allowfullscreen hidden></iframe>
 <script>
 const origins = ${JSON.stringify(origins).replace(/</g, '\\u003c')};
 const frame = document.getElementById('player'), status = document.getElementById('status');
+let state, sequence=0; const pending=new Map(), completed=new Set();
 const send = value => parent.postMessage({jsonrpc:'2.0', ...value}, '*');
 addEventListener('message', event => {
+  if (event.source === frame.contentWindow && (origins.includes(event.origin) || event.origin==='null') && event.data?.type === 'review-feedback') {
+    const feedback=event.data;
+    if (!state || feedback.result?.status !== 'completed') return;
+    if (completed.has(feedback.result.artifactSha256)) { frame.contentWindow.postMessage({type:'review-continuation',id:feedback.id},'*'); return; }
+    const id='feedback-'+(++sequence);
+    pending.set(id,{id:feedback.id,origin:event.origin,sha:feedback.result.artifactSha256});
+    send({id,method:'ui/message',params:{role:'user',content:[{type:'text',text:'Live composition review '+state.sessionId+' is complete. Call get_preview with this sessionId, read review.document and continue the agreed workflow. Do not infer export approval.'}]}});
+    return;
+  }
   if (event.source !== parent || event.data?.jsonrpc !== '2.0') return;
   const message = event.data;
+  if (pending.has(message.id)) {
+    const call=pending.get(message.id); pending.delete(message.id);
+    if (!message.error) completed.add(call.sha);
+    frame.contentWindow.postMessage({type:'review-continuation',id:call.id,error:message.error?.message},'*');
+    return;
+  }
   if (message.id === 'init' && message.result) {
     send({method:'ui/notifications/initialized',params:{}});
-    send({method:'ui/notifications/size-changed',params:{height:560}});
+    send({method:'ui/notifications/size-changed',params:{height:700}});
   }
   if (message.method === 'ui/notifications/tool-result') {
-    const state = message.params?.structuredContent;
+    state = message.params?.structuredContent;
     if (!state || state.status !== 'ready') {
       frame.hidden = true; frame.src = 'about:blank'; status.hidden = false;
       status.textContent = state?.status === 'failed' ? 'Preview could not start. See the tool result.' : 'Preparing preview…';

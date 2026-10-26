@@ -1,0 +1,114 @@
+diff --git i/packages/fluvie/lib/src/media/web_image_media_resolver.dart w/packages/fluvie/lib/src/media/web_image_media_resolver.dart
+index be77505..89630e6 100644
+--- i/packages/fluvie/lib/src/media/web_image_media_resolver.dart
++++ w/packages/fluvie/lib/src/media/web_image_media_resolver.dart
+@@ -1,4 +1,8 @@
+ import 'dart:ui' as ui;
++import 'dart:convert';
++import 'package:fluvie/src/captions/parse/srt_parser.dart';
++import 'package:fluvie/src/captions/parse/vtt_parser.dart';
++import 'package:fluvie/src/core/time.dart';
+
+ import 'package:fluvie/src/core/audio/audio_source.dart';
+ import 'package:fluvie/src/core/audio/band_table.dart';
+@@ -33,7 +37,7 @@ part 'web_unsupported_capabilities.dart';
+ /// [ImageResolveCache], and the clip cache through [ClipResolveCache]. A clip is
+ /// probed and frame-extracted through the injected [clipDecoder] (WebCodecs);
+ /// with no decoder a declared clip fails with a clear typed error. Snapshots,
+-/// audio, beat/spectrum reactivity, and captions are not available in the
++/// audio and beat/spectrum reactivity are not available in the
+ /// browser yet, so each of those members fails with a clear typed error instead
+ /// of a confusing decode failure. `file://` sources fail through the byte
+ /// loader's web seam.
+@@ -61,8 +65,37 @@ final class WebImageMediaResolver
+   @override
+   final int? maxClipDecodeEdge;
+
++  final _captionCues = <CaptionSource, List<CaptionCue>>{};
++
++  @override
++  Future<void> preResolveCaptions(CaptionSource source) async {
++    if (_captionCues.containsKey(source)) return;
++    Future<String> text(String path) async =>
++        utf8.decode(await loader.load(MediaSource.asset(path)));
++    _captionCues[source] = switch (source) {
++      SrtCaptionSource(:final path) => parseSrt(await text(path)),
++      VttCaptionSource(:final path) => parseVtt(await text(path)),
++      InlineCaptionSource(:final words) => [
++        for (var i = 0; i < words.length; i++)
++          CaptionCue(
++            words[i].text,
++            start: words[i].at,
++            end: i + 1 < words.length ? words[i + 1].at : words[i].at + const Time.seconds(1),
++            words: [CaptionCueWord(words[i].text, at: words[i].at)],
++          ),
++      ],
++    };
++    markResolved();
++  }
++
++  @override
++  List<CaptionCue> cuesFor(CaptionSource source) =>
++      _captionCues[source] ??
++      (throw FluvieRenderException('Caption source was not prepared: $source'));
++
+   @override
+   void dispose() {
++    _captionCues.clear();
+     disposeCachedImages();
+     disposeClipFrames();
+   }
+diff --git i/packages/fluvie/test/media/web_image_media_resolver_test.dart w/packages/fluvie/test/media/web_image_media_resolver_test.dart
+index edc8525..eff5674 100644
+--- i/packages/fluvie/test/media/web_image_media_resolver_test.dart
++++ w/packages/fluvie/test/media/web_image_media_resolver_test.dart
+@@ -1,4 +1,7 @@
+ import 'dart:ui' as ui;
++import 'dart:convert';
++import 'package:fluvie/src/core/captions/caption_word.dart';
++import 'package:fluvie/src/core/time.dart';
+
+ import 'package:flutter/services.dart';
+ import 'package:flutter_test/flutter_test.dart';
+@@ -348,7 +351,31 @@ void main() {
+       );
+     });
+
+-    test('clip, snapshot, audio, reactive, and caption members throw typed web errors', () {
++    test('browser captions prepare inline words and SRT/VTT once before frames', () async {
++      final resolver = _resolver(
++        assets: {
++          's.srt': Uint8List.fromList(utf8.encode('1\n00:00:01,000 --> 00:00:02,000\nSRT text\n')),
++          's.vtt': Uint8List.fromList(
++            utf8.encode('WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nVTT text\n'),
++          ),
++        },
++      );
++      addTearDown(resolver.dispose);
++      const inline = CaptionSource.inline([CaptionWord('word', at: Time.seconds(2))]);
++      expect(() => resolver.cuesFor(inline), throwsA(isA<FluvieRenderException>()));
++      await resolver.preResolveCaptions(inline);
++      expect(resolver.cuesFor(inline).single.text, 'word');
++      expect(resolver.cuesFor(inline).single.end, const Time.seconds(2) + const Time.seconds(1));
++      final cues = resolver.cuesFor(inline);
++      await resolver.preResolveCaptions(inline);
++      expect(identical(cues, resolver.cuesFor(inline)), isTrue);
++      await resolver.preResolveCaptions(const CaptionSource.srt('s.srt'));
++      await resolver.preResolveCaptions(const CaptionSource.vtt('s.vtt'));
++      expect(resolver.cuesFor(const CaptionSource.srt('s.srt')).single.text, 'SRT text');
++      expect(resolver.cuesFor(const CaptionSource.vtt('s.vtt')).single.text, 'VTT text');
++    });
++
++    test('clip, snapshot, audio, and reactive members throw typed web errors', () {
+       final resolver = _resolver();
+       void expectsWeb(void Function() call, String needle) => expect(
+         call,
+@@ -388,8 +415,6 @@ void main() {
+       );
+       expectsWeb(() => resolver.beatGridFor(const AudioSource.asset('b.mp3')), 'b.mp3');
+       expectsWeb(() => resolver.bandTableFor(const AudioSource.asset('b.mp3')), 'b.mp3');
+-      expectsWeb(() => resolver.preResolveCaptions(const CaptionSource.srt('s.srt')), 's.srt');
+-      expectsWeb(() => resolver.cuesFor(const CaptionSource.vtt('s.vtt')), 's.vtt');
+     });
+   });
+ }

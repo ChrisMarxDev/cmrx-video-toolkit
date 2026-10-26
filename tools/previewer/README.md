@@ -224,3 +224,26 @@ active decode batches to 32 MiB (at least one frame). Test with:
 cd packages/fluvie
 flutter test test/rendering/preview_clip_frames_test.dart test/rendering/runtime/preview_pending_audio_test.dart
 ```
+
+## Caller-owned review hosts
+
+`PreviewRuntime` accepts `command`, `prefixArgs` and `onEvent(session, event)` for
+a caller-owned host integration. The MCP server's `main` accepts
+`previewRuntimeFactory(root)`; the default standalone host stays generic.
+An integration may supply review progress in `get_preview`. The app frame can
+forward a `review-feedback` message after a durable completion receipt; it requests
+agent continuation using the outer preview session ID and acknowledges the exact
+child window. Failed host notification must be reported as saved feedback with
+manual continuation, not as successful agent delivery.
+
+For the pinned compatible CLI, `patches/fluvie-preview-host-adapter.patch` adds
+an explicit `FLUVIE_PREVIEW_HOST_ADAPTER` executable hook. It receives the generated
+app directory after scaffolding and before Flutter starts. The caller owns its
+UI package, dependency preparation and readiness checks. This hook runs trusted
+local code; no default brand or private project is shipped. Apply it with
+`git -C /path/to/compatible-fluvie apply /absolute/toolkit/tools/previewer/patches/fluvie-preview-host-adapter.patch`.
+
+`patches/fluvie-preview-captions.patch` enables inline and asset SRT/VTT captions
+in the compatible browser media resolver using the existing parsers and native
+inline timing semantics. Its regression test covers preparation, cached lookup,
+SRT/VTT text and the last word's one-second tail. It contains no caller branding.

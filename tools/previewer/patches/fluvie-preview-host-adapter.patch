@@ -1,0 +1,18 @@
+diff --git i/packages/fluvie_cli/lib/src/preview_command.dart w/packages/fluvie_cli/lib/src/preview_command.dart
+index 3d8c2df..2238a3e 100644
+--- i/packages/fluvie_cli/lib/src/preview_command.dart
++++ w/packages/fluvie_cli/lib/src/preview_command.dart
+@@ -86,6 +86,13 @@ final class PreviewCommand {
+         cliVersion: previewCliVersion,
+         out: args.flag('json') ? err : out,
+       );
++      final hostAdapter = Platform.environment['FLUVIE_PREVIEW_HOST_ADAPTER'];
++      if (hostAdapter != null && hostAdapter.isNotEmpty) {
++        final adapted = await Process.run(hostAdapter, [appDir]);
++        err.write(adapted.stdout);
++        err.write(adapted.stderr);
++        if (adapted.exitCode != 0) throw CliFailure('Preview host adapter failed.');
++      }
+       final tools = await ensureFfmpegToolchain(
+         _runner,
+         binary: args.option('ffmpeg'),
