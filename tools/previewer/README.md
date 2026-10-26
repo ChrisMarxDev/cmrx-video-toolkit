@@ -247,3 +247,15 @@ local code; no default brand or private project is shipped. Apply it with
 in the compatible browser media resolver using the existing parsers and native
 inline timing semantics. Its regression test covers preparation, cached lookup,
 SRT/VTT text and the last word's one-second tail. It contains no caller branding.
+
+For an MCP host that deliberately uses an opaque sandbox origin, apply
+`patches/fluvie-preview-opaque-origin.patch` to the same compatible checkout.
+Setting `FLUVIE_PREVIEW_OPAQUE_ORIGIN=1` then permits `Origin: null` on that
+preview's media bridge. The random session token remains mandatory; remote
+origins remain rejected, and opaque origins remain rejected by default. Validate
+both settings from `packages/fluvie_cli`:
+
+```sh
+dart test test/local_media_bridge_test.dart
+FLUVIE_PREVIEW_OPAQUE_ORIGIN=1 dart test test/local_media_bridge_test.dart
+```

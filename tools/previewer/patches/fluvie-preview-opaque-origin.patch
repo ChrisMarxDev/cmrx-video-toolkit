@@ -1,0 +1,37 @@
+diff --git i/packages/fluvie_cli/lib/src/local_media_bridge_http.dart w/packages/fluvie_cli/lib/src/local_media_bridge_http.dart
+index 18eb421..76e98ce 100644
+--- i/packages/fluvie_cli/lib/src/local_media_bridge_http.dart
++++ w/packages/fluvie_cli/lib/src/local_media_bridge_http.dart
+@@ -8,7 +8,10 @@ extension _BridgeHttp on LocalMediaBridge {
+       final origin = request.headers.value('origin');
+       if (origin != null) {
+         final uri = Uri.tryParse(origin);
+-        if (uri == null || !{'localhost', '127.0.0.1', '::1'}.contains(uri.host)) {
++        final opaqueAllowed = origin == 'null' &&
++            Platform.environment['FLUVIE_PREVIEW_OPAQUE_ORIGIN'] == '1';
++        if (!opaqueAllowed &&
++            (uri == null || !{'localhost', '127.0.0.1', '::1'}.contains(uri.host))) {
+           response.statusCode = HttpStatus.forbidden;
+           return;
+         }
+diff --git i/packages/fluvie_cli/test/local_media_bridge_test.dart w/packages/fluvie_cli/test/local_media_bridge_test.dart
+index bad971a..b756b71 100644
+--- i/packages/fluvie_cli/test/local_media_bridge_test.dart
++++ w/packages/fluvie_cli/test/local_media_bridge_test.dart
+@@ -49,6 +49,16 @@ void main() {
+     expect(asset.body, 'a cat story');
+   });
+
++  test('opaque origin is opt-in and still requires the session token', () async {
++    final enabled = Platform.environment['FLUVIE_PREVIEW_OPAQUE_ORIGIN'] == '1';
++    final response = await http.get(bridge.endpoint.resolve('/status'),
++        headers: {'Origin': 'null', 'X-Fluvie-Token': bridge.sessionToken});
++    expect(response.statusCode, enabled ? 200 : 403);
++    if (enabled) expect(response.headers['access-control-allow-origin'], 'null');
++    expect((await http.get(bridge.endpoint.resolve('/status'),
++        headers: {'Origin': 'null'})).statusCode, 403);
++  });
++
+   test('denies remote browser origins and paths outside project', () async {
+     final headers = {'X-Fluvie-Token': bridge.sessionToken};
+     expect(
