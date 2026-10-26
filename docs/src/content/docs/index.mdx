@@ -1,32 +1,48 @@
 ---
 title: CMRX Video Toolkit
-description: Documentation for the local video tools, components and agent workflows.
+description: Agent skills, editing tools and reusable components for creating videos.
 ---
 
-Use the toolkit to review a recording’s transcript, choose cuts, add captions and
-animations, and render a video. Python and FFmpeg handle media processing;
-Flutter renders the visual elements. Agent skills describe how to run each stage.
+A collection of **agent skills, tools and reusable video components**, with
+`edit-video` as the core editing experience. Make a complete video or pick the
+piece you need: visual style, component authoring, animation, 3D or effects.
 
-**[Get started →](/cmrx-video-toolkit/guides/quick-start/)**
+Your agent works with footage, transcripts and editable Flutter scenes. You
+review the cuts and visuals, request changes and approve the export.
 
-## Find what you need
+**[Start editing →](/cmrx-video-toolkit/guides/quick-start/)**
 
-| Area | What you’ll find |
+**[Browse the skills & tools glossary →](/cmrx-video-toolkit/reference/skills/)**
+
+## One workflow, a useful collection
+
+**Bring footage or assets → shape the edit → compose scenes → review live → export.**
+
+`edit-video` coordinates this workflow and loads only the guidance needed at each
+stage. Other skills can help with a specific task without starting a full edit.
+
+| Explore | What you’ll find |
 | --- | --- |
-| [Quick start](/cmrx-video-toolkit/guides/quick-start/) | Prerequisites, installation and your first look at the tools. |
-| [Skill map](/cmrx-video-toolkit/reference/skills/) | Core workflow, specialists and shared tools. |
-| [Video workflow](/cmrx-video-toolkit/guides/workflow/) | The stages from ingest to reviewed render. |
-| [Transcript editor](/cmrx-video-toolkit/reference/editor/) | Cuts, source-timed notes and export handoffs. |
-| [Components](/cmrx-video-toolkit/reference/components/) | Flutter widgets, shaders, media and motion. |
-| [Your workspace](/cmrx-video-toolkit/guides/workspace/) | Project layout and your own visual style. |
+| [Skills & tools glossary](/cmrx-video-toolkit/reference/skills/) | Core skills, editing subskills, specialists and the tools they use. |
+| [Quick start](/cmrx-video-toolkit/guides/quick-start/) | Install the skills and ask your agent to prepare your first project. |
+| [Video workflow](/cmrx-video-toolkit/guides/workflow/) | How the stages fit together, from source media to reviewed export. |
+| [Review editor](/cmrx-video-toolkit/reference/editor/) | Transcript cuts, timed notes and feedback handoffs. |
+| [Components](/cmrx-video-toolkit/reference/components/) | Reusable Flutter widgets, shaders, media and motion. |
+| [Your workspace](/cmrx-video-toolkit/guides/workspace/) | Production files and your own visual style. |
 | [Artifact contracts](/cmrx-video-toolkit/reference/contracts/) | Timelines, annotations and composition handoffs. |
+
+You can also [try the component browser](/cmrx-video-toolkit/components/) without
+installing the local toolkit.
 
 ## Before you begin
 
-The toolkit runs on your computer and is in early development. Review the rough
-cut before building animations. Keep original recordings unchanged and check the
-final render. Store recordings, transcripts and generated media outside Git.
+The toolkit is in early development. Installing skills adds guidance, not the
+runtime tools, models or MCP registrations. Your agent prepares the requirements
+for the chosen workflow; the quick start also covers manual setup.
 
-Set your video colors and typography through the component styling API.
+Bring your own colors, fonts and editorial direction. Keep original recordings
+unchanged, review the composition before export and check the final render.
+Store production media outside Git. Optional generation services have their own
+credentials and terms; the local media tools do not require generation keys.
 
 [Source code on GitHub](https://github.com/ChrisMarxDev/cmrx-video-toolkit)

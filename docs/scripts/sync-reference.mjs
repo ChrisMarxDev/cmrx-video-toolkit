@@ -5,7 +5,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const out = path.join(root, 'docs/src/content/docs/reference');
 await mkdir(out, { recursive: true });
 const pages = [
-  ['skills', 'Skill map', 'docs/SKILLS.md'],
+  ['skills', 'Skills & tools glossary', 'docs/SKILLS.md'],
   ['fal', 'fal generation connector', 'tools/fal/README.md'],
   ['editor', 'Transcript editor', 'apps/editor/README.md'],
   ['browser', 'Component browser', 'tools/component_browser/README.md'],
