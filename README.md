@@ -88,6 +88,7 @@ toolkit runtime. Installing a skill alone does not install its dependencies.
 | [edit-video](.skills/edit-video/SKILL.md) | Core skill | Create or revise a video, coordinating the workflow from source material to reviewed export. |
 | [video-style](.skills/video-style/SKILL.md) | Skill | Define or refine your colors, typography, framing, motion and editorial rules. |
 | [video-review](.skills/video-review/SKILL.md) | Skill | Review cuts and visuals, collect timed feedback and return it to the agent. |
+| [vertical-video](.skills/vertical-video/SKILL.md) | Skill | Check portrait format, export compatibility and platform UI safe areas without editorial changes. |
 
 ### Editing subskills / workflow stages
 
