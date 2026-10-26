@@ -151,6 +151,7 @@ Tools and libraries remain shared; install/use the toolkit as one coherent bundl
 | [component-author](.skills/component-author/SKILL.md) | Create graphics and register reusable components. |
 | [component-shaders](.skills/component-shaders/SKILL.md) | Author and integrate deterministic shaders. |
 | [component-3d](.skills/component-3d/SKILL.md) | Capture native Flutter Scene geometry. |
+| [meshy-scene](.skills/meshy-scene/SKILL.md) | Prepare Meshy models, rigs and motions in an isolated Flutter Scene capture workflow. |
 | [component-dithering](.skills/component-dithering/SKILL.md) | Implement deterministic component dither textures. |
 | [effect-background-remove](.skills/effect-background-remove/SKILL.md) | Create person cutouts from existing footage. |
 | [fluvie-compose](.skills/fluvie-compose/SKILL.md) | Author framework-specific Fluvie compositions. |

@@ -54,3 +54,25 @@ visual-map:
 # Run synthetic visual-map checks: make visual-map-test
 visual-map-test:
 	python3 -m unittest discover -s tools/visual_map -v
+
+.PHONY: meshy-scene-test meshy-scene-inspect meshy-scene-scaffold meshy-scene-encode
+# Check the optional skill without network or credits. Usage: make meshy-scene-test
+meshy-scene-test:
+	python3 -m unittest discover -s .skills/meshy-scene/tests -v
+
+# Inspect a local GLB. Usage: make meshy-scene-inspect MODEL=/absolute/model.glb
+meshy-scene-inspect:
+	$(if $(strip $(MODEL)),,$(error MODEL is required))
+	python3 .skills/meshy-scene/scripts/scene_capture.py inspect "$(MODEL)"
+
+# Create an isolated capture app. Usage: make meshy-scene-scaffold MODEL=/assets/model.glb OUTPUT=/tmp/capture-app PLATFORM=linux
+meshy-scene-scaffold:
+	$(if $(strip $(MODEL)),,$(error MODEL is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 .skills/meshy-scene/scripts/scene_capture.py scaffold --model "$(MODEL)" --output "$(OUTPUT)" --platform "$(or $(PLATFORM),macos)"
+
+# Encode completed frames with alpha. Usage: make meshy-scene-encode FRAMES=/tmp/frames OUTPUT=/tmp/model.mov
+meshy-scene-encode:
+	$(if $(strip $(FRAMES)),,$(error FRAMES is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 .skills/meshy-scene/scripts/scene_capture.py encode --frames "$(FRAMES)" --output "$(OUTPUT)"
