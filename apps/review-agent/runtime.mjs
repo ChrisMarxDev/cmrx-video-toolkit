@@ -69,7 +69,11 @@ export class ReviewRuntime {
         const headers = { 'X-Review-Token': session.started.token };
         if (req.headers.range) headers.Range = req.headers.range;
         const upstream = httpRequest(`${session.started.origin}/media`, { method: 'GET', headers }, response => {
-          res.writeHead(response.statusCode, response.headers);
+          // The capability above authorizes this cross-origin media read. A
+          // presentation engine may set CORP same-origin for its direct browser
+          // route; forwarding that policy would block playback in MCP resources.
+          res.writeHead(response.statusCode, { ...response.headers,
+            'cross-origin-resource-policy': 'cross-origin' });
           if (req.method === 'HEAD') { response.destroy(); res.end(); }
           else response.pipe(res);
         });
