@@ -136,6 +136,11 @@ only session preview video, supports byte ranges, and exposes no file browser.
 `../editor/web/agent.mjs` chooses HTTP or the MCP Apps postMessage bridge.
 `resource.mjs` bundles the existing editor, without nesting it in another iframe.
 `createServer(runtime, { decorateResource })` accepts caller-owned HTML decoration;
+advanced consumers may instead pass `resourceFactory(origins, decorateResource)`
+and `resourceUri` to supply another presentation of the same session contract.
+The factory returns one MCP resource content object. `requirePath: true` makes
+`open_review.path` required for presentations without a file picker. Defaults
+preserve the existing HTML editor. No consumer fonts or UI code enter this package.
 `REVIEW_ENGINE` can select a Python launcher with the same CLI and session API.
 This supports private branding without copying it into the public toolkit.
 

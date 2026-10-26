@@ -8,7 +8,8 @@ import { editorResource, uiUri } from './resource.mjs';
 import { PreviewRuntime } from '../../tools/previewer/runtime.mjs';
 import { previewResource, previewUri } from '../../tools/previewer/resource.mjs';
 
-export function createServer(runtime, { decorateResource, previewRuntime } = {}) {
+export function createServer(runtime, { decorateResource, previewRuntime,
+  resourceFactory = editorResource, resourceUri = uiUri, requirePath = false } = {}) {
   const server = new McpServer({ name: 'video-review', version: '0.1.0' });
   const result = value => ({ content: [{ type: 'text', text: JSON.stringify(value) }], structuredContent: value });
   const safe = fn => async args => {
@@ -16,13 +17,15 @@ export function createServer(runtime, { decorateResource, previewRuntime } = {})
     catch (error) { return { isError: true, content: [{ type: 'text', text: error.message }] }; }
   };
   const annotations = { readOnlyHint: false, destructiveHint: false, openWorldHint: false };
-  server.registerResource('video-review-editor', uiUri, {}, async () => ({ contents: [
-    await editorResource([await runtime.mediaOrigin()], decorateResource),
+  server.registerResource('video-review-editor', resourceUri, { mimeType: 'text/html;profile=mcp-app' }, async () => ({ contents: [
+    await resourceFactory([await runtime.mediaOrigin()], decorateResource),
   ] }));
   server.registerTool('open_review', {
-    description: 'Open a local recording, edited/rendered video, or review.json directly in the review app. After an authorized draft render, call this with the exact output path and a separate workspace per revision so the human can comment; no re-upload or picker is needed. Feedback times belong to that opened video. Omit path to let the user choose a video in the local browser editor; no chat attachment is needed. Ask the human to review and click Done. Hosts supporting MCP Apps display it inline; other hosts can open browserUrl. Do not infer absent UI from receiving session data.',
-    inputSchema: { path: z.string().min(1).optional(), workspace: z.string().optional(), transcript: z.string().optional() }, annotations,
-    _meta: { ui: { resourceUri: uiUri }, 'openai/outputTemplate': uiUri },
+    description: requirePath
+      ? 'Open a supplied local recording, rendered video or review.json in the review surface. Path is required. Ask the human to review and click Send feedback. Read the completed review with get_review, then edit clear feedback or ask about ambiguity. Hosts supporting MCP Apps display it inline; browserUrl is a manual fallback. Do not infer absent UI from receiving session data. This route does not load live compositions.'
+      : 'Open a local recording, edited/rendered video, or review.json directly in the review app. After an authorized draft render, call this with the exact output path and a separate workspace per revision so the human can comment; no re-upload or picker is needed. Feedback times belong to that opened video. Omit path to let the user choose a video in the local browser editor; no chat attachment is needed. Ask the human to review and click Done. Hosts supporting MCP Apps display it inline; other hosts can open browserUrl. Do not infer absent UI from receiving session data.',
+    inputSchema: { path: requirePath ? z.string().min(1) : z.string().min(1).optional(), workspace: z.string().optional(), transcript: z.string().optional() }, annotations,
+    _meta: { ui: { resourceUri }, 'openai/outputTemplate': resourceUri },
   }, safe(args => runtime.open(args)));
   server.registerTool('get_review', {
     description: 'Read review progress. After explicit Done, returns the canonical review.json, its artifact path and completion receipt. Drafts are not approval.',

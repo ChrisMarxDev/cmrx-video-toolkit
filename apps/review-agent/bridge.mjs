@@ -49,5 +49,5 @@ export function embeddedRequest({ sessionId, callServerTool }) {
 }
 
 export function continuationMessage(result) {
-  return `Video review ${result.sessionId} is complete. Call get_review with this sessionId, read the saved review, and continue the agreed workflow. Do not assume rendering was requested.`;
+  return `Video review ${result.sessionId} is complete. Call get_review with this sessionId, read the saved review, and continue the agreed workflow. Edit when the feedback is clear; ask a concise question when it is ambiguous. Do not assume rendering was requested.`;
 }
