@@ -19,3 +19,9 @@ A full flattened rough-cut MP4 is not a prerequisite for composition.
 diagnostics. It produces `composition/assets/rough-cut.mp4` and
 `edit/narration.wav`; these are legacy/export artifacts, not the default scene
 handoff. Per-clip proxies and required audio preparation remain allowed.
+
+For optional pixel-change evidence during source review, follow the
+[edit-stage guidance](../../.skills/edit-video/references/edit.md#optional-visual-evidence-before-cut-decisions)
+and [visual-map tool](../../tools/visual_map/README.md). It helps inspect movement
+and held changes, with reference selection and review-coverage checks. Candidate
+windows locate original passages; they are not edit decisions or automatic cuts.

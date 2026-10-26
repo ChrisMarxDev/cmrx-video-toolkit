@@ -47,7 +47,8 @@ Paths in commands are toolkit-root-relative; skill links are file-relative.
 
 - New recording/workspace: [ingest](references/ingest.md).
 - Missing or incorrect recognition: [transcribe](references/transcribe.md).
-- Cut decisions or changed narration: [edit](references/edit.md).
+- Cut decisions, changed narration or optional visual evidence for source review:
+  [edit](references/edit.md).
 - Visual plan: [storyboard](references/storyboard.md).
 - Placement and timeline integration: [compose](references/compose.md).
 - Export and delivery checks: [render](references/render.md).

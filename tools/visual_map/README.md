@@ -3,7 +3,9 @@
 A local, model-free visual equivalent of an audio level map. It measures pixel
 changes to help a human or downstream agent select original passages for closer
 inspection. It does not identify faces, gaze, gestures, notes-reading or bad takes.
-Nothing invokes it automatically; it does not change review files or apply edits.
+The [edit workflow](../../.skills/edit-video/references/edit.md#optional-visual-evidence-before-cut-decisions)
+can use it as an optional source-inspection aid. Nothing invokes it automatically;
+it does not change review files or apply edits.
 
 Requires Python 3.9+ and FFmpeg/ffprobe on PATH (including `-fps_mode` support).
 No Python packages, downloaded models, APIs or browser are needed.
