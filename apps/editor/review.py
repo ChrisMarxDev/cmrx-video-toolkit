@@ -291,6 +291,15 @@ def export(doc, workspace, render=False, progress=lambda text: None, cancel=None
         raise ValueError('Original recording is missing or changed')
     decisions = dict(version=2, videoPath=str(source), retainedRanges=retained_ranges(doc))
     timeline = video.import_cut(decisions, doc['source']['duration'])
+    project = dict(version=1, name='video-review', source=str(source), fps=30,
+                   width=doc['source']['width'], height=doc['source']['height'])
+    existing = Path(workspace) / 'project.json'
+    if existing.exists():
+        config = read(existing)
+        if config.get('companions'):
+            if Path(config.get('source', '')).expanduser().resolve() != source.resolve():
+                raise ValueError('Linked project source differs from the reviewed recording')
+            project['companions'] = video.validate_companion_ranges(config, timeline)
     target = Path(workspace) / 'exports' / uuid.uuid4().hex[:12]
     target.mkdir(parents=True)
     notes = []
@@ -305,7 +314,7 @@ def export(doc, workspace, render=False, progress=lambda text: None, cancel=None
         notes.append(note)
     annotations = dict(version=1, notes=notes)
     resolved = video.map_annotations(annotations, timeline)
-    write(target / 'project.json', dict(version=1, name='video-review', source=str(source), fps=30, width=doc['source']['width'], height=doc['source']['height']))
+    write(target / 'project.json', project)
     exported_doc = copy.deepcopy(doc)
     exported_doc['source']['path'] = str(source)
     write(target / 'review.json', exported_doc)

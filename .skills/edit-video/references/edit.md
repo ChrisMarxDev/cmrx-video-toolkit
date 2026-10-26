@@ -65,3 +65,12 @@ Use `review_start` / `review_end` only to locate passages in original source tim
 the resampled grid is not an exact cut boundary. The JSON is not an edit file and
 must not be imported as cuts. Only independently reviewed editorial decisions enter
 the normal edit/import-edit flow, preserving complete speech and source handles.
+
+## Cuts across linked recordings
+
+Use one retained-range list in the primary recording’s clock. `prepare-clips`
+applies it to every registered companion; `adjust-clip` validates coverage before
+saving. Never edit the screen independently when it should remain synchronized.
+Keep useful screen actions during speech gaps unless deliberately removed. Review
+the resulting paired footage in the composition; the source review editor still
+shows one primary recording. See [linked recordings](../../../docs/contracts.md#optional-linked-recordings-face--screen).

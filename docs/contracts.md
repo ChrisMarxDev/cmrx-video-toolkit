@@ -55,8 +55,9 @@ can introduce small (< one-frame per segment) deviations. The media check tolera
 ## Boundaries
 
 v1 supports one original video with audio, ordered nonoverlapping words, word-based
-deletions, and no source reordering or speed changes. Audio-only input, multi-camera
-edits, new voice synthesis, and source reordering are outside the review tool. Manual transcript
+deletions, and no source reordering or speed changes. Optional linked recordings
+follow that primary source’s cuts (see below). Independent multi-camera editing,
+audio-only input, new voice synthesis, and source reordering are outside the review tool. Manual transcript
 spelling fixes don't create new speech. Cuts may need a re-recorded pickup when a
 natural join cannot be made. Reusable scene durations must follow narration, not
 compress speech to fit a graphic.
@@ -213,3 +214,84 @@ Boundary samples include the frames before/at/after each cut; use --draft when
 checking the half-size draft entry. One current draft/final output is sufficient;
 review feedback is tied to exact bytes in a disposable review workspace, not a
 mandatory deliverable history. Never replace a file during its active review.
+
+## Optional linked recordings: face + screen
+
+The primary `project.json.source` remains the narration and edit clock. Optional
+`companions` link other original recordings to that clock with fixed offsets:
+
+```json
+{"id":"screen","path":"/absolute/screen.mp4","offset_seconds":0.5}
+```
+
+Place these objects in the project's `companions` array, or use the agent-operated
+commands below. **Companion time = primary time + offset_seconds.** A screen file
+with 0.5 seconds of extra lead-in has offset `+0.5`. A companion that started later
+has a negative offset. Establish this from actual evidence; this feature does not
+estimate offsets, repair clock drift or align independent edits automatically.
+
+```sh
+make video-link-source PROJECT=/path/project ID=screen SOURCE=/absolute/screen.mp4 OFFSET=0.5
+make video-prepare-clips PROJECT=/path/project
+make video-compose PROJECT=/path/project COMPANION=screen
+# Remove the link, retaining original files and cached excerpts:
+make video-unlink-source PROJECT=/path/project ID=screen
+```
+
+These targets also forward from the Studio root. The underlying commands are
+`video.py link-source <project> <id> --source <file> --offset <seconds>` and
+`link-source <project> <id> --remove`. Re-registering an ID updates that link.
+`primary` is reserved. IDs follow the same syntax as clip IDs. Stored paths are
+absolute; offsets must be finite. Original files are never modified.
+
+Every retained primary range is mapped to each companion and prepared independently
+from its original. All members retain the same clip ID and output interval, start
+at local zero, and use the project frame rate. Companions must cover every retained
+range; an uncovered range fails rather than freezing, padding or stretching it.
+Input frame-rate differences are resampled; constant offsets do not correct drift.
+Sub-frame synchronization remains limited by source/project frame precision.
+
+The primary must contain video and audio. Companion audio is deliberately removed,
+whether or not present, so screen files can be silent and narration is not doubled.
+Independent system-audio mixing is not part of this feature. Project media filters
+apply to both pictures; primary audio filters do not apply to companions.
+
+`edit/clips.json` stays version 1 for single-source projects. Linked projects use
+version 2: existing top-level `clips`, `source`, `source_sha256` and `profile` retain
+primary semantics; `companions` contains each ID, path, offset, source hash,
+encoding profile and prepared clips. Companion `source_start/end` refer to its
+own original file; `output_start/end` remain shared. Changes to any linked source,
+offset, membership or prepared asset invalidate composition inputs.
+
+Generated Dart keeps `sourceClips` and `sourceClip('intro')` for the primary.
+Use `sourceClip('intro', sourceId: 'screen')` or `companionClips['screen']` for a
+linked source. Prepared asset duration is the shared scene interval; both clips
+use a trim starting at zero. `compose --companion screen` creates a simple
+side-by-side baseline. Without that option the baseline stays primary-only.
+Authored compositions are never replaced implicitly. For custom layouts:
+
+```dart
+final face = sourceClip('intro');
+final screen = sourceClip('intro', sourceId: 'screen');
+// Put these in the same Scene, sized/positioned with ordinary Flutter widgets.
+Clip.asset(face.asset, trim: 0.seconds.to(face.duration.seconds));
+Clip.asset(screen.asset, trim: 0.seconds.to(face.duration.seconds),
+    audio: const ClipAudio.muted());
+```
+
+Keep the narration-bearing primary Clip mounted when hiding its picture; merely
+removing it also removes its audio declaration. The legacy `cut` command still
+exports only primary footage; use the Fluvie composition for the combined video.
+Review documents remain single-source: select cuts against the primary, then
+inspect both sources in live composition. Do not remove useful screen activity
+merely because narration pauses. Reprepare after boundary changes, reconcile scene
+and caption timing, and update the composition manifest only after that work.
+
+`make linked-sources-test` exercises synthetic fixed-offset recordings, silent
+companions, paired cuts, cache reuse and rejection/invalidation behavior. Actual
+footage still needs visual and listening checks, especially on long recordings.
+
+When a review workspace itself contains `project.json` for the same primary,
+exported review handoffs preserve its companion definitions and validate coverage.
+For reviews stored separately, import their `edit/decisions.json` into the existing
+linked project with `import-edit`; the review UI cannot infer companion files.

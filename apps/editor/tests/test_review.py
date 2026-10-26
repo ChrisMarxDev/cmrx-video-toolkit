@@ -34,6 +34,26 @@ def obj(start, end, identifier='object'):
 
 
 class ContractTests(unittest.TestCase):
+    def test_export_preserves_matching_project_companions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'original.mp4'
+            source.write_bytes(b'synthetic original')
+            doc = document()
+            doc['source']['sha256'] = review.fingerprint(source)
+            companions = [dict(id='screen', path=str(root / 'screen.mp4'), offset_seconds=.5)]
+            review.write(root / 'project.json', dict(source=str(source), companions=companions))
+            with patch.object(review.video, 'validate_companion_ranges', return_value=companions) as check:
+                review.export(doc, root)
+                check.assert_called_once()
+            exported = list((root / 'exports').glob('*/project.json'))
+            self.assertEqual(review.read(exported[0])['companions'], companions)
+            review.write(root / 'project.json', dict(source=str(root / 'other.mp4'), companions=companions))
+            with self.assertRaisesRegex(ValueError, 'differs'):
+                review.export(doc, root)
+            self.assertEqual(len(list((root / 'exports').iterdir())), 1)
+
+
     def test_missing_recognizer_fails_before_media_preparation(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

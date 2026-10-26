@@ -76,3 +76,31 @@ meshy-scene-encode:
 	$(if $(strip $(FRAMES)),,$(error FRAMES is required))
 	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
 	python3 .skills/meshy-scene/scripts/scene_capture.py encode --frames "$(FRAMES)" --output "$(OUTPUT)"
+
+.PHONY: video-link-source video-unlink-source video-prepare-clips video-compose linked-sources-test
+# Link a recording: make video-link-source PROJECT=/video ID=screen SOURCE=/screen.mp4 OFFSET=0.5
+video-link-source:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	$(if $(strip $(ID)),,$(error ID is required))
+	$(if $(strip $(SOURCE)),,$(error SOURCE is required))
+	python3 scripts/video.py link-source "$(PROJECT)" "$(ID)" --source "$(SOURCE)" --offset "$(or $(OFFSET),0)"
+
+# Remove a companion: make video-unlink-source PROJECT=/video ID=screen
+video-unlink-source:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	$(if $(strip $(ID)),,$(error ID is required))
+	python3 scripts/video.py link-source "$(PROJECT)" "$(ID)" --remove
+
+# Prepare all synchronized excerpts: make video-prepare-clips PROJECT=/video
+video-prepare-clips:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	python3 scripts/video.py prepare-clips "$(PROJECT)"
+
+# Scaffold without replacing authored scenes: make video-compose PROJECT=/video COMPANION=screen
+video-compose:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	python3 scripts/video.py compose "$(PROJECT)" $(if $(COMPANION),--companion "$(COMPANION)")
+
+# Synthetic linked-source media regression: make linked-sources-test
+linked-sources-test:
+	python3 -m unittest discover -s tests -p 'test_linked_sources.py' -v

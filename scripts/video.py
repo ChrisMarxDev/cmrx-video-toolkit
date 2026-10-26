@@ -297,6 +297,7 @@ def import_edit(args):
                 span['clip_id'] = identity
         identify_spans(timeline['spans'], timeline['spans'])
         timeline['revision'] = digest({k: v for k, v in timeline.items() if k != 'revision'})
+    validate_companion_ranges(read(p / 'project.json'), timeline)
     remap_words(timeline, data)
     mapped = map_annotations(read(p / 'annotations.json'), timeline)
     remap_transcript(p, timeline)
@@ -329,6 +330,7 @@ def adjust_clip(args):
     data = dict(version=2, videoPath=config['source'], retainedRanges=ranges,
                 provenance=decisions.get('provenance', decisions))
     updated = import_cut(data, duration)  # validates source bounds and neighbors
+    validate_companion_ranges(config, updated)
     remap_words(updated, data)
     mapped = map_annotations(read(p / 'annotations.json'), updated)
     remap_transcript(p, updated)
@@ -336,6 +338,71 @@ def adjust_clip(args):
     write(p / 'edit/timeline.json', updated)
     write(p / 'storyboard/annotations.resolved.json', mapped)
     print(f"Updated {args.clip_id}; {updated['duration']:.3f}s total. Run prepare-clips, then reconcile scene durations and cues. Measured words and source captions have been remapped; partial cues need review.")
+
+
+def companion_sources(config, require_files=True):
+    """Companion time = primary time + offset; primary remains the edit clock."""
+    values = config.get('companions', [])
+    if not isinstance(values, list):
+        raise ValueError('companions must be a list')
+    result, seen = [], {'primary'}
+    for item in values:
+        if not isinstance(item, dict):
+            raise ValueError('Each companion must be an object')
+        identity, offset = item.get('id'), item.get('offset_seconds', 0)
+        if not isinstance(identity, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,63}', identity):
+            raise ValueError('Companion id must start with a letter and contain at most 64 letters, digits, _ or -')
+        if identity in seen:
+            raise ValueError(f'Duplicate or reserved companion id: {identity}')
+        if not finite(offset):
+            raise ValueError('Companion offset_seconds must be finite')
+        if not isinstance(item.get('path'), str) or not Path(item['path']).expanduser().is_absolute():
+            raise ValueError('Companion path must be absolute')
+        source = Path(item['path']).expanduser().resolve()
+        if require_files and not source.is_file():
+            raise ValueError(f'Missing companion recording: {source}')
+        seen.add(identity)
+        result.append(dict(id=identity, path=str(source), offset_seconds=float(offset)))
+    return result
+
+
+def validate_companion_ranges(config, timeline):
+    sources = companion_sources(config)
+    for item in sources:
+        info = probe(item['path'])
+        videos = [v for v in info['streams'] if v['codec_type'] == 'video']
+        if not videos:
+            raise ValueError(f'Companion {item["id"]} needs a video stream')
+        # The selected video must cover the range, not merely a longer audio stream.
+        duration = float(videos[0].get('duration', info['format']['duration']))
+        for span in timeline['spans']:
+            start, end = (span[k] + item['offset_seconds'] for k in ('source_start', 'source_end'))
+            try:
+                interval(start, end, duration)
+            except ValueError as exc:
+                raise ValueError(f'Companion {item["id"]} does not cover clip {span["clip_id"]}: {exc}') from exc
+    return sources
+
+
+def link_source(args):
+    p = project_dir(args.project)
+    config = read(p / 'project.json')
+    current = companion_sources(config, require_files=False)
+    if args.remove:
+        if not any(x['id'] == args.source_id for x in current):
+            raise ValueError(f'Unknown companion: {args.source_id}')
+        config['companions'] = [x for x in current if x['id'] != args.source_id]
+    else:
+        if not args.source:
+            raise ValueError('--source is required unless --remove is used')
+        candidate = dict(id=args.source_id, path=str(Path(args.source).expanduser().resolve()),
+                         offset_seconds=args.offset)
+        config['companions'] = [x for x in current if x['id'] != args.source_id] + [candidate]
+    companion_sources(config)
+    if (p / 'edit/timeline.json').exists():
+        validate_companion_ranges(config, read(p / 'edit/timeline.json'))
+    write(p / 'project.json', config)
+    print('Linked sources updated. Run prepare-clips and reconcile the composition before preview/export.')
 
 
 def clip_profile(config):
@@ -350,12 +417,18 @@ def clip_profile(config):
                 ffmpeg=config.get('media', {}).get('ffmpeg', 'ffmpeg'))
 
 
-def write_clip_dart(p, clips):
+def write_clip_dart(p, clips, companions=None):
     """Generated data only; never rewrite the agent's authored scene widgets."""
     rows = '\n'.join(
         '  SourceClip(' + ', '.join([dart_string(c['clip_id']), dart_string(c['asset']),
                                    *[str(float(c[k])) for k in ('source_start', 'source_end', 'output_start', 'output_end')]]) + '),'
         for c in clips)
+    linked_rows = '\n'.join(
+        '  ' + dart_string(source['id']) + ': <SourceClip>[\n' + '\n'.join(
+            '    SourceClip(' + ', '.join([dart_string(c['clip_id']), dart_string(c['asset']),
+                *[str(float(c[k])) for k in ('source_start', 'source_end', 'output_start', 'output_end')]]) + '),'
+            for c in source['clips']) + '\n  ],'
+        for source in (companions or []))
     target = composition_dir(p) / 'lib/source_clips.dart'
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix('.dart.tmp')
@@ -370,19 +443,23 @@ class SourceClip {
 const sourceClips = <SourceClip>[
 ''' + rows + '''
 ];
-SourceClip sourceClip(String id) => sourceClips.firstWhere((clip) => clip.id == id);
+const companionClips = <String, List<SourceClip>>{
+''' + linked_rows + '''
+};
+SourceClip sourceClip(String id, {String sourceId = 'primary'}) =>
+    (sourceId == 'primary' ? sourceClips : companionClips[sourceId] ??
+      (throw ArgumentError('Unknown source: $sourceId')))
+        .firstWhere((clip) => clip.id == id);
 ''', encoding='utf-8')
     temporary.replace(target)
 
 
-def prepare_clips(args):
-    p = project_dir(args.project)
-    config, timeline = read(p / 'project.json'), read(p / 'edit/timeline.json')
-    if any('clip_id' not in s for s in timeline['spans']):
-        raise ValueError('Timeline predates clip IDs; reimport edit/decisions.json first')
+def prepare_source_clips(p, config, timeline, silent=False):
     source = Path(config['source']).resolve()
     source_hash = file_digest(source)
     profile = clip_profile(config)
+    if silent:
+        profile = {**profile, 'audio_mode': 'silent', 'audio_filter': ''}
     source_info = probe(source)
     if any(s.get('color_transfer') in ('arib-std-b67', 'smpte2084') for s in source_info['streams']) and not profile['hdr_to_sdr']:
         raise ValueError('HDR footage needs explicit color-managed preparation before the SDR clip encoder; preserve original-source provenance')
@@ -418,15 +495,16 @@ def prepare_clips(args):
                 audio_args = ['-af', profile['audio_filter']] if profile['audio_filter'] else []
                 color_args = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709'] if profile['hdr_to_sdr'] else []
                 run([profile['ffmpeg'], '-nostdin', '-v', 'error', '-y', '-ss', start, '-i', source,
-                     '-t', end - start, '-map', '0:v:0', '-map', '0:a:0',
+                     '-t', end - start, '-map', '0:v:0',
+                     *(['-an'] if silent else ['-map', '0:a:0']),
                      '-vf', ','.join(vf), *audio_args, *color_args, '-c:v', profile['video_codec'], '-preset', profile['preset'],
                      '-crf', profile['crf'], '-pix_fmt', profile['pixel_format'],
-                     '-c:a', profile['audio_codec'], '-ar', profile['sample_rate'],
+                     *([] if silent else ['-c:a', profile['audio_codec'], '-ar', profile['sample_rate']]),
                      '-movflags', '+faststart', temporary])
                 info = probe(temporary)
                 streams = info['streams']
-                if not {'audio', 'video'} <= {s['codec_type'] for s in streams}:
-                    raise ValueError('Clip preparation requires source video and audio')
+                if not ({'video'} if silent else {'audio', 'video'}) <= {s['codec_type'] for s in streams}:
+                    raise ValueError('Clip preparation requires video (and audio for the primary source)')
                 media_duration = float(info['format']['duration'])
                 if abs(media_duration - (end - start)) > max(1 / profile['fps'], 1024 / 48000) + .005:
                     raise ValueError(f'Clip duration mismatch for {span["clip_id"]}')
@@ -440,12 +518,37 @@ def prepare_clips(args):
                       'sha256': cached['sha256'], 'media_duration': cached['media_duration']})
     if file_digest(source) != source_hash:
         raise ValueError('Original source changed during clip preparation; retry with stable media')
-    manifest = dict(version=1, timeline_revision=timeline['revision'],
-                    source=str(source), source_sha256=source_hash, profile=profile, clips=clips)
-    write_clip_dart(p, clips)
+    return dict(source=str(source), source_sha256=source_hash, profile=profile, clips=clips), encoded
+
+
+def prepare_clips(args):
+    p = project_dir(args.project)
+    config, timeline = read(p / 'project.json'), read(p / 'edit/timeline.json')
+    if any('clip_id' not in s for s in timeline['spans']):
+        raise ValueError('Timeline predates clip IDs; reimport edit/decisions.json first')
+    sources = validate_companion_ranges(config, timeline)
+    primary, encoded = prepare_source_clips(p, config, timeline)
+    companions = []
+    for item in sources:
+        offset = item['offset_seconds']
+        linked_timeline = {**timeline, 'source_duration': float(probe(item['path'])['format']['duration']),
+            'spans': [{**span, 'source_start': span['source_start'] + offset,
+                      'source_end': span['source_end'] + offset} for span in timeline['spans']]}
+        prepared, count = prepare_source_clips(p, {**config, 'source': item['path']}, linked_timeline, silent=True)
+        companions.append({**item, **prepared})
+        encoded += count
+    # Check all sources again after the whole batch, before publishing either handoff.
+    for source in [primary, *companions]:
+        if file_digest(source['source']) != source['source_sha256']:
+            raise ValueError('Original source changed during clip preparation; retry with stable media')
+    manifest = dict(version=1, timeline_revision=timeline['revision'], **primary)
+    if companions:
+        manifest.update(version=2, companions=companions)
+    write_clip_dart(p, primary['clips'], companions)
     write(p / 'edit/clips.json', manifest)
+    count = len(primary['clips']) + sum(len(x['clips']) for x in companions)
     print(json.dumps(dict(manifest=str(p / 'edit/clips.json'), encoded=encoded,
-                          reused=len(clips) - encoded, clips=len(clips))))
+                          reused=count - encoded, clips=count)))
 
 
 def checked_clips(p, timeline):
@@ -455,7 +558,14 @@ def checked_clips(p, timeline):
             manifest['profile'] != clip_profile(config) or
             manifest['source_sha256'] != file_digest(config['source'])):
         raise ValueError('Prepared clips are stale; run prepare-clips and reconcile the composition')
-    for clip in manifest['clips']:
+    sources = companion_sources(config)
+    prepared = manifest.get('companions', [])
+    if [{k: x[k] for k in ('id', 'path', 'offset_seconds')} for x in prepared] != sources:
+        raise ValueError('Linked sources changed; run prepare-clips and reconcile the composition')
+    for source in prepared:
+        if file_digest(source['path']) != source['source_sha256']:
+            raise ValueError('Linked source changed; run prepare-clips')
+    for clip in [*manifest['clips'], *(c for source in prepared for c in source['clips'])]:
         if file_digest(composition_dir(p) / clip['asset']) != clip['sha256']:
             raise ValueError('Prepared clip changed; run prepare-clips')
     return manifest
@@ -517,6 +627,9 @@ def compose(args):
     if (main.exists() or authored) and not args.replace:
         raise ValueError('Composition exists. Edit it directly, or explicitly pass --replace to regenerate.')
     clips = checked_clips(p, timeline)
+    companion = getattr(args, 'companion', None)
+    if companion and companion not in {x['id'] for x in clips.get('companions', [])}:
+        raise ValueError(f'Unknown prepared companion: {companion}')
     main.parent.mkdir(parents=True, exist_ok=True)
     package = Path(os.environ.get('CMRX_COMPONENT_PACKAGE', str(ROOT / 'components')))
     package_name = os.environ.get('CMRX_COMPONENT_NAME', 'video_components')
@@ -564,6 +677,18 @@ flutter:
     background: Background.color({background}),
     children: [Clip.asset(clip.asset,
       trim: 0.seconds.to(clip.duration.seconds), fit: BoxFit.contain)],
+  )'''
+    if companion:
+        scene_code = f'''for (final clip in sourceClips) Scene(
+    duration: clip.duration.seconds,
+    background: Background.color({background}),
+    children: [Row(children: [
+      Expanded(child: Clip.asset(clip.asset,
+        trim: 0.seconds.to(clip.duration.seconds), fit: BoxFit.contain)),
+      Expanded(child: Clip.asset(sourceClip(clip.id, sourceId: {dart_string(companion)}).asset,
+        trim: 0.seconds.to(clip.duration.seconds),
+        audio: const ClipAudio.muted(), fit: BoxFit.contain)),
+    ])],
   )'''
     clip_import = os.path.relpath(composition / 'lib/source_clips.dart', main.parent).replace(os.sep, '/')
     main.write_text(f'''import 'package:flutter/widgets.dart' hide Animation, Clip, Image, Tween;
@@ -684,8 +809,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     p = commands.add_parser('init'); p.add_argument('name'); p.add_argument('--source', required=True); p.set_defaults(func=init)
-    for name, fn in [('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
+    for name, fn in [('link-source', link_source), ('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
         p = commands.add_parser(name); p.add_argument('project'); p.set_defaults(func=fn)
+        if name == 'link-source':
+            p.add_argument('source_id')
+            p.add_argument('--source')
+            p.add_argument('--offset', type=float, default=0, help='Companion time = primary time + offset seconds')
+            p.add_argument('--remove', action='store_true')
         if name in ['qa', 'import-edit']: p.add_argument('file')
         if name == 'qa':
             p.add_argument('--draft', action='store_true', help='Expect half-resolution draft output')
@@ -697,6 +827,7 @@ def main():
             p.add_argument('--padding', type=float, default=.08)
         if name == 'compose':
             p.add_argument('--replace', action='store_true')
+            p.add_argument('--companion', help='Optional linked source ID for a side-by-side baseline')
         if name == 'adjust-clip':
             p.add_argument('clip_id')
             p.add_argument('--start', type=float, help='New start in original-source seconds')

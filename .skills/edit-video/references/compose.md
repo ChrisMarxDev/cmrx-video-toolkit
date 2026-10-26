@@ -46,3 +46,14 @@ clip can supply multiple trimmed scene ranges when deliberately authored. Preser
 speech handles at boundaries and check joins in live preview. Revisions change
 the relevant scene code and timeline, then reload the same composition. Preview
 and final export use the same authored scene sequence, not separate reconstructions.
+
+## Optional face/screen scenes
+
+Prepared companions are available through `sourceClip(clip.id, sourceId: 'screen')`.
+They share the primary clip’s output interval and start at local zero. Compose
+both in one scene with ordinary layout widgets; use `ClipAudio.muted()` for the
+companion, whose prepared asset intentionally contains no audio. Keep the primary
+narration mounted even when changing its visual prominence. `compose --companion
+screen` can scaffold a side-by-side starting point for a new composition; do not
+replace authored work. Validate playback/seeking, joins and final export for both
+sources. See [linked recordings](../../../docs/contracts.md#optional-linked-recordings-face--screen).
