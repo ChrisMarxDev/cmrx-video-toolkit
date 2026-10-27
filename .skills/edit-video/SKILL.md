@@ -63,9 +63,11 @@ specialists only for their implementation or integration constraints:
 [shaders](../component-shaders/SKILL.md), [3D](../component-3d/SKILL.md),
 [dithering](../component-dithering/SKILL.md).
 Use [effect-background-remove](../effect-background-remove/SKILL.md) only for
-person cutouts, and [fluvie-generative-ai](../fluvie-generative-ai/SKILL.md) only
-when generation is part of the request. No generation keys/models are required
-for ordinary editing. Tools and libraries stay shared; skills do not own copies.
+person cutouts. Use [effect-behind-subject](../effect-behind-subject/SKILL.md)
+when content should sit between the source clip and a matching person cutout.
+Use [fluvie-generative-ai](../fluvie-generative-ai/SKILL.md) only when generation
+is part of the request. No generation keys/models are required for ordinary
+editing. Tools and libraries stay shared; skills do not own copies.
 
 ## Establish video style
 

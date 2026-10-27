@@ -77,6 +77,17 @@ meshy-scene-encode:
 	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
 	python3 .skills/meshy-scene/scripts/scene_capture.py encode --frames "$(FRAMES)" --output "$(OUTPUT)"
 
+.PHONY: foreground-sandwich-test foreground-sandwich-inspect
+# Check the optional foreground sandwich helper: make foreground-sandwich-test
+foreground-sandwich-test:
+	python3 -m unittest discover -s .skills/effect-behind-subject/tests -v
+
+# Check editable layer inputs. Usage: make foreground-sandwich-inspect BASE=/clip.mp4 CUTOUT=/foreground.mov
+foreground-sandwich-inspect:
+	$(if $(strip $(BASE)),,$(error BASE is required))
+	$(if $(strip $(CUTOUT)),,$(error CUTOUT is required))
+	python3 .skills/effect-behind-subject/scripts/foreground_sandwich.py inspect --base "$(BASE)" --cutout "$(CUTOUT)"
+
 .PHONY: video-link-source video-unlink-source video-prepare-clips video-compose linked-sources-test
 # Link a recording: make video-link-source PROJECT=/video ID=screen SOURCE=/screen.mp4 OFFSET=0.5
 video-link-source:

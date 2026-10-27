@@ -18,6 +18,7 @@ toolkit runtime. Installing a skill alone does not install its dependencies.
 | [edit-video](../.skills/edit-video/SKILL.md) | Core skill | Create or revise a video, coordinating the workflow from source material to reviewed export. |
 | [video-style](../.skills/video-style/SKILL.md) | Skill | Define or refine your colors, typography, framing, motion and editorial rules. |
 | [video-review](../.skills/video-review/SKILL.md) | Skill | Review cuts and visuals, collect timed feedback and return it to the agent. |
+| [vertical-video](../.skills/vertical-video/SKILL.md) | Skill | Check portrait format, export compatibility and platform UI safe areas without editorial changes. |
 
 ### Editing subskills / workflow stages
 
@@ -49,6 +50,7 @@ invoked skills. The agent enters at the stage your project needs.
 | Skill | When it’s useful |
 | --- | --- |
 | [effect-background-remove](../.skills/effect-background-remove/SKILL.md) | Turn existing footage of a person into an alpha cutout for composition. |
+| [effect-behind-subject](../.skills/effect-behind-subject/SKILL.md) | Layer text, images or Flutter content behind a person while keeping the scene editable. |
 | [meshy-scene](../.skills/meshy-scene/SKILL.md) | Prepare Meshy models, rigs and motion clips for an isolated Flutter Scene workflow. |
 | [fluvie-generative-ai](../.skills/fluvie-generative-ai/SKILL.md) | Generate media or a prompt-authored composition when generation is requested. |
 

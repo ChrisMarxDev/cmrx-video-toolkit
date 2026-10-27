@@ -14,8 +14,8 @@
     },
     {
       "title": "Fluvie & effects",
-      "description": "Compose and render with Fluvie; optionally generate media or remove a person’s background.",
-      "skills": ["fluvie-compose", "fluvie-validate", "fluvie-render", "fluvie-generative-ai", "effect-background-remove"]
+      "description": "Compose and render with Fluvie; optionally generate media, remove a person’s background, or place content behind a subject.",
+      "skills": ["fluvie-compose", "fluvie-validate", "fluvie-render", "fluvie-generative-ai", "effect-background-remove", "effect-behind-subject"]
     }
   ]
 }

@@ -60,6 +60,7 @@ validate its output in your target environment.
 - **component-3d** — Capture native Flutter Scene geometry.
 - **component-dithering** — Implement deterministic component dither textures.
 - **effect-background-remove** — Create person cutouts from existing footage.
+- **effect-behind-subject** — Place editable content between a source clip and its person cutout.
 - **fluvie-compose** — Author framework-specific Fluvie compositions.
 - **fluvie-render** — Preview, export and diagnose Fluvie rendering.
 - **fluvie-generative-ai** — Generate media or prompt-authored compositions.
