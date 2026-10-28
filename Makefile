@@ -170,3 +170,20 @@ media-evidence-test:
 speech-model-test:
 	$(if $(strip $(MODELS)),,$(error MODELS is required))
 	EVIDENCE_MODELS="$(MODELS)" $(EVIDENCE_PYTHON) -m unittest discover -s tests -p 'test_media_evidence.py' -v
+
+.PHONY: video-apply-edits video-recover-edits batch-edits-test
+# Apply several boundary adjustments with one remap. Usage: make video-apply-edits PROJECT=/video EDITS=/batch.json REVISION=sha DRY_RUN=1
+video-apply-edits:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	$(if $(strip $(EDITS)),,$(error EDITS is required))
+	$(if $(strip $(REVISION)),,$(error REVISION is required))
+	python3 scripts/video.py apply-edits "$(PROJECT)" "$(EDITS)" --expected-revision "$(REVISION)" $(if $(filter 1,$(DRY_RUN)),--dry-run)
+
+# Recover after the writing process has stopped. Usage: make video-recover-edits PROJECT=/video
+video-recover-edits:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	python3 scripts/video.py recover-edits "$(PROJECT)"
+
+# Test final-state validation, rollback and process interruption. Usage: make batch-edits-test
+batch-edits-test:
+	python3 -m unittest discover -s tests -p 'test_batch_edits.py' -v

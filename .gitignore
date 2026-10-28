@@ -72,3 +72,7 @@ __pycache__/
 
 # Approved public README demonstration.
 !/docs/public/toolkit-walkthrough.mp4
+
+# Temporary local edit publication/recovery state.
+.edit-update/
+*.edit-update-tmp

@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT))
 from fluvie_project import settings, PIN
 from validate_fluvie import validate
+import edit_transaction
 
 
 def read(path):
@@ -238,6 +239,8 @@ def map_annotations(annotations, timeline):
 
 def project_dir(value):
     p = Path(value).resolve()
+    if (p / edit_transaction.DIRECTORY).exists():
+        raise ValueError('Edit update active/interrupted; run recover-edits after its process stops')
     if not (p / 'project.json').exists():
         raise ValueError(f'Not a video project: {p}')
     return p
@@ -308,37 +311,100 @@ def import_edit(args):
     print(f"Imported {len(timeline['spans'])} clips; {timeline['duration']:.3f}s. Run prepare-clips and reconcile the composition.")
 
 
-def adjust_clip(args):
-    """Change source boundaries, preserving clip identity and remapping all cues."""
-    p = project_dir(args.project)
+def apply_adjustments(p, operations, expected_revision=None, dry_run=False):
+    """Plan final boundaries once; stage derived files before touching current artifacts."""
+    inputs = (*edit_transaction.ARTIFACTS, 'project.json', 'annotations.json', 'transcript/segments.json')
+    expected = edit_transaction.snapshot(p, inputs)
     timeline = read(p / 'edit/timeline.json')
-    ranges = [{k: s[k] for k in ('clip_id', 'source_start', 'source_end')}
-              for s in timeline['spans']]
-    selected = next((s for s in ranges if s['clip_id'] == args.clip_id), None)
-    if selected is None:
-        raise ValueError(f'Unknown clip_id: {args.clip_id}')
-    if args.start is None and args.end is None:
-        raise ValueError('Supply --start and/or --end in original-source seconds')
-    if args.start is not None:
-        selected['source_start'] = args.start
-    if args.end is not None:
-        selected['source_end'] = args.end
+    if expected_revision is not None and timeline['revision'] != expected_revision:
+        raise ValueError('Stale expected revision; reload the timeline before editing')
+    if not isinstance(operations, list) or not operations:
+        raise ValueError('operations must be a nonempty list of clip adjustments')
+    ranges = [{k: span[k] for k in ('clip_id', 'source_start', 'source_end')}
+              for span in timeline['spans']]
+    by_id = {span['clip_id']: span for span in ranges}
+    seen = set()
+    for operation in operations:
+        if not isinstance(operation, dict) or set(operation) - {'clip_id', 'start', 'end'}:
+            raise ValueError('Each operation needs clip_id and start and/or end only')
+        clip_id = operation.get('clip_id')
+        if not isinstance(clip_id, str) or clip_id not in by_id:
+            raise ValueError(f'Unknown clip_id: {clip_id}')
+        if clip_id in seen:
+            raise ValueError(f'Duplicate adjustment for {clip_id}; combine its start/end in one operation')
+        seen.add(clip_id)
+        if not {'start', 'end'} & operation.keys():
+            raise ValueError('Supply start and/or end in original-source seconds')
+        for key in ('start', 'end'):
+            if key in operation:
+                if not finite(operation[key]):
+                    raise ValueError('Clip boundaries must be finite numbers')
+                by_id[clip_id]['source_'+key] = operation[key]
     config = read(p / 'project.json')
     duration = float(probe(config['source'])['format']['duration'])
     decisions = read(p / 'edit/decisions.json')
-    # Preserve imported evidence. Boundary edits are now explicit range decisions;
-    # the original word decisions remain attached as provenance, not mixed input.
     data = dict(version=2, videoPath=config['source'], retainedRanges=ranges,
                 provenance=decisions.get('provenance', decisions))
-    updated = import_cut(data, duration)  # validates source bounds and neighbors
+    updated = import_cut(data, duration)
     validate_companion_ranges(config, updated)
     remap_words(updated, data)
     mapped = map_annotations(read(p / 'annotations.json'), updated)
-    remap_transcript(p, updated)
-    write(p / 'edit/decisions.json', data)
-    write(p / 'edit/timeline.json', updated)
-    write(p / 'storyboard/annotations.resolved.json', mapped)
-    print(f"Updated {args.clip_id}; {updated['duration']:.3f}s total. Run prepare-clips, then reconcile scene durations and cues. Measured words and source captions have been remapped; partial cues need review.")
+    summary = dict(dry_run=dry_run, previous_revision=timeline['revision'], revision=updated['revision'],
+                   previous_duration=timeline['duration'], duration=updated['duration'],
+                   changes=[dict(clip_id=old['clip_id'], before=old, after=new)
+                            for old, new in zip(timeline['spans'], updated['spans']) if old != new],
+                   partial_word_ids=updated.get('partial_word_ids', []),
+                   next_steps=['prepare-clips', 'reconcile authored scenes and captions', 'human review in live Fluvie'])
+    # Existing caption mapping writes files, so reuse it in an isolated staging
+    # directory. No derived artifact is exposed until every mapper succeeds.
+    with tempfile.TemporaryDirectory(prefix='video-edit-plan-') as temporary:
+        stage = Path(temporary)
+        (stage/'transcript').mkdir()
+        if expected['transcript/segments.json'] is not None:
+            (stage/'transcript/segments.json').write_bytes(expected['transcript/segments.json'])
+        remap_transcript(stage, updated)
+        summary['caption_status'] = read(stage/'transcript/output-segments.json')['status']
+        write(stage/'edit/decisions.json', data)
+        write(stage/'edit/timeline.json', updated)
+        write(stage/'storyboard/annotations.resolved.json', mapped)
+        replacements = edit_transaction.snapshot(stage, edit_transaction.ARTIFACTS)
+        edit_transaction.check_snapshot(p, expected)
+        if not dry_run:
+            summary['recovery_pending'] = edit_transaction.publish(p, replacements, expected)
+            if summary['recovery_pending']:
+                summary['next_steps'].insert(0, 'recover-edits after this process exits (committed journal cleanup)')
+    return summary
+
+
+def apply_edits(args):
+    request = read(args.file)
+    if not isinstance(request, dict) or request.get('version') != 1 or set(request) != {'version', 'operations'}:
+        raise ValueError('Expected batch version 1 with operations')
+    if not isinstance(args.expected_revision, str) or not args.expected_revision:
+        raise ValueError('An expected timeline revision is required')
+    summary = apply_adjustments(project_dir(args.project), request['operations'], args.expected_revision, args.dry_run)
+    print(json.dumps(summary, indent=2))
+    return summary
+
+
+def adjust_clip(args):
+    """Single adjustments share the same validation and recoverable publication."""
+    operation = dict(clip_id=args.clip_id)
+    if args.start is not None:
+        operation['start'] = args.start
+    if args.end is not None:
+        operation['end'] = args.end
+    summary = apply_adjustments(project_dir(args.project), [operation])
+    if summary.get('recovery_pending'):
+        print('Edits committed; run recover-edits after this process exits to finish journal cleanup.')
+    print(f"Updated {args.clip_id}; {summary['duration']:.3f}s total. Run prepare-clips, then reconcile scenes/captions and review live in Fluvie.")
+
+
+def recover_edits(args):
+    p = Path(args.project).resolve()
+    if not (p/'project.json').is_file():
+        raise ValueError('Not a video project')
+    print(edit_transaction.recover(p))
 
 
 def companion_sources(config, require_files=True):
@@ -828,13 +894,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     p = commands.add_parser('init'); p.add_argument('name'); p.add_argument('--source', required=True); p.set_defaults(func=init)
-    for name, fn in [('link-source', link_source), ('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
+    for name, fn in [('link-source', link_source), ('soundmap', soundmap), ('inspect', inspect), ('cut', cut), ('prepare-clips', prepare_clips), ('adjust-clip', adjust_clip), ('apply-edits', apply_edits), ('recover-edits', recover_edits), ('compose', compose), ('preview', fluvie), ('render', fluvie), ('qa', qa), ('import-edit', import_edit), ('annotate', annotate)]:
         p = commands.add_parser(name); p.add_argument('project'); p.set_defaults(func=fn)
         if name == 'link-source':
             p.add_argument('source_id')
             p.add_argument('--source')
             p.add_argument('--offset', type=float, default=0, help='Companion time = primary time + offset seconds')
             p.add_argument('--remove', action='store_true')
+        if name == 'apply-edits':
+            p.add_argument('file')
+            p.add_argument('--expected-revision', required=True)
+            p.add_argument('--dry-run', action='store_true')
         if name in ['qa', 'import-edit']: p.add_argument('file')
         if name == 'qa':
             p.add_argument('--draft', action='store_true', help='Expect half-resolution draft output')

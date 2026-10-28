@@ -321,3 +321,64 @@ custom-component/dependency inputs before and after render. Stale inputs prevent
 composed-preview reuse. The pinned Fluvie CLI has no arbitrary-range capture; use
 live Fluvie when no current export exists, rather than imposing a full render.
 No cache TTL, unified service or scene translation is introduced.
+
+## Batch boundary adjustments
+
+`apply-edits` plans several existing clips' source boundaries together, validates
+only the resulting ordered ranges, and remaps words, captions and annotations
+once. This allows moving a shared cut even when either individual intermediate
+adjustment would overlap a neighbor. Clip IDs and unaffected encoded footage
+remain reusable. No automatic render, scene rewrite or editorial decision occurs.
+
+```json
+{"version":1,"operations":[
+  {"clip_id":"intro","end":4.2},
+  {"clip_id":"detail","start":4.2,"end":8.0}
+]}
+```
+
+`start/end` use original-source seconds; each operation supplies at least one.
+Only boundary changes are supported, with one operation per clip; duplicates,
+unknown fields/IDs, nonfinite values, overlap and insufficient companion coverage
+are rejected before publication. Existing `adjust-clip` uses the same engine for
+one operation. `import-edit` remains the separate tool for importing a new edit.
+
+```sh
+python3 scripts/video.py apply-edits /video /batch.json \
+  --expected-revision CURRENT_TIMELINE_REVISION --dry-run
+make video-apply-edits PROJECT=/video EDITS=/batch.json \
+  REVISION=CURRENT_TIMELINE_REVISION
+```
+
+Read the expected revision from `edit/timeline.json`. A stale revision is an
+error, not permission to overwrite. Dry-run returns old/new boundaries and output
+positions, duration, proposed revision, partial-word IDs and caption status; it
+changes no project files. Changed source/transcript/config/annotation metadata
+observed during planning causes a retry error. Originals must stay immutable.
+After applying, run `prepare-clips` once, reconcile authored Fluvie scenes and
+captions, and review the actual composition live. Existing source diagnostics
+and render receipts become stale through the changed timeline revision/content.
+Custom components and human review remain core.
+
+The five related edit artifacts are prepared separately, then published using a
+small local `.edit-update` recovery journal. A caught publication failure restores
+their previous bytes. After a process interruption, pipeline commands refuse to
+use that project until the agent runs:
+
+```sh
+make video-recover-edits PROJECT=/video
+```
+
+Recovery refuses a live owner process. An unfinished publication restores the
+previous edit; a committed publication with interrupted cleanup retains the new
+edit. A cleanup-only failure returns success with `recovery_pending: true` and
+instructions to finish cleanup after the command exits. No deliverable history,
+database or persistent worker is introduced.
+
+This is a single-writer local-file workflow. Do not run simultaneous edit writers
+or manually edit the artifacts during publication. Files are replaced individually;
+arbitrary external readers do not get an atomic multi-file snapshot. The journal
+provides rollback/recovery, not database isolation or a power-loss durability
+promise. If recovery itself encounters an I/O error, it preserves the journal
+for a retry. `.edit-update` is disposable recovery state outside source control,
+not production media or a permanent edit-history store.

@@ -85,3 +85,18 @@ Review flags suggest listening/inspection and never apply cuts. Use human feedba
 to choose changes, then the existing import/adjust commands to update the map.
 Re-map measured words after boundary changes. Review the actual scene sequence
 in live Fluvie: source diagnostics omit authored components, effects and companions.
+
+## Several boundary changes in one pass
+
+Use `video.py apply-edits PROJECT BATCH --expected-revision REVISION --dry-run`
+when adjusting multiple existing clip boundaries. The version-1 batch contains
+`operations: [{clip_id, start?, end?}]` in original-source seconds. Inspect its
+summary, then apply the same authorized changes without `--dry-run`. Read the
+current timeline revision first. Validation covers the final ranges, including
+companion coverage; words, captions and notes remap once. See
+[batch contract](../../../docs/contracts.md#batch-boundary-adjustments).
+
+Keep edits single-writer. If an interrupted publication blocks pipeline access,
+run `recover-edits PROJECT` after the owner process stops. Prepare footage once,
+reconcile the authored scene sequence and inspect it live in Fluvie. A batch does
+not approve edits or replace human feedback; it does not modify custom components.
