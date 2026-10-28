@@ -1,0 +1,20 @@
+{
+  "alignment.onnx": {
+    "url": "https://huggingface.co/Xenova/wav2vec2-base-960h/resolve/a19f851b3d42865797e410752b4c570c871e4825/onnx/model_quantized.onnx",
+    "sha256": "cd5040c147381580ed73258143dd8e0c28e800a09e74ee42ee2b3e8cb4d760a3",
+    "license": "Apache-2.0",
+    "purpose": "English CTC alignment; quantized wav2vec2-base-960h"
+  },
+  "vocab.json": {
+    "url": "https://huggingface.co/Xenova/wav2vec2-base-960h/resolve/a19f851b3d42865797e410752b4c570c871e4825/vocab.json",
+    "sha256": "4178db26b3c7570f6a47f14ac6a1c7b32950b8c2800fb097287e53776934f1c5",
+    "license": "Apache-2.0",
+    "purpose": "CTC token vocabulary"
+  },
+  "vad.onnx": {
+    "url": "https://raw.githubusercontent.com/snakers4/silero-vad/066409f3d9db45a30d21dfcbf9147826ffdd7052/src/silero_vad/data/silero_vad.onnx",
+    "sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3",
+    "license": "MIT",
+    "purpose": "Silero voice activity probabilities"
+  }
+}

@@ -1,0 +1,3 @@
+# Optional speech inference only; QA and previews use the Python standard library.
+numpy==2.2.6
+onnxruntime==1.23.2

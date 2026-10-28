@@ -59,3 +59,14 @@ settings.json, or use WHISPER_LANGUAGE for app sessions. The preparation CLI has
 languages better than an incorrect English auto-detection; verify on actual audio.
 This is not a promise of per-segment auto-detection or error-free transcription.
 Do not expose setup commands to the user when an agent can configure them.
+
+## Optional measured word evidence
+
+Use [modular media evidence](../../../tools/media_evidence/README.md) when precise
+word boundaries are needed. `align-speech` consumes the original and existing
+source transcript, leaving review.json unchanged. Its current backend supports
+English only: verify the recording language and do not apply it to German/mixed
+speech. Other languages retain segment review until a suitable backend is added.
+Unaligned/unsupported words retain null timing; model confidence is not human
+approval. `map-speech` maps whole measured words through the existing edit timeline
+for Fluvie/custom-component captions, explicitly listing partial/uncertain words.

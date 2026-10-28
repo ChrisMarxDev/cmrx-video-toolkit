@@ -145,6 +145,7 @@ invoked skills. The agent enters at the stage your project needs.
 | [Composition validator](tools/validator/) | Tool | Run static composition checks before preview or export. |
 | [Pipeline](scripts/) / [media tools](video_tools/) | CLI tools | Prepare clips, map timelines, transform media and check outputs. |
 | [Dither tool](tools/dither/) | Tool | Explore image/field dithering and export PNGs. |
+| [Media evidence](tools/media_evidence/) | Optional CLI tools | Measure word timing, inspect cut quality and create targeted diagnostics while retaining human review and editable scenes. |
 | [fal connector](tools/fal/) | Optional connector | Generate media through fal.ai and download it with provenance. |
 
 The animation workshop carries its own disposable template; it still needs Flutter

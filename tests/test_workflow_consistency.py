@@ -72,14 +72,18 @@ class WorkflowTests(unittest.TestCase):
         video.write(self.p / 'edit/timeline.json', dict(revision='r', duration=1))
         clips = {'clips': []}
         video.write(composition / 'manifest.json', dict(timeline_revision='r', media_mode='clips', clips_digest=video.digest(clips)))
+        (composition / 'pubspec.yaml').write_text('name: fixture\n')
+        (self.p / 'source.mp4').write_bytes(b'synthetic source identity')
         args = SimpleNamespace(project=str(self.p), command='render', final=False, approved=False)
         with patch.object(video, 'checked_clips', return_value=clips), patch.object(video, 'validate', return_value={'ok': False}), patch.object(video, 'run') as run:
             with self.assertRaisesRegex(ValueError, 'Static validation'):
                 video.fluvie(args)
             run.assert_not_called()
-        with patch.object(video, 'checked_clips', return_value=clips), patch.object(video, 'validate', return_value={'ok': True}) as validate, patch.object(video.shutil, 'disk_usage', return_value=SimpleNamespace(free=10**12)), patch.object(video, 'run') as run:
+        with patch.object(video, 'checked_clips', return_value=clips), patch.object(video, 'validate', return_value={'ok': True}) as validate, patch.object(video.shutil, 'disk_usage', return_value=SimpleNamespace(free=10**12)), patch.object(video, 'run') as run, patch('tools.media_evidence.receipts.create') as receipt:
             video.fluvie(args)
             command = run.call_args.args[0]
+            receipt.assert_called_once()
+            self.assertEqual(receipt.call_args.args[4], self.p / 'renders/draft.receipt.json')
             self.assertEqual(command[0], '/custom/fluvie')
             self.assertEqual(command[2], str(composition / 'lib/video.dart'))
             self.assertEqual(command[command.index('--entry') + 1], 'draft')

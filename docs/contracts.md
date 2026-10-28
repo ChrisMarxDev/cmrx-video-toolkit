@@ -295,3 +295,29 @@ When a review workspace itself contains `project.json` for the same primary,
 exported review handoffs preserve its companion definitions and validate coverage.
 For reviews stored separately, import their `edit/decisions.json` into the existing
 linked project with `import-edit`; the review UI cannot infer companion files.
+
+
+## Optional modular media evidence
+
+[Media evidence](../tools/media_evidence/README.md) defines independent version-1
+`speech-evidence`, `mapped-speech`, `cut-evidence`, `media-measurements`,
+`targeted-previews` and `composition-render` files. These are derived reports,
+not replacement review/edit/scene schemas. Originals and authored artifacts are
+never mutated by analysis. Human editorial review and Fluvie/custom-component
+composition remain authoritative. Optional speech inference dependencies do not
+affect QA, mapping, previews or the editor.
+
+Speech words use original-source seconds, explicit uncertainty/null timing and
+source/model/transcript fingerprints. Mapping retains whole aligned words only,
+records excluded partial/uncertain words and binds the complete edit map. Cut
+checks combine source evidence with output join times; no automatic edits occur.
+Media measurements report input-file times and do not change mechanical QA pass
+semantics. Silence, black and audio level measurements are not creative verdicts.
+
+Targeted previews select existing clip IDs, 1-based joins or output ranges. Their
+manifest distinguishes source-only diagnostics from actual composed render bytes.
+Pipeline render receipts bind the source, timeline, authored project and resolved
+custom-component/dependency inputs before and after render. Stale inputs prevent
+composed-preview reuse. The pinned Fluvie CLI has no arbitrary-range capture; use
+live Fluvie when no current export exists, rather than imposing a full render.
+No cache TTL, unified service or scene translation is introduced.

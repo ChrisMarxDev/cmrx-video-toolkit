@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT))
 from fluvie_project import settings, PIN
 from validate_fluvie import validate
 
@@ -749,7 +750,16 @@ def fluvie(args):
         command += ['--out', str(target), '--quality', 'high' if args.final else 'low']
         if not args.final:
             command[command.index('--entry') + 1] = runtime['draftEntry']
+    if args.command == 'render':
+        from tools.media_evidence import receipts
+        before = receipts.composition_identity(composition_dir(p))
+        source_before = file_digest(config['source'])
     run(command, cwd=composition_dir(p))
+    if args.command == 'render':
+        if timeline != read(p / 'edit/timeline.json') or source_before != file_digest(config['source']):
+            raise ValueError('Source/timeline changed during render; no current-render receipt written')
+        receipts.create(target, composition_dir(p), timeline, before,
+                        target.with_suffix('.receipt.json'), source_before)
 
 
 def qa(args):
@@ -782,6 +792,15 @@ def qa(args):
         checks=checks, passed=all(checks.values()), expected_frames=expected_frames,
         measured_frames=picture.get('nb_read_frames'), decode_error=decode.stderr[-2000:],
         manual_checks_pending=['speech/lip sync', 'visual transitions', 'caption correctness', 'creative acceptance'])
+    from tools.media_evidence.quality import measure
+    try:
+        result['measurements'] = measure(target)
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+        # Preserve mechanical diagnostics if an optional filter is unavailable
+        # or a damaged stream cannot complete the measurement pass.
+        result['measurements'] = None
+        result['measurement_error'] = str(exc)
+        result['manual_checks_pending'].append('audio/black/silence measurements unavailable')
     write(p / 'review/media-check.json', result)
     samples = sorted(set([timeline['duration'] * f for f in (.1, .5, .9)] +
         [max(0, min(timeline['duration'] - 1/config['fps'], span['output_start'] + offset/config['fps']))

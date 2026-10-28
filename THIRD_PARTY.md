@@ -42,3 +42,19 @@ directly from the README. The original recording,
 transcript and editable production project are not included in this repository.
 The recording and likeness are not covered by the toolkit's MIT software license;
 third-party marks in the demonstration remain owned by their respective owners.
+
+
+## Optional speech evidence models
+
+The toolkit-authored alignment/VAD adapter uses separately downloaded models; it
+does not vendor model weights or another editor's implementation.
+[models.json](tools/media_evidence/models.json) pins their provenance/checksums:
+
+- [Xenova/wav2vec2-base-960h](https://huggingface.co/Xenova/wav2vec2-base-960h),
+  ONNX export of [facebook/wav2vec2-base-960h](https://huggingface.co/facebook/wav2vec2-base-960h), Apache-2.0.
+- [Silero VAD](https://github.com/snakers4/silero-vad), MIT; model tensor usage
+  follows its published ONNX interface.
+
+NumPy (BSD-3-Clause) and ONNX Runtime (MIT) are optional installed packages, not
+vendored code. Their notices and model licenses remain applicable separately from
+the toolkit MIT license.

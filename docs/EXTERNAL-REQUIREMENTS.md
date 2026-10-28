@@ -145,3 +145,21 @@ label. See [setup and compatibility](../tools/previewer/README.md). Source proje
 pins remain explicit; this does not upgrade the toolkit component package.
 Flutter build caches and temporary audio preparation remain; no full video is
 encoded just to preview. Browser/native component support must be checked.
+
+
+## Optional speech evidence and diagnostic media tools
+
+[Modular media evidence](../tools/media_evidence/README.md) uses Python 3.10+ and
+FFmpeg/ffprobe. Cut checks, caption mapping and preview extraction need no Python
+packages/models. Required filters/codecs: blackdetect, silencedetect, ebur128,
+libx264/AAC for video excerpts; audio-only excerpts use PCM WAV.
+
+Only alignment/VAD inference needs the isolated
+[requirements](../tools/media_evidence/requirements.txt): NumPy 2.2.6 and ONNX
+Runtime 1.23.2 (CPU). Explicit setup downloads the pinned English
+Xenova/wav2vec2-base-960h quantized ONNX model/vocabulary (Apache-2.0) and Silero
+VAD ONNX model (MIT); exact URLs, revisions and SHA-256 values are in
+[models.json](../tools/media_evidence/models.json). No inference-time network or
+paid API is used. espeak-ng is optional real-model synthetic test tooling.
+Updates come from the named upstream model repositories and PyPI; retest accuracy
+and input tensor contracts before changing pins. This backend is English-only.

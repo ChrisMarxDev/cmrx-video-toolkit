@@ -21,3 +21,9 @@ word timestamps from transcript length. Review transcript corrections with the
 user; spelling corrections do not change narration. The editor exports version-2
 source-range edit decisions understood by `scripts/video.py import-edit` and
 resolves human requests through the resulting source/output map.
+
+Optional [speech evidence](../../tools/media_evidence/README.md) adds measured
+English word alignment and VAD in a separate file without changing review.json.
+Use the original source and an existing transcript; never infer word timestamps
+from segment length. Uncertain words remain explicit; other languages continue
+through the existing segment-based workflow.

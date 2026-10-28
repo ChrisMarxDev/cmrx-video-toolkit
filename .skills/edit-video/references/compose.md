@@ -57,3 +57,13 @@ narration mounted even when changing its visual prominence. `compose --companion
 screen` can scaffold a side-by-side starting point for a new composition; do not
 replace authored work. Validate playback/seeking, joins and final export for both
 sources. See [linked recordings](../../../docs/contracts.md#optional-linked-recordings-face--screen).
+
+## Targeted evidence during revisions
+
+[Targeted previews](../../../tools/media_evidence/README.md) can inspect clip IDs,
+cut indices and output-time ranges. Source diagnostics are labeled separately
+from composed output. A composed excerpt requires a current pipeline render and
+its receipt; changed custom components invalidate it. Otherwise review the selected
+range in live Fluvie. Do not encode a full intermediate solely for excerpts.
+Measured mapped words are optional inputs to caller-styled captions, never a
+replacement for editable scenes, custom components or human review.

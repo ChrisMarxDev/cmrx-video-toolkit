@@ -115,3 +115,58 @@ video-compose:
 # Synthetic linked-source media regression: make linked-sources-test
 linked-sources-test:
 	python3 -m unittest discover -s tests -p 'test_linked_sources.py' -v
+
+.PHONY: speech-models align-speech map-speech check-cuts measure-media targeted-preview media-evidence-test speech-model-test
+EVIDENCE_PYTHON ?= python3
+# Explicit optional model setup. Usage: make speech-models MODELS=/outside/git/models
+speech-models:
+	$(if $(strip $(MODELS)),,$(error MODELS is required))
+	$(EVIDENCE_PYTHON) -m tools.media_evidence.setup_models --models "$(MODELS)"
+
+# Measure words/VAD; use the optional environment. Usage: make align-speech SOURCE=/video.mp4 TRANSCRIPT=/segments.json MODELS=/models OUTPUT=/new/evidence LANGUAGE=en EVIDENCE_PYTHON=/venv/bin/python
+align-speech:
+	$(if $(strip $(SOURCE)),,$(error SOURCE is required))
+	$(if $(strip $(TRANSCRIPT)),,$(error TRANSCRIPT is required))
+	$(if $(strip $(MODELS)),,$(error MODELS is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	$(if $(strip $(LANGUAGE)),,$(error LANGUAGE is required))
+	$(EVIDENCE_PYTHON) -m tools.media_evidence.speech --source "$(SOURCE)" --transcript "$(TRANSCRIPT)" --models "$(MODELS)" --output "$(OUTPUT)" --language "$(LANGUAGE)"
+
+# Map measured words, excluding uncertain/partial cues. Usage: make map-speech SOURCE=/video.mp4 SPEECH=/speech.json TIMELINE=/edit/timeline.json OUTPUT=/new/words
+map-speech:
+	$(if $(strip $(SOURCE)),,$(error SOURCE is required))
+	$(if $(strip $(SPEECH)),,$(error SPEECH is required))
+	$(if $(strip $(TIMELINE)),,$(error TIMELINE is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 -m tools.media_evidence.map_words --source "$(SOURCE)" --speech "$(SPEECH)" --timeline "$(TIMELINE)" --output "$(OUTPUT)"
+
+# Inspect joins; optional speech and excerpts. Usage: make check-cuts SOURCE=/video.mp4 TIMELINE=/edit/timeline.json OUTPUT=/new/check SPEECH=/speech.json EXCERPTS=1
+check-cuts:
+	$(if $(strip $(SOURCE)),,$(error SOURCE is required))
+	$(if $(strip $(TIMELINE)),,$(error TIMELINE is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 -m tools.media_evidence.quality cuts --source "$(SOURCE)" --timeline "$(TIMELINE)" --output "$(OUTPUT)" $(if $(SPEECH),--speech "$(SPEECH)") $(if $(filter 1,$(EXCERPTS)),--excerpts)
+
+# Independent export measurements. Usage: make measure-media MEDIA=/draft.mp4 OUTPUT=/new/measurements
+measure-media:
+	$(if $(strip $(MEDIA)),,$(error MEDIA is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 -m tools.media_evidence.quality media --media "$(MEDIA)" --output "$(OUTPUT)"
+
+# Select an output range, clip ID or 1-based cut. Usage: make targeted-preview SOURCE=/video.mp4 TIMELINE=/edit/timeline.json OUTPUT=/new/preview CUT=1
+# Composed mode adds RENDER=/renders/draft.mp4 RECEIPT=/renders/draft.receipt.json COMPOSITION=/composition
+# Alternatives: RANGE=2:4 or CLIP=intro. Repeat selections through the Python CLI.
+targeted-preview:
+	$(if $(strip $(SOURCE)),,$(error SOURCE is required))
+	$(if $(strip $(TIMELINE)),,$(error TIMELINE is required))
+	$(if $(strip $(OUTPUT)),,$(error OUTPUT is required))
+	python3 -m tools.media_evidence.previews --source "$(SOURCE)" --timeline "$(TIMELINE)" --output "$(OUTPUT)" $(if $(CUT),--cut-index "$(CUT)") $(if $(CLIP),--clip-id "$(CLIP)") $(if $(RANGE),--range "$(RANGE)") $(if $(RENDER),--render "$(RENDER)") $(if $(RECEIPT),--receipt "$(RECEIPT)") $(if $(COMPOSITION),--composition "$(COMPOSITION)")
+
+# Core synthetic tests without models. Usage: make media-evidence-test
+media-evidence-test:
+	python3 -m unittest discover -s tests -p 'test_media_evidence.py' -v
+
+# Opt-in actual CPU alignment/VAD acceptance. Usage: make speech-model-test MODELS=/models EVIDENCE_PYTHON=/venv/bin/python
+speech-model-test:
+	$(if $(strip $(MODELS)),,$(error MODELS is required))
+	EVIDENCE_MODELS="$(MODELS)" $(EVIDENCE_PYTHON) -m unittest discover -s tests -p 'test_media_evidence.py' -v

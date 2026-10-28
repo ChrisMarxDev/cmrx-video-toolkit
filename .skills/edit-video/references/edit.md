@@ -74,3 +74,14 @@ saving. Never edit the screen independently when it should remain synchronized.
 Keep useful screen actions during speech gaps unless deliberately removed. Review
 the resulting paired footage in the composition; the source review editor still
 shows one primary recording. See [linked recordings](../../../docs/contracts.md#optional-linked-recordings-face--screen).
+
+## Optional cut evidence and focused inspection
+
+Use [modular media evidence](../../../tools/media_evidence/README.md) to measure
+word intersections, speech activity and audio discontinuities with `check-cuts`.
+Supply alignment evidence only for matching original bytes; absent evidence is
+unavailable, not passing. `EXCERPTS=1` produces source-only join diagnostics.
+Review flags suggest listening/inspection and never apply cuts. Use human feedback
+to choose changes, then the existing import/adjust commands to update the map.
+Re-map measured words after boundary changes. Review the actual scene sequence
+in live Fluvie: source diagnostics omit authored components, effects and companions.

@@ -10,3 +10,12 @@ Use [fluvie-validate](../../fluvie-validate/SKILL.md) before export; reuse a pas
 check if source and dependencies have not changed.
 
 For framework-specific mechanics, read [fluvie-render](../../fluvie-render/SKILL.md).
+
+
+`video.py render` writes a freshness receipt next to a successful export;
+[targeted previews](../../../tools/media_evidence/README.md) use it to verify
+actual render bytes, timeline and authored composition/custom-component inputs.
+The independent `measure-media` tool and pipeline QA report loudness, true peak,
+black and silent stretches as facts. These measurements do not approve creative
+quality or replace human audiovisual review. Excerpt feedback uses local time;
+map it through previews.json before revising the composition.
