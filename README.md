@@ -189,6 +189,9 @@ covers paths and connecting your own Flutter design package.
 
 ## Develop & contribute
 
+For optional music, sound effects and meme services, see
+[useful external MCP servers](docs/EXTERNAL-MCPS.md).
+
 Read [development guidance](docs/DEVELOPMENT.md) and the relevant skill. Use
 synthetic examples and preserve the source/output timing contracts.
 
