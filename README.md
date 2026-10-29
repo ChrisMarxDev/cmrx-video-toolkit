@@ -191,7 +191,7 @@ covers paths and connecting your own Flutter design package.
 ## Develop & contribute
 
 For visual effects, inspiration, music, sound effects and meme tools, see the
-[curated video editing resources](docs/EXTERNAL-MCPS.md), including websites and MCP servers.
+[Awesome Video Editing](docs/EXTERNAL-MCPS.md), including websites and MCP servers.
 
 Read [development guidance](docs/DEVELOPMENT.md) and the relevant skill. Use
 synthetic examples and preserve the source/output timing contracts.
