@@ -66,7 +66,9 @@ Use [modular media evidence](../../../tools/media_evidence/README.md) when preci
 word boundaries are needed. `align-speech` consumes the original and existing
 source transcript, leaving review.json unchanged. Its current backend supports
 English only: verify the recording language and do not apply it to German/mixed
-speech. Other languages retain segment review until a suitable backend is added.
+speech. For other spoken languages, fetch and run an alignment model that supports
+those languages (multilingual for mixed speech); retain segment review until its
+measured timestamps are compatible with the toolkit’s evidence contract.
 Unaligned/unsupported words retain null timing; model confidence is not human
 approval. `map-speech` maps whole measured words through the existing edit timeline
 for Fluvie/custom-component captions, explicitly listing partial/uncertain words.
