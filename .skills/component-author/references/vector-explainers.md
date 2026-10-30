@@ -71,15 +71,10 @@ an SVG preserves browser behaviour or converts it into editable Flutter componen
 
 ## Editable Flutter graphics
 
-Use `VideoStyle` from the caller and immutable geometry/state. Start with
-`TechnicalDiagram`, `DiagramNode`, `DiagramEdge`, `TechnicalSequence`,
-`TechnicalStack`, `TechnicalGrid` or `TechnicalAnnotation` where appropriate;
+Use `VideoStyle` from the caller and immutable geometry/state. Use
+`TechnicalSequence`, `TechnicalGrid` or `TechnicalAnnotation` where appropriate;
 consult the catalog and current constructors rather than guessing APIs.
-
-The diagram's `designSize` is a logical canvas that scales to its parent; it does
-not automatically reflow. Ports and optional `via` waypoints define routes. Default
-orthogonal routing does not avoid obstacles. Node labels can ellipsize, so inspect
-actual rendered text rather than assuming a valid model means a readable graphic.
+The former graph renderer and its node/connector recipes have been removed.
 
 For custom shapes, keep model coordinates separate from canvas fitting, and derive
 attachment points and labels from the same geometry. Use a painter or composed
@@ -100,8 +95,7 @@ derive time from frame/fps. Define instantaneous changes as explicit state switc
 Use easing for position changes, while preserving meaningful event order. Do not
 introduce wall-clock timers, unseeded randomness or state accumulated by playback.
 
-A whole-diagram edge reveal is not a traversal algorithm. The built-in recipe's
-progress can reveal edges together; for independently timed connections, compose
+A whole-diagram edge reveal is not a traversal algorithm. For independently timed connections, compose
 edge groups sharing the same layout or use an appropriately scoped custom painter.
 Do not move nodes just because another edge is appearing.
 

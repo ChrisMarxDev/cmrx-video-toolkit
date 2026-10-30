@@ -4,7 +4,7 @@ A small Widgetbook-style workbench that renders the **actual `video_components`
 Flutter widgets**. No parallel HTML imitations or Widgetbook dependency.
 
 [Open the hosted component browser](https://chrismarxdev.github.io/cmrx-video-toolkit/components/)
-— no installation needed. It includes the 60 public component families, live
+— no installation needed. It includes the 57 public component families, live
 previews, editable properties and copy/export selection. The default demonstration
 theme uses cool grays, standard application-blue accents (#0C66E4) and subtle 6px corners; no lime accents.
 
@@ -103,7 +103,7 @@ To add an element:
 4. Run the browser tests and build. The variant test covers every registry entry
    in both portrait and landscape; missing builders fail rather than silently hide.
 
-The catalog covers 60 entries, including media, technical diagrams and charts. Shader internals,
+The catalog covers 57 entries, including media, technical diagrams and charts. Shader internals,
 asset loaders, token constants and the Fluvie video wrapper remain documented
 APIs rather than separate browsable content components.
 
@@ -153,13 +153,11 @@ library does not bundle brand fonts or export default typography.
 
 ## Technical visuals
 
-Filter **Technical diagrams** or **Charts** for nodes, connectors, flowcharts,
-architecture recipes, grids, sequences, annotations and four
+Filter **Technical diagrams** or **Charts** for grids, sequences, annotations and four
 Fluvie-backed charts. Detail pages show usage notes and contextual sample presets
 alongside the editable preview and copyable Dart constructor. Chart data is
 edited as one `Label: value` per line; invalid input displays an explanation.
-Recipe constructors in the public package additionally require
-`package:video_components/technical_samples.dart`. All samples are illustrative.
+All samples are illustrative.
 
 ## Preview themes
 
@@ -211,7 +209,7 @@ preview properties and copied references retain the full numeric value.
 
 ## Consolidated families
 
-The public catalog has 60 entries, down from 72.
+The public catalog has 57 entries, after removal of the legacy graph components.
 Choose a family, then a Variant to select its layout. Old links continue to work;
 copy/export uses the canonical family and selected presentation. A batch contains
 one selection per family. See [the family contract](../../components/FAMILIES.md) for mappings and catalog schema version 2.

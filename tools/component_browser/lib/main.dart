@@ -962,7 +962,7 @@ class _BrowserPageState extends State<BrowserPage>
         ),
         const SizedBox(height: 8),
         const Text(
-          'Import package:video_components/video_components.dart; for diagram recipes also import package:video_components/technical_samples.dart. Supply your own VideoStyle (demoStyle is local to this browser). Import Clip from package:fluvie/fluvie.dart for video. Preload images, GIF frames and DitherPrograms before capture; supply progress and outputSeconds from the composition.',
+          'Import package:video_components/video_components.dart; Supply your own VideoStyle (demoStyle is local to this browser). Import Clip from package:fluvie/fluvie.dart for video. Preload images, GIF frames and DitherPrograms before capture; supply progress and outputSeconds from the composition.',
           style: TextStyle(fontSize: 12, color: DemoPalette.muted),
         ),
       ],

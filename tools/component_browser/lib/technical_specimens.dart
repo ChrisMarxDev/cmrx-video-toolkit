@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:video_components/video_components.dart';
-import 'package:video_components/technical_samples.dart';
 import 'demo_style.dart';
 import 'catalog.dart';
 
@@ -43,51 +42,6 @@ Widget technicalSpecimen(
   Widget content;
   try {
     content = switch (id) {
-      'diagram-node' => Center(
-        child: SizedBox(
-          width: 280,
-          height: 140,
-          child: TechnicalNode(
-            style: style,
-            label: p['label'],
-            shape: DiagramShape.values.byName(p['shape']),
-            active: p['active'],
-          ),
-        ),
-      ),
-      'connector' => TechnicalDiagram(
-        style: style,
-        designSize: const Size(800, 280),
-        nodes: [
-          DiagramNode(
-            id: 'a',
-            label: 'Producer',
-            bounds: const Rect.fromLTWH(20, 100, 200, 80),
-          ),
-          DiagramNode(
-            id: 'b',
-            label: 'Consumer',
-            bounds: const Rect.fromLTWH(580, 100, 200, 80),
-            active: true,
-          ),
-        ],
-        edges: [
-          DiagramEdge(
-            from: 'a',
-            to: 'b',
-            label: p['label'],
-            dashed: p['dashed'],
-            active: true,
-          ),
-        ],
-        progress: progress,
-      ),
-      'flowchart' || 'architecture' => technicalDiagramExample(
-        DiagramExample.values.byName(p['example']),
-        style: style,
-        vertical: p['vertical'] == true,
-        progress: progress,
-      ),
       'tensor-grid' => TechnicalGrid(
         style: style,
         cells: technicalCells(p['example']),
@@ -157,12 +111,6 @@ Widget technicalSpecimen(
 String technicalDartExample(ComponentSpec spec, Map<String, dynamic> p) {
   final id = spec.id.split('.').last;
   return switch (id) {
-    'diagram-node' =>
-      '''TechnicalNode(style: style, label: ${literal(p['label'])}, shape: DiagramShape.${p['shape']}, active: ${p['active']})''',
-    'connector' =>
-      '''TechnicalDiagram(style: style, designSize: const Size(800, 280), nodes: [DiagramNode(id: 'a', label: 'Producer', bounds: const Rect.fromLTWH(20, 100, 200, 80)), DiagramNode(id: 'b', label: 'Consumer', bounds: const Rect.fromLTWH(580, 100, 200, 80), active: true)], edges: [DiagramEdge(from: 'a', to: 'b', label: ${literal(p['label'])}, dashed: ${p['dashed']}, active: true)], progress: progress)''',
-    'flowchart' || 'architecture' =>
-      '''technicalDiagramExample(DiagramExample.${p['example']}, style: style, vertical: ${p['vertical'] == true}, progress: progress)''',
     'tensor-grid' =>
       '''TechnicalGrid(style: style, cells: ${literal(technicalCells(p['example']))}, activeRow: ${p['axis'] == 'row' ? p['active'] : null}, activeColumn: ${p['axis'] == 'column' ? p['active'] : null})''',
     'sequence' =>

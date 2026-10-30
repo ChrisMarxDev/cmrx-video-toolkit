@@ -1,7 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import '../style.dart';
-import 'diagram.dart';
+import '../validation.dart';
 
 /// A matrix / tensor / memory tile. All labels and values are caller-owned.
 class TechnicalGrid extends StatelessWidget {
@@ -334,4 +335,75 @@ class _NotesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_NotesPainter old) => true;
+}
+
+Path polyline(List<Offset> points) {
+  final path = Path()..moveTo(points.first.dx, points.first.dy);
+  for (final point in points.skip(1)) {
+    path.lineTo(point.dx, point.dy);
+  }
+  return path;
+}
+
+void paintArrow(
+  Canvas canvas,
+  Path path,
+  Paint pen,
+  double progress, {
+  bool dashed = false,
+}) {
+  if (progress <= 0) return;
+  for (final metric in path.computeMetrics()) {
+    final length = metric.length * progress;
+    if (dashed) {
+      for (var start = 0.0; start < length; start += 12) {
+        canvas.drawPath(
+          metric.extractPath(start, math.min(start + 6, length)),
+          pen,
+        );
+      }
+    } else {
+      canvas.drawPath(metric.extractPath(0, length), pen);
+    }
+    final tangent = metric.getTangentForOffset(length);
+    if (tangent != null && length > 10) {
+      final tip = tangent.position;
+      final direction = tangent.vector;
+      final normal = Offset(-direction.dy, direction.dx);
+      final base = tip - direction * 10;
+      canvas.drawPath(
+        Path()
+          ..moveTo((base + normal * 5).dx, (base + normal * 5).dy)
+          ..lineTo(tip.dx, tip.dy)
+          ..lineTo((base - normal * 5).dx, (base - normal * 5).dy),
+        pen,
+      );
+    }
+  }
+}
+
+void paintLabel(
+  Canvas canvas,
+  String text,
+  Offset center,
+  TextStyle style, {
+  double maxWidth = 180,
+  Color? background,
+}) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textAlign: TextAlign.center,
+    textDirection: TextDirection.ltr,
+  )..layout(maxWidth: maxWidth);
+  if (background != null)
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: center,
+        width: painter.width + 12,
+        height: painter.height + 6,
+      ),
+      Paint()..color = background,
+    );
+  painter.paint(canvas, center - Offset(painter.width / 2, painter.height / 2));
+  painter.dispose();
 }

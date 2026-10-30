@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as fluvie;
 
 import 'style.dart';
-import 'diagrams/diagram.dart' show checkProgress;
+import 'validation.dart' show checkProgress;
 
 enum TechnicalChartKind { bar, line, area, donut }
 

@@ -34,7 +34,7 @@ For authoring SVG assets or explanatory vector graphics, follow
 [component-author](../.skills/component-author/SKILL.md) and its focused
 reference. Use this catalog to select existing geometry and check API limits.
 
-The catalog now has 60 entries, including 11 technical/chart families. These are Flutter
+The catalog now has 57 entries, including 7 technical/chart families. These are Flutter
 widgets/custom vector painters, so the same instances work in video compositions,
 Flutter Deck slides and the browser. They have no brand palette or bundled fonts.
 SVG remains appropriate for a fixed illustration; use these widgets when labels,
@@ -42,10 +42,6 @@ data, selected states or animation must remain editable.
 
 | Catalog ID | Public API | Useful presets |
 |---|---|---|
-| `video.diagram-node` | `TechnicalNode` | Process, terminal, decision, database, document |
-| `video.connector` | `TechnicalDiagram`, `DiagramEdge` | Labeled arrow, dashed response |
-| `video.flowchart` | `technicalDiagramExample` | Pipeline, portrait pipeline, decision, feedback |
-| `video.architecture` | `technicalDiagramExample` | Service map, retrieval pipeline, worker fan-out |
 | `video.tensor-grid` | `TechnicalGrid` | Matrix, memory addresses, illustrative weights |
 | `video.sequence` | `TechnicalSequence` | Request/response, agent/tool call |
 | `video.annotation` | `TechnicalAnnotation` | Crosshair and leader over any child |
@@ -56,17 +52,9 @@ data, selected states or animation must remain editable.
 
 Pages include contextual samples, usage notes, editable properties, copied Dart
 constructors and stable component references for briefs. Sample data is synthetic.
-Recipes are optional: import `package:video_components/technical_samples.dart`.
-The core node/edge models are exported by the normal package entry point.
+The legacy node/connector graph renderer and its recipes have been removed.
 
 ```dart
-technicalDiagramExample(
-  DiagramExample.retrieval,
-  style: yourStyle,
-  progress: progress,
-  labels: {'query': 'Question'},
-)
-
 TechnicalChart(
   style: yourStyle,
   kind: TechnicalChartKind.bar,
@@ -77,21 +65,12 @@ TechnicalChart(
 )
 ```
 
-Use a bounded parent. Diagram coordinates are logical pixels in `designSize`,
-uniformly scaled to fit; layouts do not reflow automatically. Nodes/edges are
-immutable snapshots, and graph construction validates IDs, bounds and endpoints.
-Ports and optional explicit `via` points control routing. Default routing is
-orthogonal but does not avoid obstacles; route loops around intervening nodes.
-Use the portrait pipeline preset or deliberately arrange a portrait graph.
-Node labels wrap to three lines and ellipsize; keep labels short and put longer
-explanations outside the diagram. Layers accept 1–6 entries, grids 1–12 rows and
-columns, sequences 2–5 participants and 1–8 messages.
+Grids accept 1–12 rows and columns; sequences accept 2–5 participants and
+1–8 messages.
 
 All progress/expansion values are explicit, finite 0–1. No timers are introduced.
-Connectors reveal along paths, sequences reveal message by message, and layer
-expansion is reversible. Set progress to 1 for static slides, or derive it from
-the edited-output frame for video. Individual node emphasis is explicit model
-state; graph reveal does not imply traversal or computation order.
+Sequences reveal message by message and support reverse seeking. Set progress to 1 for static slides, or derive it from
+the edited-output frame for video.
 
 Charts delegate geometry to Fluvie 0.3.1 using an isolated, progress-driven frame
 scope, allowing use in plain Flutter without a video renderer. Fluvie also exposes

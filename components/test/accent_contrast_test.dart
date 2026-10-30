@@ -50,10 +50,6 @@ void main() {
           style.foreground,
         );
         await tester.pumpWidget(
-          frame(style, const TechnicalNode(label: 'Active', active: true)),
-        );
-        expect(tester.widget<Text>(find.text('Active')).style!.color, ink);
-        await tester.pumpWidget(
           frame(
             style,
             const TimedWordCaptions(

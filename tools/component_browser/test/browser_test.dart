@@ -23,6 +23,18 @@ void main() {
     () => binding.platformDispatcher.clearAccessibilityFeaturesTestValue(),
   );
 
+  test('Removed graph components have no catalog routes or aliases', () async {
+    final catalog = await loadCatalog();
+    for (final id in [
+      'video.diagram-node',
+      'video.connector',
+      'video.flowchart',
+      'video.architecture',
+    ]) {
+      expect(catalog.where((spec) => spec.matchesId(id)), isEmpty, reason: id);
+    }
+  });
+
   testWidgets('Preview theme persists across component navigation', (
     tester,
   ) async {
@@ -319,17 +331,17 @@ void main() {
     await tester.pumpWidget(
       ComponentBrowser(
         catalog: catalog,
-        initialRoute: '/video.flowchart?variant=pipeline',
+        initialRoute: '/video.chart-bar?variant=sample',
       ),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final initial = tester
-        .widget<TechnicalDiagram>(find.byType(TechnicalDiagram))
+        .widget<TechnicalChart>(find.byType(TechnicalChart))
         .progress;
     await tester.pump(const Duration(seconds: 1));
     expect(
-      tester.widget<TechnicalDiagram>(find.byType(TechnicalDiagram)).progress,
+      tester.widget<TechnicalChart>(find.byType(TechnicalChart)).progress,
       initial,
     );
     await tester.drag(find.byType(ListView).last, const Offset(0, -500));
@@ -338,7 +350,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expect(
-      tester.widget<TechnicalDiagram>(find.byType(TechnicalDiagram)).progress,
+      tester.widget<TechnicalChart>(find.byType(TechnicalChart)).progress,
       isNot(initial),
     );
     await tester.tap(find.byTooltip('Pause preview'));

@@ -69,17 +69,12 @@ void main() {
       expect(tester.takeException(), isA<FlutterError>());
     },
   );
-  testWidgets('Diagrams and charts resolve parent styles', (tester) async {
+  testWidgets('Charts resolve parent styles', (tester) async {
     await tester.pumpWidget(
       VideoStage(
         style: demoStyle,
         child: Column(
           children: [
-            const SizedBox(
-              width: 200,
-              height: 100,
-              child: TechnicalNode(label: 'Node'),
-            ),
             SizedBox(
               width: 400,
               height: 300,
@@ -93,9 +88,5 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
-    expect(
-      tester.widget<Text>(find.text('Node')).style!.color,
-      demoStyle.foreground,
-    );
   });
 }

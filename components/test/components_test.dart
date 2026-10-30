@@ -1,5 +1,4 @@
 import 'test_style.dart';
-import 'package:video_components/technical_samples.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_components/video_components.dart';
@@ -54,7 +53,7 @@ void main() {
     expect((block.decoration as BoxDecoration).color, style.accent);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('Both themes fit narrow frames and reverse diagram seeks', (
+  testWidgets('Both themes fit narrow frames and reverse chart seeks', (
     tester,
   ) async {
     for (final theme in VideoTheme.values) {
@@ -70,8 +69,9 @@ void main() {
                 child: Column(
                   children: [
                     Expanded(
-                      child: technicalDiagramExample(
-                        DiagramExample.pipeline,
+                      child: TechnicalChart(
+                        data: {'A': 1, 'B': 2},
+                        kind: TechnicalChartKind.bar,
                         style: demoStyle,
                         progress: progress,
                       ),
