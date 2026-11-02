@@ -49,6 +49,7 @@ Paths in commands are toolkit-root-relative; skill links are file-relative.
 - Missing or incorrect recognition: [transcribe](references/transcribe.md).
 - Cut decisions, changed narration or optional visual evidence for source review:
   [edit](references/edit.md).
+- Localized voice emphasis: [audio-effects](../audio-effects/SKILL.md).
 - Visual plan: [storyboard](references/storyboard.md).
 - Placement and timeline integration: [compose](references/compose.md).
 - Export and delivery checks: [render](references/render.md).

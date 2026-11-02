@@ -23,6 +23,7 @@ Reduction candidates elsewhere in this inventory are possibilities, not commitme
 
 | Workflow | External requirements |
 | --- | --- |
+| Single-word voice flutter | Python 3.10+ standard library; FFmpeg only to decode non-PCM16 input |
 | Manual browser review of prepared media | Python 3.10+, FFmpeg/ffprobe, modern desktop browser |
 | Review with new local transcription | Above + whisper.cpp CLI + compatible Whisper model |
 | Agent launches browser and waits for Done | Same as browser review + the user's existing agent/terminal; no Node/MCP required |

@@ -119,6 +119,7 @@ invoked skills. The agent enters at the stage your project needs.
 
 | Skill | When it’s useful |
 | --- | --- |
+| [audio-effects](.skills/audio-effects/SKILL.md) | Add localized voice flutter to selected words while preserving timing. |
 | [effect-background-remove](.skills/effect-background-remove/SKILL.md) | Turn existing footage of a person into an alpha cutout for composition. |
 | [effect-behind-subject](.skills/effect-behind-subject/SKILL.md) | Layer text, images or Flutter content behind a person while keeping the scene editable. |
 | [meshy-scene](.skills/meshy-scene/SKILL.md) | Prepare Meshy models, rigs and motion clips for an isolated Flutter Scene workflow. |
