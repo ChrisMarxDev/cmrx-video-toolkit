@@ -1,5 +1,13 @@
 # 🚀 Start here — copy this into your agent
 
+<p>
+  <img src="docs/public/agents/codex.svg" alt="Codex" width="180" height="64" />
+  <img src="docs/public/agents/claude.svg" alt="Claude Code" width="180" height="64" />
+  <img src="docs/public/agents/cursor.svg" alt="Cursor" width="180" height="64" />
+</p>
+
+**Your agent does the setup. You bring the footage.**
+
 **On macOS, paste this into an agent that can run commands on your computer:**
 
 ```text

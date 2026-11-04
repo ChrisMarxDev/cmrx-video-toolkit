@@ -7,7 +7,7 @@ remain applicable. No dependency source or downloaded model is vendored here.
 
 Dither/ray-march shader implementations and synthetic browser media generators
 were authored in this project. Paper is a research reference, not copied source.
-No meme images, external brand-logo collections, client portraits, or private brand archive
+No meme images, client portraits, or private brand archive
 is included; the explicitly approved creator walkthrough preview is noted below. Public example component styling is illustrative and not a grant of
 exclusive rights to the CMRX name.
 
@@ -58,3 +58,12 @@ does not vendor model weights or another editor's implementation.
 NumPy (BSD-3-Clause) and ONNX Runtime (MIT) are optional installed packages, not
 vendored code. Their notices and model licenses remain applicable separately from
 the toolkit MIT license.
+
+## Agent setup logos
+
+`docs/public/agents/` contains Codex, Claude and Cursor icon geometry from
+[Lobe Icons](https://github.com/lobehub/lobe-icons), revision
+`ea434b96e75813517b377825e01c0df61dee8836`, adapted into labeled README badges.
+MIT license retained in that directory; exact sources/checksums in PROVENANCE.json.
+Product names and logos belong to their respective owners; identification does
+not imply endorsement or guarantee every agent host supports local execution.
