@@ -20,6 +20,9 @@ packages() {
   done
   if [[ "${#missing[@]}" == 0 ]]; then return; fi
   [[ "$CHECK_ONLY" == 0 ]] || fail "Missing system packages: ${missing[*]}"
+  if [[ "$HINT" != *'If sudo needs a password'* ]]; then
+    HINT="$HINT If sudo needs a password but no terminal is available, ask the user to run this same installer in Terminal; never put passwords into command arguments."
+  fi
   command -v sudo >/dev/null || fail "sudo is unavailable. Ask the system administrator to install: ${missing[*]}"
   case "$MANAGER" in
     apt)
@@ -118,6 +121,8 @@ main() {
   [[ "$EUID" -ne 0 ]] || fail 'Run as your normal user. Only system package installation uses sudo.'
   case "$(uname -m)" in x86_64|aarch64|arm64) ;; *) fail 'Supported Linux architectures: x86_64 and aarch64.';; esac
   if command -v ldd >/dev/null && ldd --version 2>&1 | grep -qi musl; then fail 'musl/Alpine is unsupported by the Flutter/Node/ONNX binary toolchain. Use a glibc distribution.'; fi
+  local existing_flutter
+  existing_flutter="$(command -v flutter || true)"
   if [[ "$CHECK_ONLY" == 0 ]]; then
     mkdir -p "$STATE/logs" "$STATE/bin"
     LOG="$STATE/logs/install-$(date +%Y%m%d-%H%M%S)-$$.log"
@@ -125,7 +130,7 @@ main() {
     printf 'CMRX Linux installation\nToolkit: %s\nManaged files: %s\nLog: %s\n' "$ROOT" "$STATE" "$LOG"
   fi
   export PATH="$STATE/bin:$STATE/node/bin:$STATE/flutter/bin:$PATH"
-  step system-packages 'Read the package-manager error. Repair repository access/package names for your distribution; on Arch, complete a normal full system upgrade yourself if the package database is stale. No system-wide upgrade is run by this installer.'
+  step system-packages 'Read the package-manager error. Repair repository access/package names for your distribution; on Arch, complete a normal full system upgrade yourself if the package database is stale. No system-wide upgrade is run by this installer. If sudo needs a password but no terminal is available, ask the user to run this same installer in Terminal; never put passwords into command arguments.'
   select_manager; base_packages; native_packages
   step python 'Reuse/install Python 3.10–3.13 with venv/SSL. If none is compatible, uv downloads a user-owned Python 3.13 without changing system Python. Check HTTPS access to astral.sh/GitHub.'
   install_python; run "$PYTHON" --version
@@ -135,6 +140,7 @@ main() {
   step node 'Check nodejs.org access, archive checksum, CPU architecture and glibc compatibility. Existing incompatible system Node is preserved.'
   install_node; run node --version; run npm --version
   step flutter 'Check GitHub/storage.googleapis.com access and Flutter SDK initialization output. Existing system Flutter is preserved; managed stable SDK stays under the installation directory.'
+  if [[ -n "$existing_flutter" ]]; then export PATH="$(dirname "$existing_flutter"):$PATH"; fi
   install_flutter
   export PATH="$(dirname "$(command -v flutter)"):$PATH"
   step transcription 'Inspect the pinned Whisper CMake/compiler error; fix native dependencies and rerun. No GPU SDK is required for this CPU recognizer.'

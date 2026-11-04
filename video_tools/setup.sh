@@ -16,6 +16,6 @@ fi
 import hashlib
 from pathlib import Path
 p=Path('.tools/video-models/rvm_mobilenetv3_fp32.onnx')
-assert hashlib.sha256(p.read_bytes()).hexdigest() == '88d4531297118f595bf2fd60f6f566aec2e559393802d1f436c380f0cbbd2828', 'Model checksum mismatch'
+assert hashlib.sha256(p.read_bytes()).hexdigest() == '88d4531297118f595bf2fd60f6f566aec2e559393802d1f436c380f0cbbd2828', f'Model checksum mismatch at {p.resolve()}; preserve/move this file aside and rerun setup to download a verified copy.'
 print('Video tools model verified.')
 PY

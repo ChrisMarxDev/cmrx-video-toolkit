@@ -31,12 +31,13 @@ headers and C++ build tools as needed. Existing compatible Python 3.10–3.13,
 Node22+/npm, Flutter with Dart3.12–3.x, FFmpeg/ffprobe and Whisper are reused.
 Fallbacks stay user-owned: uv-managed Python3.13, a checksummed official Node22
 archive, Flutter upstream stable checkout (resolved commit logged), and Whisper
-v1.8.2 portable CPU build. System Python/Node/Flutter are preserved.
+v1.8.2 portable CPU build. System Python/Node/Flutter are preserved. A compatible Flutter SDK already
+selected on PATH (including an FVM path) takes precedence over a managed fallback.
 
 Shared installation restores media Python packages in the existing ignored
 `.tools/video-tools-venv`, npm adapters and component Pub packages; prepares
 verified default Whisper/RVM/speech-evidence models; and checks an actual synthetic
-Fluvie render, video decode, audio encoding, transcription and saved review comment.
+Fluvie render, video decode, audio encoding, transcription and saved review comment, plus actual HTTP asset/video/comment requests.
 No provider credentials/accounts, paid generation, annex, phone tooling, or host
 MCP registrations are installed. Project-specific dependencies/assets still belong
 to their authored projects. Interactive playback/host integration require testing.
@@ -59,8 +60,7 @@ If the terminal cannot handle sudo/password/Apple prompts, the user runs this sa
 command in Terminal, then returns to their agent. An installer cannot grant local
 command execution to a browser-only chat.
 
-Validation: installer dispatch/package-reuse/error contracts are mock-tested.
-The real shared render/transcription/comment test has passed on an existing Linux
-workstation. Fresh Debian/Fedora/Arch and Apple Silicon/Intel Mac provisioning is
-not yet validated. The installer fails instead of reporting success when its
-verification does not pass.
+Validation: real provisioning, rerun and SDK preservation were tested in an
+isolated fresh Ubuntu 24.04 userland. The installed tools passed render,
+transcription and HTTP review/comment checks. Other platforms and real desktop/GPU
+interaction still need acceptance. See [test evidence](INSTALL-TESTING.md).

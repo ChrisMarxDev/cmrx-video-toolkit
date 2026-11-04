@@ -63,7 +63,8 @@ bash install.sh
 ```
 
 Run it as your normal user from a toolkit checkout. Xcode/password prompts may
-need your input. Fresh-machine acceptance is still pending; see the guide for scope.
+need your input. Ubuntu acceptance has been exercised; other fresh-machine checks remain pending.
+See the guide for scope.
 
 
 Start with **`edit-video`** after installing the complete collection. It coordinates

@@ -43,6 +43,8 @@ main() {
   if [[ "$(uname -m)" == x86_64 && "$(/usr/sbin/sysctl -in sysctl.proc_translated 2>/dev/null || true)" == 1 ]]; then
     fail 'Terminal is running through Rosetta. Open a native Apple Silicon terminal and rerun to avoid mixing architectures.'
   fi
+  local existing_flutter
+  existing_flutter="$(command -v flutter || true)"
   if [[ "$CHECK_ONLY" == 0 ]]; then
     mkdir -p "$STATE/logs" "$STATE/bin"
     LOG="$STATE/logs/install-$(date +%Y%m%d-%H%M%S)-$$.log"
@@ -69,10 +71,12 @@ main() {
   node_ok "$(command -v node)" || fail 'Node version remains incompatible.'
   run node --version; run npm --version
   step flutter 'Install a Flutter SDK containing Dart >=3.12,<4. Existing incompatible Flutter SDKs are preserved; choose a compatible SDK on PATH, or repair the Homebrew flutter cask.'
+  if [[ -n "$existing_flutter" ]]; then export PATH="$(dirname "$existing_flutter"):$PATH"; fi
   if ! command -v flutter >/dev/null || ! flutter_ok "$(command -v flutter)"; then
     [[ "$CHECK_ONLY" == 0 ]] || fail 'Compatible Flutter SDK missing.'
     brew_ready
     run "$BREW" install --cask flutter
+    export PATH="$("$BREW" --prefix)/bin:$PATH"
   fi
   flutter_ok "$(command -v flutter)" || fail 'Flutter is installed but its Dart SDK is incompatible.'
   # Flutter's own Dart must precede unrelated Dart installations.

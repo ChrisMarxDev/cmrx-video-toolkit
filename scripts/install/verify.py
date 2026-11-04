@@ -7,6 +7,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
+import urllib.request
 
 
 def run(*args, cwd=None, capture=False):
@@ -70,6 +72,35 @@ void main() {}
                              source_start=0, source_end=0.5))
     review.write(scratch / 'review/review.json', review.validate(doc))
     assert review.read(scratch / 'review/review.json')['marks'][0]['text'] == 'Installation test'
+    # Exercise the browser backend over HTTP, including the same save route the
+    # UI uses. Bind an ephemeral loopback port and always stop our own server.
+    import server
+    httpd = server.make_server(home=scratch / 'server-home')
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        httpd.session.open({'path': str(scratch / 'review/review.json')})
+        httpd.session.worker.join(timeout=60)
+        state = httpd.session.snapshot()
+        assert not state['job']['busy'] and not state['job']['error'], state['job']
+        base = 'http://127.0.0.1:' + str(httpd.server_address[1])
+        for route in ['/', '/app.js', '/style.css']:
+            with urllib.request.urlopen(base+route, timeout=10) as response:
+                assert response.status == 200 and response.read(), 'Review asset missing: '+route
+        headers = {'X-Review-Token': httpd.token, 'Content-Type': 'application/json'}
+        request = urllib.request.Request(base+'/media', headers={**headers, 'Range': 'bytes=0-255'})
+        with urllib.request.urlopen(request, timeout=10) as response:
+            assert response.status == 206 and len(response.read()) == 256, 'Video range serving failed'
+        doc['marks'][0]['text'] = 'HTTP installation test'
+        payload = dict(source_sha256=doc['source']['sha256'], revision=doc['revision'],
+                       marks=doc['marks'], objects=doc['objects'])
+        request = urllib.request.Request(base+'/api/save', data=json.dumps(payload).encode(), headers=headers)
+        with urllib.request.urlopen(request, timeout=10) as response:
+            assert json.load(response)['revision'] == doc['revision']+1
+        assert review.read(scratch / 'review/review.json')['marks'][0]['text'] == 'HTTP installation test'
+        print('PASS: review HTTP assets, video range request and comment save')
+    finally:
+        httpd.shutdown(); httpd.server_close(); thread.join(timeout=5)
     import numpy, onnxruntime
     print('Media environment:', numpy.__version__, onnxruntime.__version__)
     # Verify Node can load the installed adapter dependency without starting a server.

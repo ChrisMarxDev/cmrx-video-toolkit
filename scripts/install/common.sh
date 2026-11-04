@@ -19,18 +19,35 @@ fail() { printf '\nERROR [%s]: %s\nRecovery: %s\nLog: %s\nRetry: /bin/bash %q\n'
 on_error() {
   local status="$1" line="$2" command="$3" source_file="$4"
   trap - ERR
+  if [[ "$command" == '"$@"' ]]; then command="${LAST_COMMAND:-$command}"; fi
   printf '\nINSTALLATION FAILED\nStep: %s\nExit code: %s\nSource: %s\nLine: %s\nCommand: %s\nRecovery: %s\nLog: %s\nRetry: /bin/bash %q\nCompleted tools are checked and reused on retry. No automatic rollback was attempted.\n' "$STEP" "$status" "$source_file" "$line" "$command" "$HINT" "${LOG:-not started}" "$INSTALL_SCRIPT" >&2
   exit "$status"
 }
 trap 'on_error "$?" "$LINENO" "$BASH_COMMAND" "${BASH_SOURCE[0]}"' ERR
-run() { printf '\n+ '; printf '%q ' "$@"; printf '\n'; "$@"; }
+run() { LAST_COMMAND="$(printf '%q ' "$@")"; printf '\n+ %s\n' "$LAST_COMMAND"; "$@"; }
 step() { STEP="$1"; HINT="$2"; printf '\n=== %s ===\n' "$STEP"; }
 # Version checks execute the candidate, rather than trusting presence on PATH.
 python_ok() { "$1" -c 'import sys,venv,ssl,ensurepip; assert (3,10) <= sys.version_info[:2] < (3,14)' >/dev/null 2>&1; }
 node_ok() { "$1" -e 'if (+process.versions.node.split(".")[0] < 22) process.exit(1)' >/dev/null 2>&1; }
 flutter_ok() {
-  "$1" --version --machine 2>/dev/null | "$PYTHON" -c 'import json,sys; d=json.load(sys.stdin); v=tuple(map(int,d["dartSdkVersion"].split(" ")[0].split(".")[:2])); assert (3,12)<=v<(4,0)' >/dev/null 2>&1
+  # Cold Flutter bootstrap can write setup text before its machine JSON.
+  "$1" --version --machine | "$PYTHON" -c '
+import json,sys
+raw=sys.stdin.read(); data=None; decoder=json.JSONDecoder()
+for i,char in enumerate(raw):
+    if char != "{": continue
+    try: obj,_=decoder.raw_decode(raw[i:])
+    except json.JSONDecodeError: continue
+    if isinstance(obj,dict) and "dartSdkVersion" in obj:
+        data=obj; break
+if data is None:
+    print("Could not parse Flutter version output:\n"+raw,file=sys.stderr); sys.exit(1)
+version=tuple(map(int,data["dartSdkVersion"].split(" ")[0].split(".")[:2]))
+if not (3,12)<=version<(4,0):
+    print("Flutter requires Dart >=3.12,<4; found "+data["dartSdkVersion"],file=sys.stderr); sys.exit(1)
+' >/dev/null
 }
+
 ffmpeg_ok() {
   command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null || return 1
   ffprobe -version >/dev/null 2>&1 || return 1

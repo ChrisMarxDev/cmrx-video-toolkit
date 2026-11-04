@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -56,6 +57,27 @@ class LinuxInstallTests(unittest.TestCase):
                        'install_node; install_flutter; install_whisper')
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertNotIn('UNEXPECTED', r.stdout)
+
+    @unittest.skipIf(getattr(os, 'geteuid', lambda: 1)() == 0, 'main intentionally refuses root')
+    def test_main_keeps_selected_fvm_sdk_before_managed_sdk(self):
+        with tempfile.TemporaryDirectory(prefix='fvm fixture ') as d:
+            root = Path(d)
+            selected = root / 'fvm/default/bin'
+            managed = root / 'managed/flutter/bin'
+            for folder in (selected, managed):
+                folder.mkdir(parents=True)
+                tool = folder / 'flutter'
+                tool.write_text('#!/bin/sh\nexit 0\n'); tool.chmod(0o755)
+            r = self.shell('STATE='+shlex.quote(str(root / 'managed'))+'; '
+                'PATH='+shlex.quote(str(selected))+':/usr/bin:/bin; CHECK_ONLY=1; '
+                'uname() { if [[ "$1" == -m ]]; then echo x86_64; else echo Linux; fi; }; ldd() { echo glibc; }; '
+                'select_manager() { :; }; base_packages() { :; }; native_packages() { :; }; '
+                'install_python() { PYTHON=/usr/bin/true; }; install_node() { :; }; '
+                'node() { :; }; npm() { :; }; flutter_ok() { return 0; }; '
+                'install_whisper() { :; }; finish_install() { command -v flutter; }; main')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn(str(selected / 'flutter'), r.stdout)
+            self.assertNotIn(str(managed / 'flutter'), r.stdout)
 
     def test_dispatch_preserves_arguments_and_exit_code(self):
         with tempfile.TemporaryDirectory(prefix='installer space ') as d:

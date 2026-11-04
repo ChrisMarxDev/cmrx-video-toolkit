@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import sys
+import shlex
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'scripts/install/macos.sh'
@@ -27,6 +29,8 @@ class MacInstallTests(unittest.TestCase):
     def test_failure_contains_recovery_command_and_status(self):
         r = self.shell('STEP=example; HINT="repair network"; run bash -c "exit 17"')
         self.assertEqual(r.returncode, 17)
+        self.assertIn('Command: bash -c', r.stderr)
+        self.assertNotIn('Command: \"$@\"', r.stderr)
         for value in ['Step: example', 'Exit code: 17', 'Command:', 'repair network', 'Retry:', 'Log:']:
             self.assertIn(value, r.stderr)
 
@@ -56,6 +60,20 @@ class MacInstallTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn('Already installed', r.stdout)
         self.assertNotIn('UNEXPECTED', r.stderr)
+
+    def test_cold_flutter_bootstrap_output_does_not_reject_sdk(self):
+        output = shlex.quote('{"dartSdkVersion":"3.13.7"}')
+        r = self.shell('PYTHON='+shlex.quote(sys.executable)+'; '
+            'fake_flutter() { echo "Resolving dependencies..."; echo '+output+'; }; '
+            'flutter_ok fake_flutter')
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_flutter_reports_incompatible_or_missing_machine_data(self):
+        for output in ['{"dartSdkVersion":"3.10.0"}', 'SDK download failed']:
+            r = self.shell('PYTHON='+shlex.quote(sys.executable)+'; '
+                'fake_flutter() { echo '+shlex.quote(output)+'; }; flutter_ok fake_flutter')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('3.10.0' if '3.10' in output else 'SDK download failed', r.stderr)
 
     def test_fluvie_requires_validate_and_render_capabilities(self):
         r = self.shell('fake() { if [[ "$1" == render ]]; then echo "--toolchain --no-download --machine"; '
