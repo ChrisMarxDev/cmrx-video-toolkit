@@ -1,3 +1,20 @@
+# 🚀 Start here — copy this into your agent
+
+**On macOS, paste this into an agent that can run commands on your computer:**
+
+```text
+Set up CMRX Video Toolkit for me: https://github.com/ChrisMarxDev/cmrx-video-toolkit
+Reuse an existing checkout or clone it into a dedicated tools folder. Read
+scripts/install/macos.sh and docs/INSTALL-MACOS.md, then run the installer as
+my normal user to install the full local editing environment. Reuse compatible
+tools already installed. If it fails, read its log, fix the cause, and retry
+until verification passes. Ask me to handle password or Xcode prompts when needed.
+```
+
+[macOS installation details and troubleshooting](docs/INSTALL-MACOS.md)
+
+---
+
 ![CMRX Video Toolkit — agent skills, editing tools and reusable video components](docs/public/readme-banner.svg)
 
 # CMRX Video Toolkit
