@@ -30,6 +30,16 @@ component, tune an animation or prepare a specialist effect on its own.
 
 ## Start editing
 
+On macOS, the initial [guided installer](docs/INSTALL-MACOS.md) sets up the full
+local editing toolchain, reuses compatible tools, and writes detailed recovery logs:
+
+```sh
+bash scripts/install/macos.sh
+```
+
+Run it as your normal user from a toolkit checkout. Xcode/password prompts may
+need your input. Fresh-Mac acceptance is still pending; see the guide for scope.
+
 
 Start with **`edit-video`** after installing the complete collection. It coordinates
 the workspace and loads component, style, review and rendering guidance as needed.

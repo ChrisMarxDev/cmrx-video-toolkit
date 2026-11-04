@@ -192,3 +192,18 @@ batch-edits-test:
 # Apply flutter to one measured word. Example: make audio-flutter INPUT=/tmp/in.wav OUTPUT=/tmp/out.wav START=1 END=1.5 RATE=24 DEPTH_MS=1 MIX=0.4
 audio-flutter:
 	python3 .skills/audio-effects/scripts/flutter_word.py --input "$(INPUT)" --output "$(OUTPUT)" --start "$(START)" --end "$(END)" --rate "$(RATE)" --depth-ms "$(DEPTH_MS)" --mix "$(MIX)"
+
+.PHONY: install-macos install-macos-check install-macos-test
+# Guided full editing setup, normal user. Usage: make install-macos
+install-macos:
+	bash scripts/install/macos.sh
+
+# Inspect macOS tool compatibility without installation. Usage: make install-macos-check
+install-macos-check:
+	bash scripts/install/macos.sh --check
+
+# Installer regression checks without installing tools. Usage: make install-macos-test
+install-macos-test:
+	bash -n scripts/install/macos.sh
+	bash -n video_tools/setup.sh
+	python3 -m unittest discover -s tests -p 'test_macos_install.py' -v

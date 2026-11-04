@@ -5,7 +5,9 @@ This is the inventory of what must be present on a user's
 computer for the current source-distributed toolkit, not a request to install
 everything. Choose the workflow first. The product goal is to systematically
 reduce user-managed prerequisites while preserving local files and browser use.
-No dependency removal or bundled installer is claimed by this inventory.
+The initial [macOS installer](INSTALL-MACOS.md) automates installation of these
+existing dependencies. It does not bundle/remove them or establish clean-Mac
+compatibility before platform acceptance.
 
 ## README summary and decision status
 
@@ -164,3 +166,14 @@ VAD ONNX model (MIT); exact URLs, revisions and SHA-256 values are in
 paid API is used. espeak-ng is optional real-model synthetic test tooling.
 Updates come from the named upstream model repositories and PyPI; retest accuracy
 and input tensor contracts before changing pins. This backend is English-only.
+
+## Guided macOS installation — 2026-11-04
+
+`scripts/install/macos.sh` uses Homebrew (existing or official installer) for
+missing Python 3.13, node@22, FFmpeg, whisper-cpp, Flutter and CocoaPods. Compatible
+existing tools are reused. Python media packages remain pinned in
+`video_tools/requirements.txt`, also serving speech evidence. The Fluvie fallback
+uses Git revision `10e442c1bb469118516df3335547f85ec92155e6`; its Pub resolution
+and downloaded SDK/package-manager versions are recorded in the installation log.
+Full Xcode and license acceptance may need user interaction. No annex/phone tools
+or provider credentials are installed. See [installation guide](INSTALL-MACOS.md).
