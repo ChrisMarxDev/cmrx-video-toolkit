@@ -3,9 +3,9 @@
 Run this check when starting work or when the requested capabilities change.
 Installing skills with `npx skills add` supplies guidance and resources, not the
 shared toolkit applications or system dependencies. Setup is agent-operated using
-existing scripts/package managers. On macOS, the full editing setup is
-`scripts/install/macos.sh`; read `docs/INSTALL-MACOS.md` for recovery and limits.
-A universal cross-platform installer is not available.
+existing scripts/package managers. On macOS and supported Linux distributions, the full editing setup is
+`bash install.sh`; read `docs/INSTALL.md` for recovery and platform limits.
+Windows installation is not automated.
 
 ## Locate and reuse
 

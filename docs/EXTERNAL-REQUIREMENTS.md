@@ -5,7 +5,7 @@ This is the inventory of what must be present on a user's
 computer for the current source-distributed toolkit, not a request to install
 everything. Choose the workflow first. The product goal is to systematically
 reduce user-managed prerequisites while preserving local files and browser use.
-The initial [macOS installer](INSTALL-MACOS.md) automates installation of these
+The [macOS/Linux installer](INSTALL.md) automates installation of these
 existing dependencies. It does not bundle/remove them or establish clean-Mac
 compatibility before platform acceptance.
 
@@ -177,3 +177,20 @@ uses Git revision `10e442c1bb469118516df3335547f85ec92155e6`; its Pub resolution
 and downloaded SDK/package-manager versions are recorded in the installation log.
 Full Xcode and license acceptance may need user interaction. No annex/phone tools
 or provider credentials are installed. See [installation guide](INSTALL-MACOS.md).
+
+## Linux installation — 2026-11-04
+
+Root `install.sh` dispatches by uname to macOS or Linux; unknown systems fail before
+installation. Linux uses apt-get, dnf or pacman for missing base/native packages
+(compiler, CMake, Ninja, pkg-config, GTK headers, FFmpeg). It never performs a full
+system upgrade. Full Fedora FFmpeg codecs may require an explicitly configured
+repository; the installer reports that blocker rather than enabling one.
+Compatible Python/Node/Flutter/Whisper are reused. Python fallback uses the official
+uv installer and a user-managed CPython 3.13 from Astral python-build-standalone.
+Node fallback downloads official latest-v22.x Linux archives with SHA-256
+verification from the same HTTPS distribution; Flutter fallback uses the upstream
+stable Git branch and logs its resolved commit. Whisper CPU fallback builds
+v1.8.2 commit `4979e04f5dcaccb36057e059bbaed8a2f5288315`. Shared package/model and
+render/transcription/comment verification stays in scripts/install/common.sh.
+Only glibc x86_64/aarch64 Linux is targeted; musl, unknown package managers and
+Windows are unsupported. See [guide](INSTALL.md) for validation limits.

@@ -2,6 +2,7 @@
 """Acceptance checks for the installed editing environment; never uses user media."""
 import argparse
 import json
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -23,7 +24,7 @@ def main():
     # A new scratch directory preserves failed evidence and cannot replace a project.
     scratch = Path(tempfile.mkdtemp(prefix='verify-', dir=a.state))
     print('Verification artifacts:', scratch, flush=True)
-    run('flutter', 'create', '--platforms=macos', '--project-name=cmrx_install_check', scratch / 'composition')
+    run('flutter', 'create', '--platforms=' + ('macos' if platform.system() == 'Darwin' else 'linux'), '--project-name=cmrx_install_check', scratch / 'composition')
     project = scratch / 'composition'
     # Published 0.3.1 predates the pinned CLI render-host API despite the same
     # version label. Pin both library and companion media package explicitly.

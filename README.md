@@ -8,18 +8,18 @@
 
 **Your agent does the setup. You bring the footage.**
 
-**On macOS, paste this into an agent that can run commands on your computer:**
+**On macOS or Linux, paste this into an agent that can run commands on your computer:**
 
 ```text
 Set up CMRX Video Toolkit for me: https://github.com/ChrisMarxDev/cmrx-video-toolkit
 Reuse an existing checkout or clone it into a dedicated tools folder. Read
-scripts/install/macos.sh and docs/INSTALL-MACOS.md, then run the installer as
+install.sh and docs/INSTALL.md, then run the installer as
 my normal user to install the full local editing environment. Reuse compatible
 tools already installed. If it fails, read its log, fix the cause, and retry
 until verification passes. Ask me to handle password or Xcode prompts when needed.
 ```
 
-[macOS installation details and troubleshooting](docs/INSTALL-MACOS.md)
+[Installation details and troubleshooting](docs/INSTALL.md)
 
 ---
 
@@ -55,15 +55,15 @@ component, tune an animation or prepare a specialist effect on its own.
 
 ## Start editing
 
-On macOS, the initial [guided installer](docs/INSTALL-MACOS.md) sets up the full
+On macOS and Linux, the [guided installer](docs/INSTALL.md) sets up the full
 local editing toolchain, reuses compatible tools, and writes detailed recovery logs:
 
 ```sh
-bash scripts/install/macos.sh
+bash install.sh
 ```
 
 Run it as your normal user from a toolkit checkout. Xcode/password prompts may
-need your input. Fresh-Mac acceptance is still pending; see the guide for scope.
+need your input. Fresh-machine acceptance is still pending; see the guide for scope.
 
 
 Start with **`edit-video`** after installing the complete collection. It coordinates

@@ -1,5 +1,8 @@
 # Guided macOS installation
 
+Prefer `bash install.sh` from the toolkit root: it selects this platform
+automatically. See [shared installation guide](INSTALL.md) for Linux.
+
 Run from a toolkit checkout as your ordinary user, in one Terminal session:
 
 ```sh

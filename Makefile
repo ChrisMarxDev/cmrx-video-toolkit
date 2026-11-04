@@ -207,3 +207,25 @@ install-macos-test:
 	bash -n scripts/install/macos.sh
 	bash -n video_tools/setup.sh
 	python3 -m unittest discover -s tests -p 'test_macos_install.py' -v
+
+.PHONY: install install-check install-test install-linux
+# Detect macOS/Linux and install editing requirements. Usage: make install
+install:
+	bash install.sh
+
+# Detect platform and check tools without installation. Usage: make install-check
+install-check:
+	bash install.sh --check
+
+# Linux-only editing setup. Usage: make install-linux
+install-linux:
+	bash scripts/install/linux.sh
+
+# Test shared/platform installer behavior without installing tools. Usage: make install-test
+install-test:
+	bash -n install.sh
+	bash -n scripts/install/common.sh
+	bash -n scripts/install/macos.sh
+	bash -n scripts/install/linux.sh
+	bash -n video_tools/setup.sh
+	python3 -m unittest discover -s tests -p 'test_*install.py' -v
