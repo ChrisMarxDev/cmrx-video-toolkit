@@ -45,6 +45,10 @@ is hardcoded. Credentials and project media must never be committed to this repo
 Project instructions, memory and skills are discovered from the project folder;
 workspace skills can be installed through Settings. The toolkit skill catalog and
 [video-project skill](skills/video-project/SKILL.md) supply editing guidance.
+`app/video-project` is the single bundled app-workflow skill: it covers empty
+projects, importing existing videos, editable Flutter layers, cuts, notes, live
+preview and verified export. The in-app agent is instructed to load it for video
+work; no separate skill installation is needed.
 Arbitrary source runs through the offline rendering worker. The provider agent
 and network-capable connection broker are separate processes from that worker;
 this is not an operating-system sandbox around the entire app.
