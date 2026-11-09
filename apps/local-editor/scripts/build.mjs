@@ -56,6 +56,7 @@ await Promise.all([
   }),
 ]);
 await copyFile("src/index.html", "dist/public/index.html");
+await copyFile("src/resize-handles.css", "dist/public/resize-handles.css");
 await copyFile(
   "resources/fonts/Fraunces.ttf",
   "dist/public/Fraunces.ttf",

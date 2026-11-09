@@ -79,7 +79,7 @@ h2 {
 .editor {
   height: 100dvh;
   display: grid;
-  grid-template-rows: 34px minmax(0, 1fr) 5px var(--timeline-height, 38dvh);
+  grid-template-rows: 34px minmax(0, 1fr) 14px var(--timeline-height, 38dvh);
   padding: 0;
   overflow: hidden;
 }
@@ -169,16 +169,6 @@ h2 {
 .dock-pane[data-drop-target="true"] {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-.dock-divider {
-  flex: 0 0 5px;
-  cursor: col-resize;
-  background: #202127;
-  touch-action: none;
-}
-.dock-divider:hover,
-.dock-divider:focus-visible {
-  background: var(--accent);
 }
 .transcript-dock {
   overflow: auto;
@@ -353,17 +343,6 @@ input[type="range"] {
 .comment-meta button:first-child {
   font-family: ui-monospace, monospace;
   color: var(--accent);
-}
-.panel-divider {
-  position: relative;
-  background: #202127;
-  border: 0;
-  cursor: row-resize;
-  touch-action: none;
-}
-.panel-divider:hover,
-.panel-divider:focus-visible {
-  background: var(--accent);
 }
 .timeline-panel {
   position: relative;

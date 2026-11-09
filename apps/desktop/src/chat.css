@@ -316,25 +316,6 @@ textarea::placeholder {
 .job a:hover {
   color: #fff;
 }
-#divider {
-  position: relative;
-  width: 14px;
-  flex-shrink: 0;
-  cursor: col-resize;
-}
-#divider::after {
-  content: "";
-  position: absolute;
-  top: 45%;
-  height: 34px;
-  left: 5px;
-  width: 2px;
-  border-radius: 2px;
-  background: #55455f;
-}
-#divider:hover::after {
-  background: var(--lavender);
-}
 #visual {
   flex: 1;
   min-width: 320px;

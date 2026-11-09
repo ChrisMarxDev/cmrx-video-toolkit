@@ -33,7 +33,7 @@
   background-clip: padding-box;
 }
 .editor {
-  grid-template-rows: 36px minmax(0, 1fr) 6px var(--timeline-height, 30dvh);
+  grid-template-rows: 36px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
 }
 .editor > header {
   background: #19171c;
@@ -83,14 +83,6 @@ button:hover:not(:disabled) {
 }
 .workspace-grid[data-pane-count="1"] .dock-title {
   display: none;
-}
-.dock-divider,
-.panel-divider {
-  background: #2a2034;
-}
-.dock-divider:hover,
-.panel-divider:hover {
-  background: #9276b3;
 }
 .transport {
   height: 42px;

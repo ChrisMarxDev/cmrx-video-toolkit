@@ -92,7 +92,7 @@ export function DockLayout({ panels }: { panels: Panel[] }) {
         <React.Fragment key={panel.id}>
           {index > 0 && (
             <div
-              className="dock-divider"
+              className="dock-divider resize-divider"
               role="separator"
               tabIndex={0}
               aria-label={`Resize ${visible[index - 1].title} and ${panel.title}`}

@@ -1,0 +1,47 @@
+/* Shared by the standalone editor and its desktop host. */
+.resize-divider {
+  position: relative;
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  touch-action: none;
+  user-select: none;
+}
+.resize-divider[aria-orientation="vertical"] {
+  flex-basis: 14px;
+  width: 14px;
+  cursor: col-resize;
+}
+.resize-divider[aria-orientation="horizontal"] {
+  height: 14px;
+  cursor: row-resize;
+}
+.resize-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 34px;
+  border-radius: 2px;
+  background: var(--resize-handle, #55455f);
+  pointer-events: none;
+}
+.resize-divider[aria-orientation="horizontal"]::after {
+  width: 34px;
+  height: 2px;
+}
+.resize-divider:hover::after,
+.resize-divider:active::after,
+.resize-divider:focus-visible::after {
+  background: var(--resize-handle-active, var(--accent, #dfd6f4));
+}
+.resize-divider:focus-visible {
+  outline: none;
+}
+.resize-divider:focus-visible::after {
+  outline: 2px solid var(--resize-handle-active, var(--accent, #dfd6f4));
+  outline-offset: 3px;
+}

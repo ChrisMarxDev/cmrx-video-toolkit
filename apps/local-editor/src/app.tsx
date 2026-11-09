@@ -18,6 +18,7 @@ import {
   type TrackBounds,
 } from "./timeline";
 import "./style.css";
+import "./resize-handles.css";
 import { ClipControls } from "./clip-controls";
 import { DockLayout } from "./dock-layout";
 import { TranscriptPanel } from "./transcript-panel";
@@ -1619,7 +1620,7 @@ function App() {
         ]}
       />
       <div
-        className="panel-divider"
+        className="panel-divider resize-divider"
         role="separator"
         tabIndex={0}
         aria-label="Resize timeline"
