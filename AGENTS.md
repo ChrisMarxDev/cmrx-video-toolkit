@@ -13,8 +13,10 @@ Run make test for cross-cutting changes; use affected package analysis/tests for
 focused work. Use deterministic frames, immutable props and explicit timeline
 mapping. No library default may imply a user's content/brand approval.
 
-Repository-maintenance skills belong to the outer Studio workspace, not this
-public skill catalog. In a Studio checkout, follow its git-sync and maintenance
+General repository-maintenance skills stay outside this public creator catalog.
+The app-owned exception is `apps/desktop/.agents/skills/desktop-deploy/SKILL.md`:
+use it for desktop build, signing, notarization and release work. It ships with the
+app and is separate from `.skills/`, which is exposed to video-editing agents. In a Studio checkout, follow its git-sync and maintenance
 instructions; publish this repo before Studio records its commit. Standalone
 contributors follow docs/DEVELOPMENT.md and their own repository workflow.
 Ask the user before UI automation when required by the host workspace.

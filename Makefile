@@ -245,3 +245,11 @@ desktop-check:
 # Prepare a tagged source archive outside the checkout: make desktop-release-source TAG=desktop-v0.1.0 DESKTOP_RELEASE_DIR=/absolute/output
 desktop-release-source:
 	DESKTOP_RELEASE_DIR="$(DESKTOP_RELEASE_DIR)" node apps/desktop/scripts/release-source.mjs "$(TAG)"
+
+.PHONY: desktop-deploy-check desktop-deploy-preflight
+# Validate app-owned deployment helpers without signing/publishing: make desktop-deploy-check
+desktop-deploy-check:
+	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy check
+# Read-only Mac release readiness; blockers exit 2: make desktop-deploy-preflight
+desktop-deploy-preflight:
+	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy preflight TOOLKIT="$(CURDIR)"

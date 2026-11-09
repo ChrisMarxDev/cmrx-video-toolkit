@@ -1,6 +1,13 @@
 # Desktop releases
 
-The toolkit repository owns app source, issues and releases. Desktop tags use
+The toolkit repository owns app source, issues, releases and the
+[desktop-deploy skill](.agents/skills/desktop-deploy/SKILL.md). On your Mac, open
+`apps/desktop` in your coding agent and use `$desktop-deploy` to prepare a candidate.
+The skill includes first-time Mac support work and later signing/release steps.
+Use `make desktop-deploy-check` or `make desktop-deploy-preflight` from the toolkit
+root for its helpers; preflight exits 2 when Mac requirements are missing.
+
+Desktop tags use
 `desktop-vX.Y.Z`; do not reuse a toolkit tag. The version in
 `apps/desktop/package.json` and its lockfile must match the tag.
 

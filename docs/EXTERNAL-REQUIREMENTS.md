@@ -236,3 +236,11 @@ preview, separate from the older Flutter review app in `apps/editor`.
 
 Linux is the tested desktop/rendering target. macOS binaries, native worker
 isolation and clean-machine dependency installation remain outstanding.
+
+The app-owned deployment skill is in
+`apps/desktop/.agents/skills/desktop-deploy/`. Its read-only preflight/tests use
+Node/Git; native signature checks and release steps need macOS/Xcode signing,
+notarization and disk-image tools plus an appropriate Developer ID identity.
+GitHub CLI is used for authorized release actions. These are maintainer
+requirements, not dependencies for end users editing videos. Credentials remain
+in secure local/CI storage; no signing material ships with the skill.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Desktop Deploy"
+  short_description: "Build, sign and release the CMRX Mac desktop app"
+  default_prompt: "Use $desktop-deploy on this Mac to prepare a complete CMRX desktop release candidate, implement missing Mac support, and report what remains before publication."
