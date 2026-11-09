@@ -339,19 +339,14 @@ if (!token || !editorToken) {
       s.locked || s.running || s.queue?.length || s.queuePaused
         ? "Queue"
         : "Send";
-    const immediate = $("#send-now");
-    immediate.hidden =
-      !(s.busy && s.canSteer) && !s.queue?.length && !s.queuePaused;
-    immediate.disabled =
-      !connected ||
-      !!s.switching ||
-      sending ||
-      dropping ||
-      (s.busy ? !s.canSteer : !!s.locked || !!s.running);
     const queue = $("#message-queue");
     const queueSignature = JSON.stringify([
       s.queue || [],
       s.queuePaused,
+      s.busy,
+      s.canSteer,
+      s.steering,
+      connected,
       commentPositions,
     ]);
     if (queue.dataset.signature !== queueSignature) {
@@ -406,7 +401,33 @@ if (!token || !editorToken) {
           );
           remove.onclick = () =>
             call("queue-remove", { id: item.id }).catch(showError);
-          row.append(content, remove);
+          const actions = document.createElement("div");
+          actions.className = "queued-message-actions";
+          if (s.canSteer) {
+            const steer = document.createElement("button");
+            steer.type = "button";
+            steer.textContent = "Steer";
+            steer.title = "Send this message to the current task";
+            steer.setAttribute(
+              "aria-label",
+              `Steer with queued message ${index + 1}`,
+            );
+            steer.disabled = !connected || !s.busy || !!s.steering;
+            steer.onclick = async () => {
+              steer.disabled = true;
+              try {
+                await call("queue-steer", { id: item.id });
+              } catch (error) {
+                showError(error);
+              } finally {
+                queue.dataset.signature = "";
+              }
+            };
+            actions.append(steer);
+          }
+          remove.disabled = !!s.steering;
+          actions.append(remove);
+          row.append(content, actions);
           queue.append(row);
         });
       }
@@ -527,7 +548,7 @@ if (!token || !editorToken) {
       syncPreview();
     }
   }
-  async function send(delivery) {
+  async function send() {
     const draft = $("#prompt").value;
     const text = draft.trim();
     if (
@@ -541,10 +562,8 @@ if (!token || !editorToken) {
     try {
       sending = true;
       $("#send").disabled = true;
-      $("#send-now").disabled = true;
       forceScroll = true;
       await call("send", {
-        ...(delivery ? { delivery } : {}),
         text,
         comments: queuedComments,
         assets: sentAssets,
@@ -562,16 +581,8 @@ if (!token || !editorToken) {
     } finally {
       sending = false;
       $("#send").disabled = !connected || !!latestState?.switching || dropping;
-      $("#send-now").disabled =
-        !connected ||
-        !!latestState?.switching ||
-        dropping ||
-        (latestState?.busy
-          ? !latestState.canSteer
-          : !!latestState?.locked || !!latestState?.running);
     }
   }
-  $("#send-now").onclick = () => send("now");
   $("form").onsubmit = (e) => {
     e.preventDefault();
     send();
@@ -586,7 +597,7 @@ if (!token || !editorToken) {
   $("#prompt").onkeydown = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
-      send(e.ctrlKey || e.metaKey ? "now" : undefined);
+      send();
     }
   };
   $("#render").onclick = () => call("render").catch(showError);

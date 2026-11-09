@@ -1038,3 +1038,10 @@ a {
 #asset-attachments .asset-chip-image button:hover {
   background: #51465f;
 }
+
+.queued-message-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}

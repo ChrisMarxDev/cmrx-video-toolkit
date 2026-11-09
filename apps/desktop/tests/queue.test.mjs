@@ -210,7 +210,7 @@ test("a message sent during rendering waits without canceling that render", asyn
   }
 });
 
-test("immediate messages steer one active turn, retain payloads, preserve queued work and recover on rejection", async () => {
+test("queued messages steer only on explicit action, preserve other work and recover on rejection", async () => {
   const workspace = fs.mkdtempSync(
     path.join(os.homedir(), ".cache/cmrx-steer-test-"),
   );
@@ -232,6 +232,7 @@ test("immediate messages steer one active turn, retain payloads, preserve queued
     fetch(app.url + "/chat/state", {
       headers: { Authorization: "Bearer " + app.token },
     }).then((r) => r.json());
+  const queue = async (body) => (await post("send", body)).json();
   try {
     app = await startApp({
       workspace,
@@ -271,7 +272,7 @@ test("immediate messages steer one active turn, retain payloads, preserve queued
           Authorization: "Bearer " + app.token,
           "X-File-Name": "reference.txt",
         },
-        body: "Reference for this correction",
+        body: "Reference",
       })
     ).json();
     const asset = {
@@ -280,75 +281,80 @@ test("immediate messages steer one active turn, retain payloads, preserve queued
     };
     await post("send", { text: "Build a video" });
     await emit({ type: "delta", text: "Starting", itemId: "before" });
-    await post("send", { text: "Later task" });
+    await queue({ text: "Later task" });
     await app.editor("/api/comment", {
       revision: 0,
       body: "Use blue",
       anchor: { type: "timeline", time: 0 },
     });
     const note = (await state()).pendingComments[0];
+    const correction = await queue({
+      text: "Actually blue",
+      assets: [asset],
+      comments: [note],
+    });
+    assert.equal(correction.queued, true);
+    assert.equal(steering.length, 0);
     const result = await (
-      await post("send", {
-        text: "Actually blue",
-        assets: [asset],
-        comments: [note],
-        delivery: "now",
-      })
+      await post("queue-steer", { id: correction.id })
     ).json();
     assert.equal(result.steered, true);
     assert.equal(calls.length, 1);
     assert.equal(steering.length, 1);
+    assert.deepEqual(steering[0].context.attachedComments, [note]);
     assert.equal(
       steering[0].context.attachedAssets[0].workspacePath,
       imported.path,
     );
-    assert.deepEqual(steering[0].context.attachedComments, [note]);
     assert.equal(
       JSON.stringify(steering[0].context).includes("Later task"),
       false,
     );
     assert.equal((await state()).queue.length, 1);
-    assert.equal((await state()).busy, true);
-    assert.deepEqual((await state()).pendingComments, []);
+    assert.equal((await state()).messages.at(-1).queueId, correction.id);
+    assert.equal(
+      (await post("queue-steer", { id: correction.id })).status,
+      400,
+    );
     await emit({ type: "delta", text: "Using blue", itemId: "after" });
     assert.deepEqual(
       (await state()).messages.map((m) => m.text),
       ["Build a video", "Starting", "Actually blue", "Using blue"],
     );
+    const failed = await queue({ text: "Failed delivery" });
     rejectSteer = true;
-    assert.equal(
-      (await post("send", { text: "Failed delivery", delivery: "now" })).status,
-      400,
-    );
+    assert.equal((await post("queue-steer", { id: failed.id })).status, 400);
+    assert((await state()).queue.some((m) => m.id === failed.id));
     assert(!(await state()).messages.some((m) => m.text === "Failed delivery"));
-    assert.equal((await state()).busy, true);
+    await post("queue-remove", { id: failed.id });
     rejectSteer = false;
     holdSteer = true;
-    const held = post("send", { text: "Held correction", delivery: "now" });
+    const heldItem = await queue({ text: "Held correction" });
+    const held = post("queue-steer", { id: heldItem.id });
     await waitFor(async () => !!completeSteer, Boolean);
-    assert.equal(
-      (await post("send", { text: "Duplicate", delivery: "now" })).status,
-      400,
-    );
+    assert.equal((await post("queue-steer", { id: heldItem.id })).status, 400);
+    assert.equal((await post("queue-remove", { id: heldItem.id })).status, 400);
     await emit({ type: "complete" });
     await new Promise((r) => setTimeout(r, 1100));
-    assert.equal(calls.length, 1); // Queue must not race an unacknowledged steering request.
+    assert.equal(calls.length, 1);
     completeSteer();
     assert.equal((await held).status, 200);
     await waitFor(state, (s) => s.queue.length === 0);
     assert.equal(calls[1].text, "Later task");
-    await post("send", { text: "Still waiting" });
+    const waiting = await queue({ text: "Still waiting" });
     await post("stop");
-    const direct = await (
-      await post("send", { text: "Do this first", delivery: "now" })
-    ).json();
-    assert.equal(direct.queued, undefined);
-    assert.equal(calls.at(-1).text, "Do this first");
-    assert.equal((await state()).queue[0].text, "Still waiting");
-    assert.equal((await state()).queuePaused, true);
+    assert.equal((await post("queue-steer", { id: waiting.id })).status, 400);
+    assert.equal((await state()).queue.length, 1);
+    assert.equal(
+      (await post("send", { text: "No bypass", delivery: "now" })).status,
+      400,
+    );
+    await post("queue-resume");
+    await waitFor(state, (s) => s.busy && s.queue.length === 0);
+    const unsupported = await queue({ text: "Unsupported" });
     delete client.steer;
     assert.equal(
-      (await post("send", { text: "Unsupported", delivery: "now" })).status,
+      (await post("queue-steer", { id: unsupported.id })).status,
       400,
     );
     assert.equal((await state()).queue.length, 1);

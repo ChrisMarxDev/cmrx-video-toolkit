@@ -558,7 +558,8 @@ form {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.queued-message > button {
+.queued-message-actions button {
+  font-size: 11px;
   border: 0;
   background: transparent;
   color: #a89ab9;

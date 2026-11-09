@@ -215,6 +215,7 @@ export async function startApp({
   const publish = () => {
     state.locked = locked();
     state.importing = importing;
+    state.steering = !!steeringPayload;
     try {
       const doc = JSON.parse(
         fs.readFileSync(path.join(workspace, "project.json")),
@@ -957,10 +958,10 @@ export async function startApp({
           await ready;
           if (state.switching)
             throw Error("A provider change is still running");
-          if (body.delivery !== undefined && body.delivery !== "now")
-            throw Error("Unknown message delivery mode");
-          if (body.delivery === "now" && steeringPayload)
-            throw Error("Your previous message is still being delivered");
+          if (body.delivery !== undefined)
+            throw Error(
+              "Send the message to the queue, then choose Steer there.",
+            );
           const text = typeof body.text === "string" ? body.text.trim() : "";
           if (text.length > 20000)
             throw Error("Write a message under 20,000 characters");
@@ -1008,59 +1009,7 @@ export async function startApp({
             provider: manager.id,
             selection: { ...manager.selected },
           };
-          if (body.delivery === "now") {
-            if (steeringPayload)
-              throw Error("Your previous message is still being delivered");
-            if (state.busy) {
-              if (typeof manager.active?.steer !== "function")
-                throw Error(
-                  "This provider cannot receive messages during a task. Stop it first or queue your message.",
-                );
-              const generation = turnGeneration;
-              steeringPayload = item;
-              publish();
-              try {
-                await manager.active.steer(
-                  item.text ||
-                    (item.assets.length
-                      ? "Use the attached project assets."
-                      : "Apply the attached timed comments."),
-                  {
-                    ...current,
-                    attachedComments: comments,
-                    attachedAssets: item.assets.map((ref) => ({
-                      ...assets.inspect("project", ref.path),
-                      workspacePath: "assets/" + ref.path,
-                    })),
-                    commentWorkflow,
-                    projectAgent: agent.context(),
-                  },
-                );
-                state.messages.push({
-                  role: "user",
-                  text: item.text,
-                  delivery: "now",
-                  ...(comments.length ? { comments } : {}),
-                  ...(item.assets.length ? { assets: item.assets } : {}),
-                });
-                if (generation === turnGeneration) {
-                  assistant = null;
-                  assistantItem = null;
-                }
-                save();
-                result = { ok: true, steered: true };
-              } finally {
-                steeringPayload = null;
-                publish();
-              }
-            } else {
-              if (locked() || playground.running)
-                throw Error(
-                  "Wait for the import or render to finish, or queue your message.",
-                );
-              result = await startMessage(item);
-            }
-          } else if (
+          if (
             locked() ||
             playground.running ||
             state.queue.length ||
@@ -1075,7 +1024,85 @@ export async function startApp({
           } else {
             result = await startMessage(item);
           }
+        } else if (url.pathname === "/chat/queue-steer") {
+          if (steeringPayload)
+            throw Error("A queued message is still being delivered");
+          const item = state.queue.find((entry) => entry.id === body.id);
+          if (!item) throw Error("This message is no longer queued");
+          if (!state.connected || !state.busy || state.switching)
+            throw Error(
+              "Steering needs an active agent task. Your message is still queued.",
+            );
+          if (
+            item.provider !== manager.id ||
+            typeof manager.active?.steer !== "function"
+          )
+            throw Error(
+              "This provider does not support steering. Your message is still queued.",
+            );
+          const generation = turnGeneration;
+          steeringPayload = item;
+          publish();
+          try {
+            const current = await editor("/api/context");
+            const comments = (item.comments || []).map((comment) => {
+              const live = current.project.comments?.find(
+                (c) => c.id === comment.id,
+              );
+              if (
+                !live ||
+                live.status !== "open" ||
+                commentKey(live) !== commentKey(comment)
+              )
+                throw Error(
+                  "A queued comment changed. Review it before steering.",
+                );
+              return structuredClone(live);
+            });
+            const attachedAssets = (item.assets || []).map((ref) => ({
+              ...assets.inspect("project", ref.path),
+              workspacePath: "assets/" + ref.path,
+            }));
+            if (!state.busy || generation !== turnGeneration)
+              throw Error(
+                "The task has finished. Your message is still queued.",
+              );
+            await manager.active.steer(
+              item.text ||
+                (attachedAssets.length
+                  ? "Use the attached project assets."
+                  : "Apply the attached timed comments."),
+              {
+                ...current,
+                attachedComments: comments,
+                attachedAssets,
+                commentWorkflow,
+                projectAgent: agent.context(),
+              },
+            );
+            state.messages.push({
+              role: "user",
+              text: item.text,
+              queueId: item.id,
+              delivery: "steer",
+              ...(comments.length ? { comments } : {}),
+              ...(item.assets?.length ? { assets: item.assets } : {}),
+            });
+            state.queue = state.queue.filter((entry) => entry.id !== item.id);
+            if (generation === turnGeneration) {
+              assistant = null;
+              assistantItem = null;
+            }
+            state.error = null;
+            save();
+            result = { ok: true, steered: true };
+          } finally {
+            steeringPayload = null;
+            publish();
+          }
         } else if (url.pathname === "/chat/queue-remove") {
+          if (steeringPayload?.id === body.id)
+            throw Error("This message is being delivered");
           state.queue = state.queue.filter((item) => item.id !== body.id);
           save();
           publish();

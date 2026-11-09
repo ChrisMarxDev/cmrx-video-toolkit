@@ -49,11 +49,11 @@ Arbitrary source runs through the offline rendering worker. The provider agent
 and network-capable connection broker are separate processes from that worker;
 this is not an operating-system sandbox around the entire app.
 
-While an agent task runs, Enter queues a follow-up. With a provider that supports
-active-turn input (currently ChatGPT), **Send now** or Ctrl/⌘+Enter delivers a
-correction into that task without starting another. Waiting messages stay queued.
-Idle Send now can run ahead of a paused queue; the queue stays paused. Unsupported
-providers keep Stop and Queue. A rejected immediate send preserves your draft.
+While an agent task runs, sending a message queues a follow-up. A queued message's
+**Steer** button explicitly delivers it into the active task when the provider
+supports this (currently ChatGPT). It leaves the queue only after acceptance;
+other waiting messages are preserved. Failed steering leaves it queued. There is
+no immediate-send shortcut or automatic steering.
 
 The layer speaker/eye buttons in the embedded editor are temporary preview controls:
 they stay available during agent/render work and never change the timeline or
