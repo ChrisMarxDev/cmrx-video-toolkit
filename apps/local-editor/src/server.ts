@@ -1,0 +1,493 @@
+import fs from "node:fs";
+import path from "node:path";
+import { createServer, type ServerResponse } from "node:http";
+import { randomBytes } from "node:crypto";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { Workspace, Fault, atomic } from "./workspace.js";
+import {
+  validate,
+  patchClip,
+  patchLayer,
+  chooseTake,
+  splitClip,
+  addComment,
+  updateComment,
+  clone,
+  type Project,
+} from "./model.js";
+import { Renderer, getBoxes, safeFile, type Extension } from "./render.js";
+import { MediaPreviews } from "./media-preview.js";
+const app = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const arg = (name: string, fallback: string) => {
+  const i = process.argv.indexOf(name);
+  return i < 0 ? fallback : process.argv[i + 1];
+};
+const root = path.resolve(
+    arg("--workspace", path.join(app, "workspaces/demo")),
+  ),
+  port = Number(arg("--port", "4319"));
+if (!fs.existsSync(path.join(root, "project.json")))
+  throw Error(`No project.json in ${root}. Run npm run demo first.`);
+fs.mkdirSync(path.join(root, ".editor"), { recursive: true });
+const lock = path.join(root, ".editor", "server.lock");
+try {
+  fs.mkdirSync(lock);
+} catch {
+  let recovered = false;
+  if (process.env.EDITOR_RECOVER_STALE_LOCK === "1") {
+    try {
+      const owner = Number(fs.readFileSync(path.join(lock, "pid"), "utf8"));
+      if (Number.isSafeInteger(owner) && owner > 1) {
+        try {
+          process.kill(owner, 0);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ESRCH") {
+            fs.rmSync(lock, { recursive: true });
+            fs.mkdirSync(lock);
+            recovered = true;
+          }
+        }
+      }
+    } catch {}
+  }
+  if (!recovered)
+    throw Error(
+      `Workspace already locked. Close its editor before reopening ${root}`,
+    );
+}
+fs.writeFileSync(path.join(lock, "pid"), String(process.pid));
+const extensions: Extension[] = [];
+try {
+  for (const base of process.env.EDITOR_DISABLE_EXTENSIONS === "1"
+    ? []
+    : [path.join(app, "extensions"), path.join(root, "extensions")])
+    if (fs.existsSync(base))
+      for (const folder of fs.readdirSync(base)) {
+        const dir = path.join(base, folder),
+          file = path.join(dir, "extension.json");
+        if (!fs.existsSync(file)) continue;
+        const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
+        if (
+          manifest.apiVersion !== 1 ||
+          !/^[\w-]+$/.test(manifest.id) ||
+          extensions.some((e) => e.manifest.id === manifest.id)
+        )
+          throw Error("Invalid or duplicate extension");
+        const worker = await import(
+          pathToFileURL(safeFile(dir, manifest.worker)).href
+        );
+        extensions.push({ dir, manifest, ...worker });
+      }
+} catch (e) {
+  fs.rmSync(lock, { recursive: true });
+  throw e;
+}
+let workspace: Workspace;
+try {
+  workspace = new Workspace(root);
+} catch (e) {
+  fs.rmSync(lock, { recursive: true });
+  throw e;
+}
+const token = randomBytes(32).toString("hex"),
+  clients = new Set<ServerResponse>();
+let selection: unknown = null;
+const selectionFile = path.join(root, ".editor/view.json");
+try {
+  selection = JSON.parse(fs.readFileSync(selectionFile, "utf8"));
+} catch {}
+let renderer: Renderer;
+function state() {
+  let boxes = {};
+  let extensionError = "";
+  try {
+    boxes = getBoxes(workspace.project, extensions);
+  } catch (e) {
+    extensionError = (e as Error).message;
+  }
+  return {
+    project: workspace.project,
+    error: workspace.error || extensionError,
+    boxes,
+    canUndo: workspace.state.cursor > 0,
+    canRedo: workspace.state.cursor < workspace.state.history.length - 1,
+    jobs: renderer?.jobs ?? [],
+    extensions: extensions.map((e) => e.manifest),
+    selection,
+  };
+}
+function broadcast() {
+  const data = `data: ${JSON.stringify(state())}\n\n`;
+  for (const c of clients) c.write(data);
+}
+renderer = new Renderer(root, extensions, broadcast);
+const mediaPreviews = new MediaPreviews(root);
+workspace.on("change", broadcast);
+function send(res: ServerResponse, value: unknown, status = 200) {
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store",
+  });
+  res.end(JSON.stringify(value));
+}
+function stream(res: ServerResponse, file: string, range: string | undefined) {
+  const stat = fs.statSync(file),
+    ext = path.extname(file),
+    mime: Record<string, string> = {
+      ".html": "text/html",
+      ".js": "text/javascript",
+      ".mjs": "text/javascript",
+      ".css": "text/css",
+      ".ttf": "font/ttf",
+      ".mp4": "video/mp4",
+      ".webm": "video/webm",
+      ".mov": "video/quicktime",
+      ".wav": "audio/wav",
+    };
+  const headers = {
+    "Content-Type": mime[ext] || "application/octet-stream",
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "no-store",
+  };
+  let start = 0,
+    finish = stat.size - 1;
+  if (range) {
+    const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+    if (!m || (!m[1] && !m[2])) {
+      res.writeHead(416, { "Content-Range": `bytes */${stat.size}` });
+      res.end();
+      return;
+    }
+    if (m[1]) {
+      start = Number(m[1]);
+      finish = m[2] ? Math.min(Number(m[2]), finish) : finish;
+    } else start = Math.max(0, stat.size - Number(m[2]));
+    if (start > finish || start >= stat.size) {
+      res.writeHead(416, { "Content-Range": `bytes */${stat.size}` });
+      res.end();
+      return;
+    }
+  }
+  res.writeHead(range ? 206 : 200, {
+    ...headers,
+    "Content-Length": finish - start + 1,
+    ...(range
+      ? { "Content-Range": `bytes ${start}-${finish}/${stat.size}` }
+      : {}),
+  });
+  fs.createReadStream(file, { start, end: finish })
+    .on("error", () => res.destroy())
+    .pipe(res);
+}
+const server = createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url || "/", `http://127.0.0.1`),
+      route = url.pathname;
+    const host = req.headers.host || "";
+    if (
+      host !== `127.0.0.1:${actualPort}` &&
+      host !== `localhost:${actualPort}`
+    )
+      throw new Fault(403, "Invalid Host");
+    const origin = req.headers.origin;
+    const authorized =
+      req.headers.authorization === `Bearer ${token}` ||
+      url.searchParams.get("token") === token;
+    const sandboxRequest =
+      origin === "null" && route.startsWith("/api/") && authorized;
+    if (origin && origin !== `http://${host}` && !sandboxRequest)
+      throw new Fault(403, "Cross-origin requests are disabled");
+    if (sandboxRequest) {
+      res.setHeader("Access-Control-Allow-Origin", "null");
+      res.setHeader("Vary", "Origin");
+    }
+    if (route.startsWith("/api/") && !authorized)
+      throw new Fault(401, "Open the launcher URL to connect");
+    if (route === "/api/events") {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-store",
+        Connection: "keep-alive",
+      });
+      clients.add(res);
+      res.write(`data: ${JSON.stringify(state())}\n\n`);
+      req.on("close", () => clients.delete(res));
+      return;
+    }
+    if (req.method === "GET") {
+      if (route === "/api/state" || route === "/api/context") {
+        workspace.poll();
+        send(res, {
+          ...state(),
+          ...(route.endsWith("context")
+            ? {
+                workspace: root,
+                projectFile: "project.json",
+                contract:
+                  "Use expected revision for mutations. Local scripts may edit files; watch errors before continuing.",
+              }
+            : {}),
+        });
+        return;
+      }
+      if (route === "/api/media-preview") {
+        const asset = workspace.project.assets.find(
+          (a) => a.id === url.searchParams.get("id"),
+        );
+        if (!asset) throw new Fault(404, "Asset not found");
+        send(res, await mediaPreviews.get(asset));
+        return;
+      }
+      if (route === "/api/media") {
+        const asset = workspace.project.assets.find(
+          (a) => a.id === url.searchParams.get("id"),
+        );
+        if (!asset) throw new Fault(404, "Asset not found");
+        stream(res, safeFile(root, asset.path), req.headers.range);
+        return;
+      }
+      if (route === "/api/artifact") {
+        const job = renderer.jobs.find(
+          (j) => j.id === url.searchParams.get("id"),
+        );
+        if (!job?.artifact) throw new Fault(404, "Artifact not available");
+        stream(res, safeFile(root, job.artifact), req.headers.range);
+        return;
+      }
+      if (route.startsWith("/api/extension/")) {
+        const ext = extensions.find(
+          (e) => e.manifest.id === route.split("/").pop(),
+        );
+        if (!ext?.manifest.browser) throw new Fault(404, "No panel");
+        stream(res, safeFile(ext.dir, ext.manifest.browser), undefined);
+        return;
+      }
+      if (route === "/embed") {
+        // Inline bundled assets: opaque sandbox origins cannot load same-origin ES modules.
+        const publicDir = path.join(app, "dist/public");
+        const script = fs
+          .readFileSync(path.join(publicDir, "app.js"), "utf8")
+          .replaceAll("</script", "<\\/script");
+        const css = fs
+          .readFileSync(path.join(publicDir, "app.css"), "utf8")
+          .replace(/@font-face\s*\{[^}]*\}/g, "");
+        res.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+          "Referrer-Policy": "no-referrer",
+        });
+        res.end(
+          `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><div id="root">Connecting editor…</div><script type="module">${script}</script></body></html>`,
+        );
+        return;
+      }
+      const file = route === "/" ? "index.html" : route.slice(1);
+      stream(res, safeFile(path.join(app, "dist/public"), file), undefined);
+      return;
+    }
+    if (req.method !== "POST") throw new Fault(405, "Method not allowed");
+    if (!route.startsWith("/api/")) throw new Fault(404, "Not found");
+    let raw = "";
+    for await (const chunk of req) {
+      raw += chunk;
+      if (raw.length > 2e6) throw new Fault(413, "Request too large");
+    }
+    const body = JSON.parse(raw || "{}");
+    let value: unknown;
+    switch (route) {
+      case "/api/transcript":
+        if (!Array.isArray(body.transcript))
+          throw Error("Transcript must be an array of segments");
+        value = workspace.update(body.revision, (p) => {
+          const asset = p.assets.find((a) => a.id === body.assetId);
+          if (!asset) throw Error("Transcript source not found");
+          asset.transcript = body.transcript;
+          return validate(p);
+        });
+        break;
+      case "/api/comment":
+        value = workspace.update(body.revision, (p) =>
+          addComment(p, body.body, body.anchor),
+        );
+        break;
+      case "/api/comment-update":
+        value = workspace.update(body.revision, (p) =>
+          updateComment(p, body.id, body.patch),
+        );
+        break;
+      case "/api/take-choice":
+        value = workspace.update(body.revision, (p) =>
+          chooseTake(p, body.sectionId, body.takeId),
+        );
+        break;
+      case "/api/layer":
+        value = workspace.update(body.revision, (p) =>
+          patchLayer(p, body.track, body.patch),
+        );
+        break;
+      case "/api/clip":
+        value = workspace.update(body.revision, (p) =>
+          patchClip(p, body.id, body.patch),
+        );
+        break;
+      case "/api/project":
+        value = workspace.update(body.revision, () => validate(body.project));
+        break;
+      case "/api/split":
+        value = workspace.update(body.revision, (p) =>
+          splitClip(p, body.id, body.time),
+        );
+        break;
+      case "/api/delete":
+        value = workspace.update(body.revision, (p) => {
+          p.clips = p.clips.filter((c) => c.id !== body.id);
+          return p;
+        });
+        break;
+      case "/api/add-graphics":
+        value = workspace.update(body.revision, (p) => {
+          p.clips.push({
+            id: `graphics-${randomBytes(6).toString("hex")}`,
+            name: body.name || "Graphics",
+            kind: "graphics",
+            start: body.start ?? 0,
+            in: 0,
+            duration: body.duration,
+            track: body.track ?? 0,
+            x: 0,
+            y: 0,
+            width: p.width,
+            height: p.height,
+            muted: false,
+            props: { source: body.source },
+          });
+          return validate(p);
+        });
+        break;
+      case "/api/add":
+        value = workspace.update(body.revision, (p) => {
+          const a = p.assets.find((a) => a.id === body.assetId);
+          if (!a) throw Error("Asset not found");
+          p.clips.push({
+            id: `clip-${randomBytes(6).toString("hex")}`,
+            name: a.name,
+            kind: "video",
+            assetId: a.id,
+            start: body.start ?? 0,
+            in: 0,
+            duration: body.duration ?? Math.min(4, a.duration),
+            track: body.track ?? 0,
+            x: 0,
+            y: 0,
+            width: p.width,
+            height: p.height,
+            muted: false,
+          });
+          return p;
+        });
+        break;
+      case "/api/undo":
+        value = workspace.travel(body.revision, -1);
+        break;
+      case "/api/redo":
+        value = workspace.travel(body.revision, 1);
+        break;
+      case "/api/render":
+        workspace.ensure(body.revision);
+        value = renderer.start(workspace.project);
+        break;
+      case "/api/cancel":
+        renderer.cancel(body.id);
+        value = { ok: true };
+        break;
+      case "/api/selection":
+        if (
+          !Number.isFinite(body.time) ||
+          body.time < 0 ||
+          (body.clipId != null && typeof body.clipId !== "string")
+        )
+          throw Error("Invalid selection");
+        selection = { clipId: body.clipId, time: body.time };
+        fs.writeFileSync(selectionFile + ".tmp", JSON.stringify(selection), {
+          mode: 0o600,
+        });
+        fs.renameSync(selectionFile + ".tmp", selectionFile);
+        value = { ok: true };
+        break;
+      case "/api/tool": {
+        const ext = extensions.find((e) =>
+          e.manifest.commands.some((c) => c.id === body.name),
+        );
+        if (!ext) throw new Fault(404, "Unknown extension command");
+        value = workspace.update(body.revision, (p) =>
+          ext.command(clone(p), body.name),
+        );
+        break;
+      }
+      default:
+        throw new Fault(404, "Unknown operation");
+    }
+    send(res, value);
+    broadcast();
+  } catch (e) {
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
+    const error = e as Error;
+    send(res, { error: error.message }, e instanceof Fault ? e.status : 400);
+  }
+});
+let actualPort = port;
+server.on("error", (e) => {
+  console.error(e);
+  shutdown();
+  process.exitCode = 1;
+});
+server.listen(port, "127.0.0.1", () => {
+  actualPort = (server.address() as { port: number }).port;
+  const url = `http://127.0.0.1:${actualPort}`;
+  atomic(path.join(root, ".editor", "connection.json"), {
+    url,
+    token,
+    pid: process.pid,
+  });
+  fs.chmodSync(path.join(root, ".editor", "connection.json"), 0o600);
+  console.log(
+    `\nCMRX Local Editor MVP\nWorkspace: ${root}\nOpen: ${url}/#token=${token}\n`,
+  );
+});
+const heartbeat = setInterval(() => {
+  for (const c of clients) c.write(": heartbeat\n\n");
+}, 15000);
+const parentPid = Number(process.env.EDITOR_PARENT_PID || 0);
+const parentWatch =
+  Number.isSafeInteger(parentPid) && parentPid > 1
+    ? setInterval(() => {
+        try {
+          process.kill(parentPid, 0);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ESRCH") {
+            shutdown();
+            process.exit(0);
+          }
+        }
+      }, 1000)
+    : undefined;
+parentWatch?.unref();
+let stopped = false;
+function shutdown() {
+  if (stopped) return;
+  stopped = true;
+  clearInterval(heartbeat);
+  if (parentWatch) clearInterval(parentWatch);
+  workspace.close();
+  renderer.close();
+  mediaPreviews.close();
+  for (const c of clients) c.end();
+  server.close();
+  fs.rmSync(lock, { recursive: true, force: true });
+  fs.rmSync(path.join(root, ".editor", "connection.json"), { force: true });
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

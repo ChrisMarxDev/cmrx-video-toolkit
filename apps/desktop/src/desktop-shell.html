@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Editing room</title>
+    <link rel="stylesheet" href="desktop-shell.css" />
+  </head>
+  <body>
+    <header>
+      <nav id="tabs" role="tablist" aria-label="Open projects"></nav>
+      <button
+        id="add"
+        aria-label="Open or create project"
+        aria-expanded="false"
+      >
+        +</button
+      ><button id="settings" aria-label="Settings">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <path
+            d="m9 3-1 3-3 1-2 3 2 2v3l3 1 1 3h5l1-3 3-1v-3l2-2-2-3-3-1-1-3Z"
+          />
+          <circle cx="11.5" cy="11" r="3" />
+        </svg>
+      </button>
+    </header>
+    <main id="empty">
+      <div class="orb" aria-hidden="true"></div>
+      <p>Open or create a project</p>
+      <button id="empty-add">Open project <span>+</span></button>
+    </main>
+    <section id="menu" aria-label="Project menu" hidden>
+      <button id="new">New project…</button>
+      <h2>Open</h2>
+      <div id="recents"></div>
+      <button id="open">Open folder…</button>
+    </section>
+    <dialog id="name-dialog">
+      <form id="name-form">
+        <label for="name">Project name</label
+        ><input
+          id="name"
+          required
+          maxlength="100"
+          autocomplete="off"
+          placeholder="My next video"
+        />
+        <p id="name-error" role="alert"></p>
+        <footer>
+          <button id="cancel-name" type="button">Cancel</button
+          ><button type="submit" class="primary">Create project</button>
+        </footer>
+      </form>
+    </dialog>
+    <p id="error" role="alert" hidden></p>
+    <script src="desktop-shell.js"></script>
+  </body>
+</html>

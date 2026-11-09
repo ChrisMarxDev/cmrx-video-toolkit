@@ -250,3 +250,12 @@ Dependencies, optional services and media assets retain their own terms; see
 [THIRD_PARTY.md](THIRD_PARTY.md). No private recordings or client materials are bundled.
 
 Built by [Chris Marx Studio](https://cmrx.dev).
+
+## Desktop playground preview
+
+The subscription-backed desktop app now lives in [apps/desktop](apps/desktop/README.md),
+with its JavaScript editor in `apps/local-editor`. Run `make desktop-install` and
+`make desktop` after installing the documented development requirements. This is
+currently a Linux developer preview, not a self-contained installer. Desktop
+release drafts use separate `desktop-vX.Y.Z` tags in this repository; see
+[release procedure](apps/desktop/RELEASING.md). Existing editor commands remain unchanged.

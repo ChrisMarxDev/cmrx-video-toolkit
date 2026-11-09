@@ -194,3 +194,45 @@ v1.8.2 commit `4979e04f5dcaccb36057e059bbaed8a2f5288315`. Shared package/model a
 render/transcription/comment verification stays in scripts/install/common.sh.
 Only glibc x86_64/aarch64 Linux is targeted; musl, unknown package managers and
 Windows are unsupported. See [guide](INSTALL.md) for validation limits.
+
+## Desktop playground
+
+`apps/desktop` and its sibling `apps/local-editor` are an optional developer
+preview, separate from the older Flutter review app in `apps/editor`.
+
+- Node.js **22.12+** and npm; each app has a pinned package-lock. The local editor
+  uses React/React DOM 19.3.1, MCP Apps 1.7.4, MCP SDK 1.32.1, Zod 4.6.7,
+  esbuild 0.28.2, TypeScript 7.0.2, Prettier 3.9.10 and the types in its manifest.
+  The desktop broker uses MCP SDK 1.32.1, Marked 18.1.3 and YAML 2.9.1.
+  Manifests/locks remain authoritative; update from their official upstream releases.
+- Electron **43**, supplied by the developer/system; `scripts/run.sh` finds
+  `electron43` or `electron`. It is not bundled in source releases. Electron's
+  Chromium/Node versions are independent of the service Node baseline.
+- FFmpeg and ffprobe for importing, thumbnails, audio and encoding. Your build's
+  codecs and distribution license matter when bundling binaries; the app does
+  not redistribute them in this source preview.
+- Flutter SDK and bundled Dart, Pub cache, Linux native build tools and working GPU
+  drivers; Bubblewrap (`bwrap`) with user namespaces for the current offline
+  worker. Set `CHAT_FLUTTER_SDK` and `PUB_CACHE` when using nondefault locations.
+  The worker currently expects Fluvie revision
+  `10e442c1bb469118516df3335547f85ec92155e6` in the Git Pub cache, including
+  `packages/fluvie_cli/bin/fluvie.dart`. This is a development prerequisite,
+  not an automatic clean-machine runtime installer. See `src/engine-status.mjs`.
+- Official Codex **0.166.0** and Claude Code **2.1.318** runtimes are downloaded
+  on explicit provider Connect with pinned platform checksums; see
+  `apps/desktop/src/runtime-manager.mjs` for sources and supported architectures.
+  No global CLI is required. Provider software/account terms apply separately;
+  a source license does not grant a subscription or guarantee plan eligibility.
+- Playwright is an optional separately supplied UI-test tool, selected through
+  `EDITOR_PLAYWRIGHT`; Chromium or Electron are supplied by the test environment.
+- Application-local fonts come from Google Fonts revision
+  `5bb28733cec313b63fbd415b574b5ae35c8aa8b8`: Fraunces and Space Grotesk, SIL OFL1.1.
+  Adjacent licenses/provenance retain source URLs and hashes. Third-party product
+  marks have their own sources/rights in `apps/desktop/resources/brands/catalog.json`.
+- CSS includes attribution to Damir Sokolovsky's unslop guidance (CC BY4.0,
+  https://github.com/heydamir/unslop); no upstream skill is installed by the app.
+- GitHub Releases API/CLI are used only by the release workflow to prepare draft
+  prereleases. This version contains no application update checker or auto-installer.
+
+Linux is the tested desktop/rendering target. macOS binaries, native worker
+isolation and clean-machine dependency installation remain outstanding.

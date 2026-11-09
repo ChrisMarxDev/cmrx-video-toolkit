@@ -1,0 +1,337 @@
+import { setBrandedText } from "/brand-ui.mjs";
+export function setupAssetManager({ call, token, onError, onPrompt }) {
+  const $ = (s) => document.querySelector(s),
+    el = (tag, text) => {
+      const e = document.createElement(tag);
+      if (text) setBrandedText(e, text);
+      return e;
+    };
+  const open = el("button", "Assets");
+  open.id = "assets-open";
+  open.type = "button";
+  open.title = "Browse project and library assets";
+  $("#project-open").parentNode.append(open);
+  const dialog = el("dialog");
+  dialog.id = "assets-dialog";
+  dialog.setAttribute("aria-label", "Asset manager");
+  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Library</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><p id="assets-status" role="status"></p><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
+  document.body.append(dialog);
+  const settings = el("section");
+  settings.className = "asset-library-settings";
+  settings.innerHTML =
+    '<h3>Asset library</h3><label>Library folder<input id="asset-library-folder" readonly></label><div class="settings-row"><button type="button" id="asset-library-choose">Choose folder</button><button type="button" id="asset-library-open">Open folder</button></div><p id="asset-library-state" class="settings-caption"></p>';
+  $('[data-settings-panel="project"]').append(settings);
+  const chips = el("div");
+  chips.id = "asset-attachments";
+  chips.setAttribute("aria-label", "Attached assets");
+  $("#prompt").parentNode.insertBefore(chips, $("#prompt"));
+  let attached = [],
+    scope = "library",
+    folder = "",
+    items = [],
+    query = "",
+    type = "",
+    sequence = 0,
+    busy = false;
+  const previewURL = (item) =>
+    "/chat/asset-preview?" +
+    new URLSearchParams({ scope: item.scope, path: item.path, token });
+  const error = (e) => {
+    $("#assets-status").textContent = e.message;
+    onError(e);
+  };
+  const renderChips = () => {
+    chips.replaceChildren(
+      ...attached.map((item) => {
+        const chip = el("span");
+        chip.className = "asset-chip";
+        chip.append(el("span", item.name));
+        const remove = el("button", "×");
+        remove.type = "button";
+        remove.setAttribute("aria-label", "Remove asset " + item.name);
+        remove.onclick = () => {
+          attached = attached.filter((a) => a.path !== item.path);
+          renderChips();
+        };
+        chip.append(remove);
+        return chip;
+      }),
+    );
+  };
+  async function attach(item, prompt) {
+    if (attached.length >= 20)
+      throw Error("Attach up to 20 assets per message");
+    if (busy) return;
+    busy = true;
+    $("#assets-status").textContent = "Preparing project copy…";
+    try {
+      const copy = await call("assets-use", {
+        scope: item.scope,
+        path: item.path,
+      });
+      if (!attached.some((a) => a.path === copy.path)) attached.push(copy);
+      renderChips();
+      dialog.close();
+      $("#asset-detail").replaceChildren();
+      $("#prompt").focus();
+      if (prompt)
+        onPrompt(
+          `Generate a standalone preview for the attached asset ${copy.name}. Keep the asset source editable and save the preview in its folder.`,
+        );
+    } finally {
+      busy = false;
+    }
+  }
+  function detail(item) {
+    const d = $("#asset-detail");
+    d.replaceChildren(
+      el("h3", item.name),
+      el("p", item.description || item.type),
+    );
+    if (item.preview) {
+      const media = el(
+        item.preview.type === "image"
+          ? "img"
+          : item.preview.type === "audio"
+            ? "audio"
+            : "video",
+      );
+      media.src = previewURL(item);
+      if (item.preview.type !== "image") {
+        media.controls = true;
+        media.preload = "metadata";
+      } else media.alt = item.name + " preview";
+      media.onerror = () => {
+        $("#assets-status").textContent =
+          "This preview cannot be played. The asset is still available.";
+      };
+      d.append(media);
+    } else
+      d.append(
+        el(
+          "div",
+          item.error
+            ? "Invalid preview/config: " + item.error
+            : "No preview yet",
+        ),
+      );
+    if (item.instructionError)
+      d.append(el("p", "Instructions unavailable: " + item.instructionError));
+    if (item.tags?.length) d.append(el("p", item.tags.join(" · ")));
+    d.append(el("p", "License: " + (item.license || "Unknown")));
+    if (item.source) d.append(el("p", "Source: " + item.source));
+    const use = el("button", "Attach to chat");
+    use.type = "button";
+    use.className = "primary";
+    use.onclick = () => attach(item).catch(error);
+    d.append(use);
+    if (item.bundle && !item.preview) {
+      const generate = el("button", "Generate preview");
+      generate.type = "button";
+      generate.onclick = () => attach(item, true).catch(error);
+      d.append(generate);
+    }
+    const action = el(
+      "button",
+      item.scope === "project" ? "Save to library" : "Move to trash",
+    );
+    action.type = "button";
+    action.onclick = async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        await call(
+          item.scope === "project" ? "assets-promote" : "assets-trash",
+          { scope: item.scope, path: item.path },
+        );
+        d.replaceChildren();
+        await refresh();
+      } catch (e) {
+        error(e);
+      } finally {
+        busy = false;
+      }
+    };
+    d.append(action);
+  }
+  function render() {
+    const grid = $("#assets-grid");
+    grid.replaceChildren();
+    const visible = items.filter((i) => !type || i.type === type);
+    for (const item of visible) {
+      const card = el("button");
+      card.type = "button";
+      card.className = "asset-card";
+      card.dataset.path = item.path;
+      card.setAttribute(
+        "aria-label",
+        (item.folder ? "Open folder " : "Preview asset ") + item.name,
+      );
+      if (item.preview?.type === "image") {
+        const image = el("img");
+        image.src = previewURL(item);
+        image.alt = "";
+        image.loading = "lazy";
+        image.onerror = () => {
+          const placeholder = el("span", "Preview unavailable");
+          placeholder.className = "asset-placeholder";
+          image.replaceWith(placeholder);
+        };
+        card.append(image);
+      } else {
+        const icon = el(
+          "span",
+          item.folder
+            ? "↳"
+            : item.preview?.type === "video"
+              ? "▶"
+              : item.preview?.type === "audio"
+                ? "♫"
+                : item.bundle
+                  ? "◇"
+                  : "□",
+        );
+        icon.className = "asset-placeholder";
+        card.append(icon);
+      }
+      card.append(
+        el("strong", item.name),
+        el(
+          "small",
+          item.error ? "Needs attention" : item.folder ? "Folder" : item.type,
+        ),
+      );
+      card.onclick = () => {
+        if (item.folder) {
+          folder = item.path;
+          query = "";
+          $("#assets-search").value = "";
+          $("#asset-detail").replaceChildren();
+          refresh().catch(error);
+        } else detail(item);
+      };
+      grid.append(card);
+    }
+    if (!visible.length)
+      grid.append(
+        el(
+          "p",
+          query || type
+            ? "No matching assets."
+            : "No assets here yet. Choose a library folder in Settings, or save a project asset.",
+        ),
+      );
+  }
+  async function refresh() {
+    const seq = ++sequence;
+    const result = await call("assets-list", { scope, folder, query });
+    if (seq !== sequence) return;
+    items = result.items;
+    $("#asset-library-folder").value = result.settings.folder;
+    $("#asset-library-state").textContent = result.settings.offline
+      ? "Library folder is offline. Project copies remain available."
+      : "";
+    $("#assets-status").textContent = result.offline
+      ? "Library folder is offline."
+      : result.truncated
+        ? "Showing the first matching assets. Narrow your search."
+        : "";
+    const select = $("#assets-type");
+    select.replaceChildren(
+      new Option("All types", ""),
+      ...Array.from(new Set(items.map((i) => i.type)))
+        .sort()
+        .map((t) => new Option(t, t)),
+    );
+    if (Array.from(select.options).some((o) => o.value === type))
+      select.value = type;
+    else {
+      type = "";
+      select.value = "";
+    }
+    $("#assets-library").setAttribute(
+      "aria-pressed",
+      String(scope === "library"),
+    );
+    $("#assets-project").setAttribute(
+      "aria-pressed",
+      String(scope === "project"),
+    );
+    const crumbs = $("#assets-breadcrumb");
+    crumbs.replaceChildren();
+    const root = el(
+      "button",
+      scope === "library" ? "Library" : "Project assets",
+    );
+    root.type = "button";
+    root.title =
+      scope === "library"
+        ? result.settings.folder
+        : result.settings.projectFolder;
+    root.onclick = () => {
+      folder = "";
+      refresh().catch(error);
+    };
+    crumbs.append(root);
+    let current = "";
+    for (const part of folder.split("/").filter(Boolean)) {
+      current = [current, part].filter(Boolean).join("/");
+      const dest = current;
+      const b = el("button", part);
+      b.type = "button";
+      b.onclick = () => {
+        folder = dest;
+        refresh().catch(error);
+      };
+      crumbs.append(b);
+    }
+    render();
+  }
+  open.onclick = () => {
+    dialog.showModal();
+    refresh().catch(error);
+  };
+  $("#assets-close").onclick = () => dialog.close();
+  dialog.addEventListener("close", () => $("#asset-detail").replaceChildren());
+  for (const loc of ["library", "project"])
+    $("#assets-" + loc).onclick = () => {
+      scope = loc;
+      folder = "";
+      type = "";
+      $("#asset-detail").replaceChildren();
+      refresh().catch(error);
+    };
+  let timer;
+  $("#assets-search").oninput = (e) => {
+    clearTimeout(timer);
+    query = e.target.value;
+    timer = setTimeout(() => refresh().catch(error), 180);
+  };
+  $("#assets-type").onchange = (e) => {
+    type = e.target.value;
+    render();
+  };
+  $("#assets-refresh").onclick = () => refresh().catch(error);
+  $("#asset-library-choose").onclick = () =>
+    call("assets-folder")
+      .then(() => {
+        folder = "";
+        return refresh();
+      })
+      .catch((e) => {
+        $("#settings-error").textContent = e.message;
+      });
+  $("#asset-library-open").onclick = () =>
+    call("assets-open", { scope: "library" }).catch((e) => {
+      $("#settings-error").textContent = e.message;
+    });
+  $("#settings-open").addEventListener("click", () => refresh().catch(onError));
+  return {
+    attachments: () =>
+      attached.map((a) => ({ scope: "project", path: a.path })),
+    clear: () => {
+      attached = [];
+      renderChips();
+    },
+  };
+}

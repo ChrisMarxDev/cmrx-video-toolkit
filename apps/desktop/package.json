@@ -1,0 +1,20 @@
+{
+  "name": "cmrx-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bash scripts/run.sh",
+    "serve": "node src/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "npm --prefix ../local-editor run build"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "marked": "18.1.3",
+    "yaml": "2.9.1"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "source": "https://github.com/lobehub/lobe-icons",
+  "tarball": "https://registry.npmjs.org/@lobehub/icons-static-png/-/icons-static-png-1.97.1.tgz",
+  "assets": [
+    {
+      "file": "openai.png",
+      "package": "@lobehub/icons-static-png@1.97.1",
+      "variant": "dark",
+      "sha256": "375016542ebe78b63c7f36b8f6aee3058f2b706d861e5153fd74f9c27f63b8b7"
+    },
+    {
+      "file": "claude-color.png",
+      "package": "@lobehub/icons-static-png@1.97.1",
+      "variant": "dark",
+      "sha256": "97b53fb85b3bf401ffeb8ee7c5ebad734ce9f6edc3038f242021c53bcc18e23d"
+    },
+    {
+      "file": "gemini-color.png",
+      "package": "@lobehub/icons-static-png@1.97.1",
+      "variant": "dark",
+      "sha256": "10c628f55d22a9725b9f9fccce7cf062b9fb68da5f7736e87010e0594d7ba6db"
+    },
+    {
+      "file": "mistral-color.png",
+      "package": "@lobehub/icons-static-png@1.97.1",
+      "variant": "dark",
+      "sha256": "f3b97d586f84e68b8031c74b34bebe4651ee0cb130831ac9b97cb64e1820a2ef"
+    },
+    {
+      "file": "flutter.png",
+      "source": "https://raw.githubusercontent.com/flutter/website/main/sites/docs/web/assets/images/branding/flutter/logo/flutter-logomark-320px.png",
+      "sha256": "d1f6f3f5ac82a54af5fbec317e3029e262ea7f940d255ce41a541521aa6182b3",
+      "usage": "Referential identification; trademarks belong to respective owners.",
+      "version": "official-site snapshot 2026-10-22",
+      "rights": "Trademark of respective owner; retained for referential identification. No general third-party-logo license granted by the existing Lobe Icons LICENSE."
+    },
+    {
+      "file": "ffmpeg.png",
+      "source": "https://ffmpeg.org/img/ffmpeg3d_white.png",
+      "sha256": "72945c128bf3659ba1b1c58da29290601bcdccba401856318df0b7003e9b02e2",
+      "usage": "Referential identification; trademarks belong to respective owners.",
+      "version": "official-site snapshot 2026-10-22",
+      "rights": "Trademark of respective owner; retained for referential identification. No general third-party-logo license granted by the existing Lobe Icons LICENSE."
+    },
+    {
+      "file": "fluvie.svg",
+      "source": "https://fluvie.dev/fluvie_logo_inverted.svg",
+      "sha256": "4c6361458ffc7c625357c0cac716b328fa250c8be6f5e1f49829d4cade2ac22d",
+      "usage": "Referential identification; trademarks belong to respective owners.",
+      "rendered_file": "fluvie.png",
+      "rendered_sha256": "0cdb94373c940af7f9d5bdd2641db67ed4f75aa45af76e53cd5439abf773f3a4",
+      "version": "official-site snapshot 2026-10-22",
+      "rights": "Trademark of respective owner; retained for referential identification. No general third-party-logo license granted by the existing Lobe Icons LICENSE."
+    },
+    {
+      "file": "higgsfield.svg",
+      "source": "https://higgsfield.ai/",
+      "note": "Official inline glyph, currentColor resolved to white for dark background.",
+      "sha256": "e40e8b6169563f04188f29e7caf48ad57e9512f7a8431221809d2a026413cc20",
+      "rendered_file": "higgsfield.png",
+      "rendered_sha256": "e94b5fb5743ed75308b8744a98f63ab99c10937c0a6585fb7ca2bf3a8d0cf51c",
+      "version": "official-site snapshot 2026-10-22",
+      "rights": "Trademark of respective owner; retained for referential identification. No general third-party-logo license granted by the existing Lobe Icons LICENSE."
+    }
+  ]
+}

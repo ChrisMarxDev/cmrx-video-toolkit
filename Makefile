@@ -229,3 +229,19 @@ install-test:
 	bash -n scripts/install/linux.sh
 	bash -n video_tools/setup.sh
 	python3 -m unittest discover -s tests -p 'test_*install.py' -v
+
+.PHONY: desktop-install desktop desktop-check desktop-release-source
+# Install both locked JS workspaces: make desktop-install
+desktop-install:
+	npm --prefix apps/local-editor ci --ignore-scripts
+	npm --prefix apps/desktop ci --ignore-scripts
+# Open the desktop playground: make desktop [WORKSPACE=/absolute/project]
+desktop:
+	$(MAKE) -C apps/desktop run $(if $(WORKSPACE),WORKSPACE="$(WORKSPACE)",)
+# Typecheck editor and verify desktop services: make desktop-check
+desktop-check:
+	$(MAKE) -C apps/local-editor check
+	$(MAKE) -C apps/desktop check
+# Prepare a tagged source archive outside the checkout: make desktop-release-source TAG=desktop-v0.1.0 DESKTOP_RELEASE_DIR=/absolute/output
+desktop-release-source:
+	DESKTOP_RELEASE_DIR="$(DESKTOP_RELEASE_DIR)" node apps/desktop/scripts/release-source.mjs "$(TAG)"

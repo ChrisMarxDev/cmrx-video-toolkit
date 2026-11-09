@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Editing room</title>
+    <link rel="stylesheet" href="/chat.css" />
+    <link rel="stylesheet" href="/app-polish.css" />
+  </head>
+  <body>
+    <main>
+      <section id="chat" aria-label="Editing conversation">
+        <div class="conversation-heading">
+          <button id="project-open" type="button" title="Change project">
+            Choose project
+          </button>
+          <button
+            id="settings-open"
+            type="button"
+            aria-label="Open settings"
+            title="Settings"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="m10 3-.6 2.2-2 .9-2-.7-2 3.4 1.5 1.6v2.3L3.4 14l2 3.4 2-.7 2 .9.6 2.2h4l.6-2.2 2-.9 2 .7 2-3.4-1.5-1.5v-2.3l1.5-1.6-2-3.4-2 .7-2-.9L14 3Z"
+              />
+              <circle cx="12" cy="11.4" r="3" />
+            </svg>
+          </button>
+        </div>
+        <div id="messages" aria-live="polite">
+          <div id="welcome">
+            <canvas
+              class="welcome-art"
+              data-dither="spheres"
+              aria-hidden="true"
+            ></canvas>
+            <h1>Describe the edit</h1>
+            <p>Or mark a moment in the timeline.</p>
+            <button id="suggestion">Tighten the opening</button>
+          </div>
+        </div>
+        <div
+          id="message-queue"
+          aria-label="Queued messages"
+          aria-live="polite"
+          hidden
+        ></div>
+        <div id="agent-actions" aria-live="polite" hidden></div>
+        <div id="jobs"></div>
+        <div id="activity" role="status"></div>
+        <div id="error" role="alert"></div>
+        <button id="connect-provider" type="button" hidden>
+          Connect provider
+        </button>
+        <form>
+          <div id="comment-attachments" aria-live="polite" hidden></div>
+          <textarea
+            id="prompt"
+            aria-label="Message"
+            placeholder="Ask for an edit, or refer to a comment…"
+            rows="3"
+          ></textarea>
+          <div class="composer">
+            <div class="model-controls">
+              <span
+                id="model-status"
+                class="model-status"
+                aria-label="Connection status"
+              ></span
+              ><select id="model-select" aria-label="Model">
+                <option>Loading models…</option>
+              </select>
+            </div>
+            <button type="button" id="stop" hidden>Stop</button
+            ><button id="send" type="submit" aria-label="Send message">
+              Send
+            </button>
+          </div>
+        </form>
+        <p class="footnote">
+          <button id="add-note" type="button">Add a timed note</button>
+        </p>
+      </section>
+      <div
+        id="divider"
+        role="separator"
+        tabindex="0"
+        aria-label="Resize chat"
+        aria-orientation="vertical"
+      ></div>
+      <section id="visual" aria-label="Video workspace">
+        <div id="render-bar">
+          <span id="preview-status">Ready to edit</span>
+          <div class="video-actions">
+            <button id="import">Add video</button
+            ><button id="render">Export video</button>
+          </div>
+        </div>
+        <div id="timeline">
+          <iframe
+            title="Video editor"
+            id="editor"
+            allow="autoplay; fullscreen"
+          ></iframe>
+        </div>
+      </section>
+    </main>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <div class="settings-heading">
+        <div>
+          <h2 id="settings-title">Settings</h2>
+          <p>Choose how you connect.</p>
+        </div>
+        <button id="settings-close" aria-label="Close settings" type="button">
+          ×
+        </button>
+      </div>
+      <div id="settings-error" role="alert"></div>
+      <div id="provider-cards"></div>
+      <details class="engine-details">
+        <summary>
+          <span>Video engine</span><span id="engine-status">Checking</span>
+        </summary>
+        <p id="engine-detail"></p>
+      </details>
+      <section class="model-preferences">
+        <h3>Model preferences</h3>
+        <p id="settings-selected-model"></p>
+        <label for="effort-select">Reasoning effort</label
+        ><select id="effort-select" aria-label="Reasoning effort"></select>
+        <p class="settings-note">
+          Availability and usage limits come from your provider. Preferences
+          apply to the next message.
+        </p>
+      </section>
+    </dialog>
+    <script src="/chat.js" type="module"></script>
+    <dialog id="tool-dialog" aria-labelledby="tool-title">
+      <div class="settings-heading">
+        <h2 id="tool-title">Project tool</h2>
+        <button type="button" id="tool-close" aria-label="Close project tool">
+          ×
+        </button>
+      </div>
+      <iframe
+        id="tool-frame"
+        title="Project tool"
+        sandbox="allow-scripts allow-downloads"
+        referrerpolicy="no-referrer"
+      ></iframe>
+    </dialog>
+  </body>
+</html>

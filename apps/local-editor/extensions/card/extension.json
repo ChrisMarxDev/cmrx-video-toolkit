@@ -1,0 +1,9 @@
+{
+  "id": "card",
+  "apiVersion": 1,
+  "name": "Signal card",
+  "kind": "card",
+  "worker": "worker.mjs",
+  "browser": "panel.mjs",
+  "commands": [{ "id": "add-card", "label": "Add signal card" }]
+}

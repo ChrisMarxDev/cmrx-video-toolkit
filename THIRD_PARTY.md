@@ -1,6 +1,7 @@
 # Third-party notices and provenance
 
-No brand fonts are bundled. Flutter project scaffolding
+No brand fonts are bundled into reusable components. The desktop applications
+bundle separately licensed application typography as described below. Flutter project scaffolding
 and default platform icons originate from Flutter tooling. Flutter, Fluvie and
 other dependencies are resolved through pubspec manifests/lockfiles; their licenses
 remain applicable. No dependency source or downloaded model is vendored here.
@@ -67,3 +68,24 @@ the toolkit MIT license.
 MIT license retained in that directory; exact sources/checksums in PROVENANCE.json.
 Product names and logos belong to their respective owners; identification does
 not imply endorsement or guarantee every agent host supports local execution.
+
+## Desktop applications
+
+`apps/desktop/resources/fonts` (Space Grotesk) and
+`apps/local-editor/resources/fonts` (Fraunces) contain fonts retrieved from the
+public Google Fonts repository, with original SIL OFL1.1 notices and exact source
+revision/hashes in adjacent PROVENANCE.json files. These are app-local resources,
+not component defaults or a reusable brand archive.
+
+`apps/desktop/resources/brands` includes LobeHub product identity PNGs from
+`@lobehub/icons-static-png` 1.97.1 (MIT, Copyright 2023 LobeHub; full LICENSE retained),
+and official referential marks for Flutter, FFmpeg, Fluvie and Higgsfield.
+The catalog retains source URLs, hashes, transformations and distinct rights.
+Trademarks belong to their owners; the toolkit MIT license and LobeHub's source
+license do not grant general rights to other product marks. The app icon is a
+rasterization of this repository's existing public `docs/public/favicon.svg`.
+
+The desktop CSS acknowledges Damir Sokolovsky's unslop guidance,
+https://github.com/heydamir/unslop (CC BY4.0), used for design review. No upstream
+skill or private design documentation is distributed. Package dependencies retain
+their respective licenses; see the app manifests/locks and external requirements.

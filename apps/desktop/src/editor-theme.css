@@ -1,0 +1,269 @@
+/* Only the desktop host loads this theme. The standalone review remains intact. */
+@font-face {
+  font-family: Space Grotesk;
+  src: url("/SpaceGrotesk.ttf");
+  font-weight: 300 700;
+  font-display: swap;
+}
+:root {
+  --ink: #f5f0ff;
+  --surface: #1c1a20;
+  --canvas: #151417;
+  --lav: #39313f;
+  --muted: #a69ab6;
+  --border: #353239;
+  --accent: #c9b3e9;
+  font-family: "Space Grotesk", sans-serif;
+  background: #151417;
+  scrollbar-color: #51465f transparent;
+  scrollbar-width: thin;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #51465f transparent;
+}
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-thumb {
+  background: #51465f;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.editor {
+  grid-template-rows: 36px minmax(0, 1fr) 6px var(--timeline-height, 30dvh);
+}
+.editor > header {
+  background: #19171c;
+  padding: 0 12px;
+}
+.connection,
+.revision {
+  display: none;
+}
+button {
+  border-radius: 9px;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+button:hover:not(:disabled) {
+  background: #39313f;
+}
+.header-actions {
+  gap: 4px;
+}
+.header-actions button {
+  width: 30px;
+  height: 28px;
+}
+.workspace-grid,
+.dock-pane,
+.viewer,
+.preview-area {
+  background: #151417;
+}
+.preview-area {
+  padding: 16px 18px;
+}
+.stage {
+  border-radius: 12px;
+  box-shadow: 0 8px 28px #0004;
+}
+.dock-title {
+  background: #1c1a20;
+  border-bottom: 1px solid #ffffff06;
+  color: #b7abc7;
+  font-size: 11px;
+}
+.dock-grip {
+  opacity: 0.35;
+}
+.workspace-grid[data-pane-count="1"] .dock-title {
+  display: none;
+}
+.dock-divider,
+.panel-divider {
+  background: #2a2034;
+}
+.dock-divider:hover,
+.panel-divider:hover {
+  background: #9276b3;
+}
+.transport {
+  height: 42px;
+  flex-basis: 42px;
+  background: #19171c;
+  padding: 0 14px;
+  color: #c6b8d5;
+}
+.transport > button {
+  width: 32px;
+  height: 30px;
+  border-radius: 50%;
+  background: #30233f;
+}
+.time {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: #baaccb;
+}
+.timeline-panel {
+  background: #1c1a20;
+  border-top: 1px solid #ffffff08;
+}
+.timeline-tools {
+  height: 43px;
+  flex-basis: 43px;
+  padding: 0 12px;
+  background: #211a2d;
+}
+.timeline-tools h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #d2c5e1;
+  margin-right: 8px;
+}
+.timeline-tools button {
+  height: 29px;
+  width: 29px;
+  min-height: 29px;
+}
+.timeline-tools button[aria-pressed="true"] {
+  background: #4b365f;
+  color: #f1e4ff;
+}
+.timeline,
+.ruler {
+  background: #1c1a20;
+}
+.ruler {
+  border-bottom: 1px solid #ffffff08;
+  font-size: 10px;
+  color: #a99bb9;
+}
+.track {
+  background: #252129;
+  border-bottom: 1px solid #ffffff06;
+}
+.track:nth-child(even) {
+  background: #252129;
+}
+.track-name {
+  background: #1c1a20;
+  color: #c7b7d8;
+  font-size: 10px;
+}
+.track-name small {
+  color: #90819f;
+}
+.track-name .layer-controls {
+  opacity: 0.7;
+}
+.track-clips {
+  background: transparent;
+}
+.clip.video {
+  border-radius: 8px;
+  border: 1px solid #9d86bf88;
+  background: #84739b;
+}
+.clip.selected {
+  outline: 1px solid #dfd6f4;
+  outline-offset: 1px;
+  border-color: #dfd6f4;
+}
+.clip b {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+}
+.clip.video .clip-text {
+  background: #e4dcf2dd;
+  color: #24143d;
+}
+.playhead {
+  background: #d5ff45;
+}
+.playhead::before {
+  background: #d5ff45;
+}
+.comment-marker {
+  color: #d3baf2;
+}
+.zoom input {
+  accent-color: #c9b3e9;
+}
+.comments {
+  background: #1c1a20;
+  padding: 12px;
+}
+.comments textarea {
+  border-radius: 12px;
+  background: #151417;
+  border: 1px solid #49404f;
+  padding: 12px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.comments select {
+  border-radius: 8px;
+  background: #26222b;
+  border-color: #49404f;
+}
+.comment-list article {
+  background: #27232d;
+  border: 1px solid #49404f55;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.comment-list article > p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.comment-meta button:first-child {
+  font-size: 10px;
+  color: #d6beef;
+}
+.comment-list small {
+  color: #a89ab9;
+  font-size: 10px;
+}
+.comment-list .resolved {
+  opacity: 0.6;
+}
+.nav-hint {
+  font-size: 9px;
+  color: #8f819e;
+  white-space: nowrap;
+}
+.timeline-tools > div:first-child > .nav-hint {
+  display: block;
+  line-height: 1.4;
+}
+.timeline-tools > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timeline-tools > div:last-child {
+  margin-left: auto;
+}
+@media (max-width: 900px) {
+  .nav-hint {
+    display: none !important;
+  }
+  .preview-area {
+    padding: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

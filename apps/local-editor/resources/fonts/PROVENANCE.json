@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/google/fonts",
+  "revision": "5bb28733cec313b63fbd415b574b5ae35c8aa8b8",
+  "assets": [
+    {
+      "file": "Fraunces.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/5bb28733cec313b63fbd415b574b5ae35c8aa8b8/ofl/fraunces/Fraunces%5BSOFT%2CWONK%2Copsz%2Cwght%5D.ttf",
+      "sha256": "177ff6c0f14e5550a3c624247cd1189611d4eb65d000b14944c63d967958abbb",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "Fraunces-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/5bb28733cec313b63fbd415b574b5ae35c8aa8b8/ofl/fraunces/OFL.txt",
+      "sha256": "6732d6cc72c5d09292ff754dc1f39d9ea14918f74e87a17afa3f00a5120c3d48",
+      "license": "SIL OFL 1.1",
+      "upstream_sha256": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b",
+      "transformation": "Normalize line endings and trailing whitespace only; license text unchanged."
+    }
+  ]
+}
