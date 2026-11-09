@@ -13,6 +13,9 @@ for a chosen effect/framework, not alternative project formats.
 ## Start with the actual project
 
 Read `editor_context` and the workspace/project instructions in `projectAgent`.
+Its versioned `runtime` separates agent activity, preview rendering and queue state,
+and gives capability reasons. An idle agent can coexist with a rendering preview;
+use `editor_job` to wait for a specific render rather than repeating context reads.
 Use returned IDs and revisions, not remembered ones. These tools are supplied by
 the app; a plain terminal agent does not automatically have them. Outside the app,
 open the project in the desktop app and use its connected agent. Do not invent an

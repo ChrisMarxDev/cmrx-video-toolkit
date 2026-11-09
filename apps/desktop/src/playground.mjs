@@ -42,6 +42,7 @@ export class Playground {
     for (const j of this.jobs)
       if (j.status === "running") {
         j.status = "interrupted";
+        j.phase = "interrupted";
         j.error = "App closed during rendering. Render again when ready.";
       }
     fs.mkdirSync(path.join(workspace, "lib"), { recursive: true });
@@ -496,6 +497,7 @@ export class Playground {
       height: project.height,
       duration: Math.max(1, ...project.clips.map((c) => c.start + c.duration)),
       status: "running",
+      phase: "preparing",
       fingerprint: this.fingerprint(),
       createdAt: new Date().toISOString(),
     };
@@ -574,6 +576,12 @@ export class Playground {
     this.jobs.push(j);
     this.persist();
     // The job has an immutable source+manifest snapshot, independent of the chat turn.
+    const stage = (phase, detail = {}) => {
+      Object.assign(j, detail, {
+        phase: j.cancelRequested ? "canceling" : phase,
+      });
+      this.persist();
+    };
     this.renderTask = (async () => {
       let release;
       const controller = new AbortController();
@@ -581,11 +589,11 @@ export class Playground {
       try {
         if (this.renderQueue) {
           j.waitingForRender = true;
-          this.persist();
+          stage("waiting");
           release = await this.renderQueue.acquire(controller.signal);
           j.waitingForRender = false;
           if (j.cancelRequested) throw Error("Canceled");
-          this.persist();
+          stage("preparing");
         }
         await this.prepare();
         await this.execRaw(
@@ -603,6 +611,7 @@ export class Playground {
           true,
         );
         if (!overlayOnly) {
+          stage("capturing");
           const out = await this.execRaw(
             [
               "dart",
@@ -634,10 +643,12 @@ export class Playground {
           if (!artifact.isFile() || artifact.isSymbolicLink())
             throw Error("Renderer did not produce a regular video file");
           this.log(dest, out.output);
+          stage("verifying");
           await this.verifyTiming(dest, "preview.mp4", j);
           j.artifact = true;
         }
         const renderAlpha = async (name, target, capture) => {
+          stage("capturing");
           try {
             await this.execRaw(
               [
@@ -692,6 +703,7 @@ export class Playground {
               mismatch[0].actual === "yuv420p"
             ))
               throw error;
+            stage("verifying");
             // Do not waive verification: decode every alpha frame with the alpha-capable decoder.
             await this.execRaw(
               [
@@ -719,6 +731,7 @@ export class Playground {
           const overlay = fs.lstatSync(path.join(dest, name + ".webm"));
           if (!overlay.isFile() || overlay.isSymbolicLink())
             throw Error("Invalid graphics cache");
+          stage("verifying");
           await this.verifyTiming(dest, name + ".webm", j);
         };
         await renderAlpha(
@@ -726,7 +739,11 @@ export class Playground {
           "overlay.dart",
           "cmrx_overlay_capture_test.dart",
         );
-        for (const track of previewTracks) {
+        for (const [trackIndex, track] of previewTracks.entries()) {
+          stage("capturing", {
+            track: trackIndex,
+            trackCount: previewTracks.length,
+          });
           if (j.cancelRequested) throw Error("Canceled");
           const name = `overlay_track_${track}`;
           if (previewTracks.length === 1 && !project.layers?.[track]?.disabled)
@@ -754,8 +771,11 @@ export class Playground {
             )
             .slice(0, 1000);
         j.status = "complete";
+        j.phase = "complete";
       } catch (e) {
         j.status = j.cancelRequested ? "canceled" : "failed";
+        j.phase = j.status;
+        j.waitingForRender = false;
         j.error = j.cancelRequested ? "Canceled by user" : e.message;
         this.log(dest, e.message);
       }
@@ -822,7 +842,11 @@ export class Playground {
   cancel() {
     this.renderController?.abort();
     for (const j of this.jobs)
-      if (j.status === "running") j.cancelRequested = true;
+      if (j.status === "running") {
+        j.cancelRequested = true;
+        j.phase = "canceling";
+      }
+    this.persist();
     for (const p of this.processes)
       try {
         process.kill(-p.pid, "SIGTERM");

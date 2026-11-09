@@ -1,3 +1,4 @@
+import { projectRuntime, timelineOwner } from "./project-runtime.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -206,12 +207,14 @@ export async function startApp({
     preparingRender = false;
   let activeWrites = 0;
   const locked = () =>
-    state.busy ||
-    !!steeringPayload ||
-    state.switching ||
-    importing ||
-    preparingRender ||
-    !!playground?.blocking;
+    !!timelineOwner({
+      busy: state.busy,
+      switching: state.switching,
+      importing,
+      steering: !!steeringPayload,
+      preparingRender,
+      blockingRender: !!playground?.blocking,
+    });
   const publish = () => {
     state.locked = locked();
     state.importing = importing;
@@ -236,6 +239,7 @@ export async function startApp({
       Object.assign(state, manager.snapshot());
       state.connected = !!manager.entries.get(manager.id).connected;
     }
+    state.runtime = projectRuntime({ ...state, preparingRender });
     const value = "data: " + JSON.stringify(state) + "\n\n";
     for (const c of clients) c.write(value);
   };
@@ -365,10 +369,14 @@ export async function startApp({
       return { ...job, error: job.error?.slice(0, 8000) };
     }
     if (name === "editor_context") {
-      if (playground.running) await delay(2000);
       return {
         ...(await editor("/api/context")),
         playground: playground.state(),
+        runtime: projectRuntime({
+          ...state,
+          ...playground.state(),
+          preparingRender,
+        }),
         sourceFiles: playground.files(),
         projectAgent: agent.context(),
       };

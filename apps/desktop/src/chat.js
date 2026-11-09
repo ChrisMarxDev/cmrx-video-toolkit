@@ -307,15 +307,19 @@ if (!token || !editorToken) {
     }
     syncPreview();
     $("#render").disabled = !!s.locked || s.running;
-    $("#preview-status").textContent = s.locked
-      ? "Working on your project…"
-      : s.running
-        ? "Updating preview…"
-        : s.overlay?.stale
-          ? "Preview update pending"
-          : s.overlay
-            ? "Ready to edit"
-            : "Ready to edit";
+    $("#preview-status").textContent =
+      s.runtime?.label ||
+      (s.locked
+        ? "Working on your project…"
+        : s.running
+          ? "Rendering graphics preview…"
+          : "Ready to edit");
+    $("#preview-status").dataset.owner = s.runtime?.owner || "none";
+    $("#preview-status").dataset.previewPhase =
+      s.runtime?.preview.phase || "unknown";
+    $("#preview-status").title = s.runtime
+      ? `Agent: ${s.runtime.agent.phase} · Preview: ${s.runtime.preview.phase} · Queue: ${s.runtime.queue.phase}`
+      : "";
     $("#preview-status").classList.toggle("stale", !!s.overlay?.stale);
     $("#engine-status").textContent = s.engine?.available
       ? "Ready"
@@ -426,7 +430,9 @@ if (!token || !editorToken) {
               "aria-label",
               `Steer with queued message ${index + 1}`,
             );
-            steer.disabled = !connected || !s.busy || !!s.steering;
+            steer.disabled = s.runtime
+              ? !s.runtime.capabilities.steerQueued.allowed
+              : !connected || !s.busy || !!s.steering;
             steer.onclick = async () => {
               steer.disabled = true;
               try {

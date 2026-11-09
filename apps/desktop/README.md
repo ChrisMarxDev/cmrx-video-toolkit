@@ -69,6 +69,9 @@ undo preserve their source timing. Preview and export use the same composition;
 rendered drafts do not replace the underlying editable project. Heavy rendering
 is serialized across tabs. See [asset library](ASSETS.md).
 
+See [state-machine inventory](STATE_MACHINES.md) for lifecycle ownership, runtime
+capabilities and render phases shared by the UI and agent tools.
+
 ## Verify
 
 ```sh

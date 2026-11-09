@@ -130,7 +130,7 @@ try {
     .click();
   await skill
     .locator("pre")
-    .getByText(/Video project agent/)
+    .getByText(/Use the desktop video app/)
     .waitFor();
   await page.screenshot({ path: path.join(results, "skills.png") });
   await page.locator("#settings-close").click();
