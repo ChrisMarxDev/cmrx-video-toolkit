@@ -133,6 +133,11 @@ try {
   await page.unroute("**/chat/asset-import");
   assert.equal(await page.locator("#prompt").inputValue(), "Keep this draft");
   assert.equal(await page.locator("#asset-attachments .asset-chip").count(), 1);
+  assert(await page.locator("#asset-attachments").isVisible());
+  assert.equal(await page.locator("#asset-import-status").textContent(), "");
+  const thumbnail = await page.locator("#asset-attachments img").boundingBox();
+  assert.equal(thumbnail.width, 56);
+  assert.equal(thumbnail.height, 56);
   const first = fs.readdirSync(path.join(workspace, "assets/imports"))[0];
   assert.deepEqual(
     fs.readFileSync(path.join(workspace, "assets/imports", first)),
@@ -175,7 +180,39 @@ try {
       document.querySelectorAll("#asset-attachments .asset-chip").length ===
         2 && !document.querySelector("#send").disabled,
   );
+  await page.screenshot({ path: path.join(root, "image-previews.png") });
+  await page.route("**/chat/send", (route) =>
+    route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Send rejected fixture" }),
+    }),
+  );
   await page.locator("#send").click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector("#error")
+      .textContent.includes("Send rejected fixture"),
+  );
+  assert.equal(await page.locator("#asset-attachments .asset-chip").count(), 2);
+  await page.unroute("**/chat/send");
+  let continueSend;
+  await page.route("**/chat/send", async (route) => {
+    await new Promise((resolve) => {
+      continueSend = resolve;
+    });
+    await route.continue();
+  });
+  await page.locator("#send").click();
+  for (let i = 0; i < 100 && !continueSend; i++)
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  assert(continueSend);
+  await paste(["next-draft.png"]);
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll("#asset-attachments .asset-chip").length === 3,
+  );
+  continueSend();
   for (let i = 0; i < 100 && !received; i++)
     await new Promise((r) => setTimeout(r, 20));
   assert(received);
@@ -200,8 +237,20 @@ try {
   }
   await page.waitForFunction(
     () =>
-      document.querySelectorAll("#asset-attachments .asset-chip").length === 0,
+      document.querySelectorAll("#asset-attachments .asset-chip").length === 1,
   );
+  assert(
+    await page
+      .getByRole("button", { name: "Remove asset next-draft.png", exact: true })
+      .isVisible(),
+  );
+  await page
+    .getByRole("button", { name: "Remove asset next-draft.png", exact: true })
+    .click();
+  await page.unroute("**/chat/send");
+  assert(await page.locator("#asset-attachments").isHidden());
+  assert.equal(await page.locator("#asset-import-status").textContent(), "");
+  assert.equal(await page.locator("#prompt").inputValue(), "");
   assert.equal(await page.locator(".message.user .asset-chip").count(), 2);
   assert.equal(
     JSON.parse(fs.readFileSync(path.join(workspace, "project.json"))).clips

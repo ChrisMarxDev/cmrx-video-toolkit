@@ -24,6 +24,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   const chips = el("div");
   chips.id = "asset-attachments";
   chips.setAttribute("aria-label", "Attached assets");
+  chips.hidden = true;
   $("#prompt").parentNode.insertBefore(chips, $("#prompt"));
   let attached = [],
     workspaceOwned = false,
@@ -42,18 +43,22 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     onError(e);
   };
   const renderChips = () => {
+    chips.hidden = attached.length === 0;
     chips.replaceChildren(
       ...attached.map((item) => {
         const chip = el("span");
         chip.className = "asset-chip";
-        if (/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(item.path)) {
+        const image = /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(item.path);
+        chip.title = item.name;
+        if (image) {
+          chip.classList.add("asset-chip-image");
           const thumbnail = document.createElement("img");
           thumbnail.src = previewURL(item);
-          thumbnail.alt = "";
-          thumbnail.width = thumbnail.height = 32;
+          thumbnail.alt = item.name;
+          thumbnail.width = thumbnail.height = 56;
           chip.append(thumbnail);
         }
-        chip.append(el("span", item.name));
+        if (!image) chip.append(el("span", item.name));
         const remove = el("button", "×");
         remove.type = "button";
         remove.setAttribute("aria-label", "Remove asset " + item.name);
@@ -360,8 +365,10 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     },
     attachments: () =>
       attached.map((a) => ({ scope: "project", path: a.path })),
-    clear: () => {
-      attached = [];
+    clear: (sent) => {
+      attached = sent
+        ? attached.filter((a) => !sent.some((ref) => ref.path === a.path))
+        : [];
       renderChips();
     },
   };

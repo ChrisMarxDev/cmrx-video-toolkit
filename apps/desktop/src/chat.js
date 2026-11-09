@@ -83,9 +83,11 @@ if (!token || !editorToken) {
     } finally {
       dropping = false;
       $("#send").disabled = !connected || !!latestState?.switching || sending;
-      assetStatus.textContent = saved.length
-        ? "Added: " + saved.join(", ")
-        : "No files added";
+      assetStatus.textContent = attach
+        ? ""
+        : saved.length
+          ? "Added: " + saved.join(", ")
+          : "No files added";
     }
   }
   function acceptDrops(doc) {
@@ -535,6 +537,7 @@ if (!token || !editorToken) {
       !connected
     )
       return;
+    const sentAssets = assetManager.attachments();
     try {
       sending = true;
       $("#send").disabled = true;
@@ -544,9 +547,10 @@ if (!token || !editorToken) {
         ...(delivery ? { delivery } : {}),
         text,
         comments: queuedComments,
-        assets: assetManager.attachments(),
+        assets: sentAssets,
       });
-      assetManager.clear();
+      assetManager.clear(sentAssets);
+      if (!dropping) assetStatus.textContent = "";
       if ($("#prompt").value === draft) {
         $("#prompt").value = "";
         $("#prompt").style.height = "64px";
