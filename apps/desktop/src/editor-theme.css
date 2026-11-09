@@ -33,11 +33,14 @@
   background-clip: padding-box;
 }
 .editor {
-  grid-template-rows: 36px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
+  grid-template-rows: 44px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
 }
 .editor > header {
   background: #19171c;
   padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .connection,
 .revision {
@@ -258,4 +261,76 @@ button:hover:not(:disabled) {
   * {
     transition: none !important;
   }
+}
+
+.workspace-status {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 28px;
+  cursor: help;
+}
+.workspace-status > span:first-child {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d5ff45;
+}
+.workspace-status[data-phase="failed"] > span:first-child,
+.workspace-status[data-phase="interrupted"] > span:first-child,
+.workspace-status[data-phase="stale"] > span:first-child {
+  background: #e9ba71;
+}
+.workspace-status-tip {
+  display: none;
+  position: absolute;
+  top: 32px;
+  left: 0;
+  z-index: 100;
+  width: max-content;
+  max-width: 260px;
+  padding: 7px 10px;
+  border: 1px solid #49404f;
+  border-radius: 8px;
+  color: #f5f0ff;
+  background: #26222b;
+  box-shadow: 0 6px 20px #0004;
+  font-size: 11px;
+}
+.workspace-status:hover .workspace-status-tip,
+.workspace-status:focus-visible .workspace-status-tip { display: block; }
+.workspace-export {
+  padding: 7px 12px;
+  background: #dfd6f4;
+  color: #24143d;
+  font-size: 11px;
+  border: 0;
+}
+.preview-area { position: relative; }
+.player-working {
+  position: absolute;
+  top: 24px;
+  right: 26px;
+  z-index: 20;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: #17131dcc;
+  border: 1px solid #ffffff20;
+  border-radius: 50%;
+}
+.player-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #dfd6f433;
+  border-top-color: #dfd6f4;
+  border-radius: 50%;
+  animation: player-working-spin 0.8s linear infinite;
+}
+@keyframes player-working-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .player-spinner { animation: none; border-style: dotted; }
 }

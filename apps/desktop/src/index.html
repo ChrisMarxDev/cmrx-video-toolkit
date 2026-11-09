@@ -98,7 +98,8 @@
         aria-orientation="vertical"
       ></div>
       <section id="visual" aria-label="Video workspace">
-        <div id="render-bar">
+        <!-- Host transport hooks; visible workspace controls live in the editor header. -->
+        <div id="render-bar" hidden aria-hidden="true">
           <span id="preview-status">Ready to edit</span>
           <div class="video-actions">
             <button id="render">Export video</button>

@@ -131,6 +131,13 @@ function VideoLayer({
 type PreviewBridge = {
   locked: boolean;
   canImportVideo: boolean;
+  activity?: {
+    label: string;
+    details: string;
+    working: boolean;
+    exportDisabled: boolean;
+    phase: string;
+  };
   overlay: null | {
     url: string;
     duration: number;
@@ -347,8 +354,25 @@ function App() {
           return;
         }
       }
+      const activity = e.data.activity;
+      if (
+        activity &&
+        (typeof activity.label !== "string" ||
+          typeof activity.details !== "string" ||
+          typeof activity.phase !== "string")
+      )
+        return;
       const next = {
         overlay,
+        activity: activity
+          ? {
+              label: activity.label,
+              details: activity.details,
+              phase: activity.phase,
+              working: activity.working === true,
+              exportDisabled: activity.exportDisabled === true,
+            }
+          : undefined,
         locked: !!e.data.locked,
         canImportVideo: e.data.canImportVideo === true,
       };
@@ -1062,6 +1086,21 @@ function App() {
     >
       <header>
         <div className="header-actions">
+          {previewBridge?.activity && (
+            <span
+              className="workspace-status"
+              tabIndex={0}
+              role="status"
+              aria-label={previewBridge.activity.label}
+              data-phase={previewBridge.activity.phase}
+              aria-description={previewBridge.activity.details}
+            >
+              <span aria-hidden="true" />
+              <span className="workspace-status-tip" aria-hidden="true">
+                {previewBridge.activity.label}
+              </span>
+            </span>
+          )}
           <span className={"connection " + (connected ? "online" : "")}>
             {connected ? "Connected" : "Reconnecting…"}
           </span>
@@ -1094,6 +1133,20 @@ function App() {
             <Icon name="keyboard" />
           </button>
         </div>
+        {previewBridge?.activity && (
+          <button
+            className="workspace-export"
+            disabled={previewBridge.activity.exportDisabled}
+            onClick={() =>
+              window.parent.postMessage(
+                { type: "cmrx:export" },
+                location.origin,
+              )
+            }
+          >
+            Export video
+          </button>
+        )}
       </header>
       {showShortcuts && (
         <aside className="shortcut-panel" aria-label="Keyboard shortcuts">
@@ -1136,6 +1189,15 @@ function App() {
             content: (
               <section className="viewer panel">
                 <div className="preview-area" aria-label="Composition preview">
+                  {previewBridge?.activity?.working && (
+                    <div
+                      className="player-working"
+                      role="status"
+                      aria-label="Agent editing video"
+                    >
+                      <span className="player-spinner" aria-hidden="true" />
+                    </div>
+                  )}
                   <div
                     className="stage"
                     ref={stage}

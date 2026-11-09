@@ -879,3 +879,6 @@ form {
     transition: none;
   }
 }
+
+/* The embedded editor owns the unified workspace toolbar. */
+#render-bar { display: none; }

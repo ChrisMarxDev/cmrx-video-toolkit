@@ -163,6 +163,10 @@ if (!token || !editorToken) {
   window.addEventListener("message", (e) => {
     if (e.source !== $("#editor").contentWindow || e.origin !== location.origin)
       return;
+    if (e.data?.type === "cmrx:export") {
+      if (!$("#render").disabled) $("#render").click();
+      return;
+    }
     if (e.data?.type === "cmrx:add-video") {
       void importVideo();
       return;
@@ -199,6 +203,15 @@ if (!token || !editorToken) {
         overlay,
         locked: s.locked || importingVideo,
         canImportVideo: s.projectInfo?.selected !== false,
+        activity: {
+          label: s.runtime?.label || "Ready to edit",
+          details: s.runtime
+            ? `Agent: ${s.runtime.agent.phase} · Preview: ${s.runtime.preview.phase} · Queue: ${s.runtime.queue.phase}`
+            : "",
+          phase: s.runtime?.preview.phase || "ready",
+          working: !!s.busy,
+          exportDisabled: !!s.locked || !!s.running,
+        },
       },
       location.origin,
     );
