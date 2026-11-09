@@ -7,3 +7,5 @@ export 'src/media.dart';
 export 'src/diagrams/technical.dart';
 export 'src/charts.dart';
 export 'expanded.dart';
+
+export 'src/media_carousel.dart';

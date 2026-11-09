@@ -1,3 +1,4 @@
+import 'media_carousel_demo.dart';
 import 'catalog_model.dart';
 export 'catalog_model.dart';
 import 'package:video_components/expanded_samples.dart';
@@ -27,6 +28,7 @@ String flowReference(
 String literal(Object? value) => jsonEncode(value).replaceAll(r'$', r'\$');
 
 String dartExample(ComponentSpec spec, Map<String, dynamic> p) {
+  if (spec.id == 'video.media-carousel') return mediaCarouselExample(p);
   final rendered = spec.presentation(p);
   if (!identical(rendered, spec)) return dartExample(rendered, p);
   if (spec.data['expanded'] == true) return expandedExample(spec.id, p);

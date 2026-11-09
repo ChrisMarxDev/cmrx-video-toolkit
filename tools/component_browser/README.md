@@ -234,3 +234,14 @@ the source image unchanged. The shader is preloaded at startup; unsupported host
 show the existing shader-unavailable state. Chapter color wipe appears under
 Transitions, with stripe count, direction and inherited fill-color controls.
 Preview progress is continuous; production timing comes from the composition.
+
+## Media carousel inspection
+
+`#/video.media-carousel` supports drag, wheel, tap and focused arrow-key selection.
+Interactive snapping takes 240ms (instant under reduced motion); timeline changes
+restore deterministic position. Portrait, landscape and still presets show original
+synthetic landscapes; alternate slots animate when enabled. The optional click is
+off by default and only responds to explicit selection in web previews, never
+scrubbing or initial load. Native previews remain silent. See
+[the component API](../../components/CATALOG.md#media-carousel) for image/clip slots
+and deterministic audio cue helpers for composition.

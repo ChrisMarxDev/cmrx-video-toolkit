@@ -138,3 +138,33 @@ fragment shader. The implementation follows Flutter's
 Both are exported by `video_components.dart` / `expanded.dart`, registered as
 `video.chapter-wipe` and `video.camera-frame`, and available in the public browser.
 The camera sample there is an original synthetic portrait.
+
+## Media carousel
+
+`video.media-carousel` / `MediaCarousel` centers one large image or clip, with
+smaller, quieter neighbors. Pass a bounded layout, caller-owned widget `children`
+and a fractional `position` (integer = centered item). `aspectRatio`, `sideScale`,
+`itemFraction`, `gap`, `radius`, and `sideOpacity` configure geometry. Empty lists
+render empty; out-of-range positions clamp. No media is decoded or played by the
+widget. Use preloaded images or frame-synchronized Fluvie `Clip` widgets; media
+fit, source time, clip audio and licensing remain the composition's responsibility.
+
+`mediaCarouselPosition(progress, count, snapFraction: .18)` holds each item then
+uses a quick ease-out snap. Progress is normalized over the complete sequence,
+including the final hold; actual transition duration is `duration * snapFraction /
+count`. For arbitrary orders, supply your own frame-derived position instead.
+
+The browser's portrait, landscape and still presets use original synthetic
+landscapes, with moving frames in alternate slots when enabled. Drag, wheel,
+tap a neighbor, or focus the preview and use arrow keys. Interactive snaps last
+240ms; reduced motion selects immediately. Changing the timeline restores its
+position. This inspection controller is separate from deterministic video output.
+
+Sound is optional and off by default. The browser's click responds only to explicit
+selection, never timeline playback/scrubbing or initial load. `mediaCarouselClickWav()`
+returns an original quiet 22ms 48kHz mono PCM WAV. In a composition, write it once
+and mix it at `startSeconds + cue * durationSeconds` for each normalized cue from
+`mediaCarouselClickCues(count)`. Those cues are the settled-selection times for
+the provided timing helper; custom motion needs matching custom cues. The widget
+never plays sound or infers the output timeline. Browser audio policy may suppress
+preview sound; native catalog previews remain silent.

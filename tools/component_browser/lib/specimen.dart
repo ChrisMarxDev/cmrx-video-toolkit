@@ -1,3 +1,4 @@
+import 'media_carousel_demo.dart';
 import 'package:video_components/expanded_samples.dart';
 import 'technical_specimens.dart';
 import 'demo_style.dart';
@@ -15,6 +16,8 @@ Widget specimen(
   bool videoControls = false,
   VideoStyle style = demoStyle,
 }) {
+  if (spec.id == 'video.media-carousel')
+    return MediaCarouselDemo(props: p, progress: progress, style: style);
   final rendered = spec.presentation(p);
   if (!identical(rendered, spec))
     return specimen(

@@ -4,6 +4,100 @@
   "importPath": "package:video_components/video_components.dart",
   "components": [
     {
+      "id": "video.media-carousel",
+      "name": "Media carousel",
+      "widget": "MediaCarousel",
+      "category": "Media layouts",
+      "description": "Large centered media with smaller neighbors and crisp snapping. Drag, scroll or tap in the inspector; timeline playback is frame-driven. Synthetic still/moving samples; replace with your own images or clips. Optional click sounds on interaction only.",
+      "source": "components/lib/src/media_carousel.dart",
+      "motion": true,
+      "curated": true,
+      "parameters": {
+        "count": {
+          "type": "number",
+          "label": "Sample items",
+          "default": 5,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        "aspectRatio": {
+          "type": "number",
+          "label": "Card aspect ratio",
+          "default": 0.8,
+          "min": 0.5,
+          "max": 1.8
+        },
+        "sideScale": {
+          "type": "number",
+          "label": "Neighbor scale",
+          "default": 0.62,
+          "min": 0.3,
+          "max": 0.85
+        },
+        "sideOpacity": {
+          "type": "number",
+          "label": "Neighbor opacity",
+          "default": 0.65,
+          "min": 0.25,
+          "max": 1
+        },
+        "gap": {
+          "type": "number",
+          "label": "Gap",
+          "default": 16,
+          "min": 0,
+          "max": 48
+        },
+        "radius": {
+          "type": "number",
+          "label": "Corner radius",
+          "default": 24,
+          "min": 0,
+          "max": 60
+        },
+        "snapFraction": {
+          "type": "number",
+          "label": "Snap duration / step",
+          "default": 0.18,
+          "min": 0.06,
+          "max": 0.5
+        },
+        "mixedMedia": {
+          "type": "bool",
+          "label": "Animated sample frames",
+          "default": true
+        },
+        "clickSound": {
+          "type": "bool",
+          "label": "Click on interaction",
+          "default": false
+        }
+      },
+      "variants": [
+        {
+          "id": "default",
+          "name": "Portrait media",
+          "props": {}
+        },
+        {
+          "id": "landscape",
+          "name": "Landscape media",
+          "props": {
+            "aspectRatio": 1.6,
+            "sideScale": 0.55
+          }
+        },
+        {
+          "id": "stills",
+          "name": "Still images",
+          "props": {
+            "mixedMedia": false
+          }
+        }
+      ]
+    },
+    {
       "id": "video.stage",
       "name": "Stage",
       "widget": "VideoStage",
