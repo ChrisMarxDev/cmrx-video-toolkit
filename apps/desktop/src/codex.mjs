@@ -313,6 +313,21 @@ export class CodexProvider {
       this.starting = false;
     }
   }
+  async steer(text, context) {
+    if (!this.thread || !this.turn || this.interrupted)
+      throw Error("The active task has finished. Send your message again.");
+    return this.call("turn/steer", {
+      threadId: this.thread,
+      expectedTurnId: this.turn,
+      input: [
+        {
+          type: "text",
+          text:
+            text + "\n\nCurrent editor context:\n" + JSON.stringify(context),
+        },
+      ],
+    });
+  }
   get running() {
     return !!this.turn || !!this.starting;
   }

@@ -337,6 +337,15 @@ if (!token || !editorToken) {
       s.locked || s.running || s.queue?.length || s.queuePaused
         ? "Queue"
         : "Send";
+    const immediate = $("#send-now");
+    immediate.hidden =
+      !(s.busy && s.canSteer) && !s.queue?.length && !s.queuePaused;
+    immediate.disabled =
+      !connected ||
+      !!s.switching ||
+      sending ||
+      dropping ||
+      (s.busy ? !s.canSteer : !!s.locked || !!s.running);
     const queue = $("#message-queue");
     const queueSignature = JSON.stringify([
       s.queue || [],
@@ -516,7 +525,7 @@ if (!token || !editorToken) {
       syncPreview();
     }
   }
-  async function send() {
+  async function send(delivery) {
     const draft = $("#prompt").value;
     const text = draft.trim();
     if (
@@ -529,8 +538,10 @@ if (!token || !editorToken) {
     try {
       sending = true;
       $("#send").disabled = true;
+      $("#send-now").disabled = true;
       forceScroll = true;
       await call("send", {
+        ...(delivery ? { delivery } : {}),
         text,
         comments: queuedComments,
         assets: assetManager.attachments(),
@@ -547,8 +558,16 @@ if (!token || !editorToken) {
     } finally {
       sending = false;
       $("#send").disabled = !connected || !!latestState?.switching || dropping;
+      $("#send-now").disabled =
+        !connected ||
+        !!latestState?.switching ||
+        dropping ||
+        (latestState?.busy
+          ? !latestState.canSteer
+          : !!latestState?.locked || !!latestState?.running);
     }
   }
+  $("#send-now").onclick = () => send("now");
   $("form").onsubmit = (e) => {
     e.preventDefault();
     send();
@@ -563,7 +582,7 @@ if (!token || !editorToken) {
   $("#prompt").onkeydown = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
-      send();
+      send(e.ctrlKey || e.metaKey ? "now" : undefined);
     }
   };
   $("#render").onclick = () => call("render").catch(showError);

@@ -65,6 +65,7 @@ export class ProviderManager {
   snapshot() {
     return {
       provider: this.id,
+      canSteer: typeof this.active?.steer === "function",
       model: this.selected.model || "",
       effort: this.selected.effort || "",
       providers: [...this.entries.values()].map((e) => ({

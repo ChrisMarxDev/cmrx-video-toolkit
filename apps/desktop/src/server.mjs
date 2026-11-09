@@ -184,6 +184,7 @@ export async function startApp({
   let closing = false;
   let turnGeneration = 0,
     activePayload = null;
+  let steeringPayload = null;
   let assistantItem = null;
   let assistant = null,
     manager,
@@ -206,6 +207,7 @@ export async function startApp({
   let activeWrites = 0;
   const locked = () =>
     state.busy ||
+    !!steeringPayload ||
     state.switching ||
     importing ||
     preparingRender ||
@@ -221,6 +223,7 @@ export async function startApp({
         ...state.messages,
         ...state.queue,
         ...(activePayload ? [activePayload] : []),
+        ...(steeringPayload ? [steeringPayload] : []),
       ]);
       state.mediaCount = doc.clips.filter((c) => c.kind === "video").length;
       state.clipCount = doc.clips.length;
@@ -954,6 +957,10 @@ export async function startApp({
           await ready;
           if (state.switching)
             throw Error("A provider change is still running");
+          if (body.delivery !== undefined && body.delivery !== "now")
+            throw Error("Unknown message delivery mode");
+          if (body.delivery === "now" && steeringPayload)
+            throw Error("Your previous message is still being delivered");
           const text = typeof body.text === "string" ? body.text.trim() : "";
           if (text.length > 20000)
             throw Error("Write a message under 20,000 characters");
@@ -980,6 +987,7 @@ export async function startApp({
             ...state.messages,
             ...state.queue,
             ...(activePayload ? [activePayload] : []),
+            ...(steeringPayload ? [steeringPayload] : []),
           ]);
           const comments = (body.comments || []).map((c) => {
             const live = pending.find((p) => p.id === c.id);
@@ -1000,7 +1008,59 @@ export async function startApp({
             provider: manager.id,
             selection: { ...manager.selected },
           };
-          if (
+          if (body.delivery === "now") {
+            if (steeringPayload)
+              throw Error("Your previous message is still being delivered");
+            if (state.busy) {
+              if (typeof manager.active?.steer !== "function")
+                throw Error(
+                  "This provider cannot receive messages during a task. Stop it first or queue your message.",
+                );
+              const generation = turnGeneration;
+              steeringPayload = item;
+              publish();
+              try {
+                await manager.active.steer(
+                  item.text ||
+                    (item.assets.length
+                      ? "Use the attached project assets."
+                      : "Apply the attached timed comments."),
+                  {
+                    ...current,
+                    attachedComments: comments,
+                    attachedAssets: item.assets.map((ref) => ({
+                      ...assets.inspect("project", ref.path),
+                      workspacePath: "assets/" + ref.path,
+                    })),
+                    commentWorkflow,
+                    projectAgent: agent.context(),
+                  },
+                );
+                state.messages.push({
+                  role: "user",
+                  text: item.text,
+                  delivery: "now",
+                  ...(comments.length ? { comments } : {}),
+                  ...(item.assets.length ? { assets: item.assets } : {}),
+                });
+                if (generation === turnGeneration) {
+                  assistant = null;
+                  assistantItem = null;
+                }
+                save();
+                result = { ok: true, steered: true };
+              } finally {
+                steeringPayload = null;
+                publish();
+              }
+            } else {
+              if (locked() || playground.running)
+                throw Error(
+                  "Wait for the import or render to finish, or queue your message.",
+                );
+              result = await startMessage(item);
+            }
+          } else if (
             locked() ||
             playground.running ||
             state.queue.length ||
