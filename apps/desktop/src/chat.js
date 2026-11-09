@@ -27,6 +27,7 @@ if (!token || !editorToken) {
   $("#send").disabled = true;
 } else {
   let latestState;
+  let importingVideo = false;
   const assetStatus = document.createElement("div");
   assetStatus.id = "asset-import-status";
   assetStatus.setAttribute("role", "status");
@@ -144,12 +145,13 @@ if (!token || !editorToken) {
     commentSignature = "",
     sending = false;
   window.addEventListener("message", (e) => {
-    if (
-      e.source !== $("#editor").contentWindow ||
-      e.origin !== location.origin ||
-      e.data?.type !== "cmrx:comment-positions"
-    )
+    if (e.source !== $("#editor").contentWindow || e.origin !== location.origin)
       return;
+    if (e.data?.type === "cmrx:add-video") {
+      void importVideo();
+      return;
+    }
+    if (e.data?.type !== "cmrx:comment-positions") return;
     if (JSON.stringify(commentPositions) === JSON.stringify(e.data.positions))
       return;
     commentPositions = e.data.positions;
@@ -176,7 +178,12 @@ if (!token || !editorToken) {
         }
       : null;
     $("#editor").contentWindow?.postMessage(
-      { type: "cmrx:preview", overlay, locked: s.locked },
+      {
+        type: "cmrx:preview",
+        overlay,
+        locked: s.locked || importingVideo,
+        canImportVideo: s.projectInfo?.selected !== false,
+      },
       location.origin,
     );
   };
@@ -283,7 +290,6 @@ if (!token || !editorToken) {
       }
     }
     syncPreview();
-    $("#import").disabled = !!s.locked;
     $("#render").disabled = !!s.locked || s.running;
     $("#preview-status").textContent = s.locked
       ? "Working on your project…"
@@ -497,16 +503,19 @@ if (!token || !editorToken) {
         encodeURIComponent(token);
     }
   });
-  $("#import").onclick = async () => {
+  async function importVideo() {
+    if (importingVideo || latestState?.locked) return;
+    importingVideo = true;
+    syncPreview();
     try {
-      $("#import").disabled = true;
       await call("import");
     } catch (e) {
       showError(e);
     } finally {
-      $("#import").disabled = false;
+      importingVideo = false;
+      syncPreview();
     }
-  };
+  }
   async function send() {
     const draft = $("#prompt").value;
     const text = draft.trim();

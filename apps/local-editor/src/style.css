@@ -391,6 +391,14 @@ input[type="range"] {
   min-width: 0;
   overflow-x: auto;
 }
+.timeline-add-video {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 4px 8px;
+}
 .timeline-tools h2 {
   font-size: 13px;
   margin-right: 10px;

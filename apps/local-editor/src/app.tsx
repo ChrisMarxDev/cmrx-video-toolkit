@@ -129,6 +129,7 @@ function VideoLayer({
 }
 type PreviewBridge = {
   locked: boolean;
+  canImportVideo: boolean;
   overlay: null | {
     url: string;
     duration: number;
@@ -345,11 +346,13 @@ function App() {
           return;
         }
       }
+      const next = {
+        overlay,
+        locked: !!e.data.locked,
+        canImportVideo: e.data.canImportVideo === true,
+      };
       setPreviewBridge((previous) =>
-        JSON.stringify(previous) ===
-        JSON.stringify({ overlay, locked: !!e.data.locked })
-          ? previous
-          : { overlay, locked: !!e.data.locked },
+        JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
       );
     };
     window.addEventListener("message", receive);
@@ -1675,6 +1678,20 @@ function App() {
               Scroll to pan · Ctrl/⌘ + scroll to zoom · Space + drag
             </span>
           </div>
+          {previewBridge?.canImportVideo && (
+            <button
+              className="timeline-add-video"
+              disabled={disabled}
+              onClick={() =>
+                window.parent.postMessage(
+                  { type: "cmrx:add-video" },
+                  location.origin,
+                )
+              }
+            >
+              <span aria-hidden="true">+</span> Add video
+            </button>
+          )}
           <ClipControls
             project={p!}
             clip={selectedClip}
