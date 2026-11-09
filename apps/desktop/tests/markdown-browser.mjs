@@ -121,11 +121,10 @@ try {
     "const markup = '<img src=x onerror=alert(1)>';",
   );
   assert((await message.textContent()).includes("Fish & chips"));
+  assert.equal(await message.locator("[data-artifact]").count(), 0);
   assert.equal(
-    await message
-      .getByRole("link", { name: "Preview", exact: true })
-      .getAttribute("data-artifact"),
-    "render-1",
+    await message.getByRole("link", { name: "Preview", exact: true }).count(),
+    0,
   );
   assert.equal(
     await message

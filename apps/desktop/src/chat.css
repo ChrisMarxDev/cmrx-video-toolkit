@@ -300,22 +300,6 @@ textarea::placeholder {
 #error:empty {
   display: none;
 }
-#jobs {
-  max-height: 42px;
-  overflow: auto;
-}
-.job {
-  padding: 0 0 12px;
-  font-size: 11px;
-}
-.job a {
-  color: #b6a2ce;
-  text-decoration: none;
-  border-bottom: 1px solid #665079;
-}
-.job a:hover {
-  color: #fff;
-}
 #visual {
   flex: 1;
   min-width: 320px;

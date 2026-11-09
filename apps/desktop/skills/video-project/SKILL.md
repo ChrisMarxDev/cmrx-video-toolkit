@@ -14,7 +14,7 @@ description: Take a video project from brief and research through editing, custo
 7. Build a concrete external action before requesting it. Calls that change remote state ask the user in chat. Declined actions did not run. A timeout after submission can have an unknown result: check service status rather than automatically repeating a publish/upload.
 8. Save useful project decisions with project_notes memory.md. Never put credentials in source, notes, chat, command arguments or generated tools. Users add named keys and generic connections in Settings.
 
-Return concise results with clickable links. Use [Export](artifact:JOB_ID) for a completed encoded export, [Tool](tool:TOOL_ID) for a registered local tool, or ordinary HTTPS links for external results. Never claim a publish/render succeeded without its actual result.
+Return concise results. Video review and downloads belong to the center editor and its Export video control; do not add watch/download/artifact links or create separate video-player tools. Use [Tool](tool:TOOL_ID) for a registered interactive tool, or ordinary HTTPS links for external results. Never claim a publish/render succeeded without its actual result.
 
 Worker dependencies are cached: use `flutter pub get --offline`, never a network
 package install. Text in headless Flutter capture needs a declared local font;

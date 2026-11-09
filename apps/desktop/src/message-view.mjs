@@ -19,17 +19,15 @@ export function renderMessage(text, doc = document) {
     return node;
   };
   function link(parent, href, tokens) {
+    // Video review/export belongs to the editor, including in older conversations.
+    if (/^artifact:[\w-]{1,100}$/.test(href)) return;
     const a = doc.createElement("a");
     let valid = false;
-    if (/^(tool|artifact):[\w-]{1,100}$/.test(href)) {
+    if (/^(tool):[\w-]{1,100}$/.test(href)) {
       const [kind, id] = href.split(":");
       a.dataset[kind] = id;
       a.href = "#";
       valid = true;
-      if (kind === "artifact") {
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-      }
     } else
       try {
         const url = new URL(href);

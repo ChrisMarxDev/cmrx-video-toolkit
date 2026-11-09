@@ -28,6 +28,20 @@ if (!token || !editorToken) {
 } else {
   let latestState;
   let importingVideo = false;
+  let requestedExport = null;
+  function downloadRequestedExport(state) {
+    const job = state?.jobs?.find((job) => job.id === requestedExport);
+    if (!job || !["complete", "failed", "canceled"].includes(job.status))
+      return;
+    requestedExport = null;
+    if (job.status !== "complete" || !job.artifact) return;
+    const link = document.createElement("a");
+    link.href = "/chat/artifact?" + new URLSearchParams({ id: job.id, token });
+    link.download = "export.mp4";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  }
   const assetStatus = document.createElement("div");
   assetStatus.id = "asset-import-status";
   assetStatus.setAttribute("role", "status");
@@ -442,30 +456,7 @@ if (!token || !editorToken) {
           ? "Render failed. Ask the assistant to fix it, or try again."
           : ""),
     );
-    $("#jobs").replaceChildren(
-      ...(s.jobs || [])
-        .filter((job) => job.kind !== "overlay")
-        .slice(-1)
-        .map((job) => {
-          const el = document.createElement("div");
-          el.className = "job";
-          if (job.artifact && job.status === "complete") {
-            const a = document.createElement("a");
-            a.href =
-              "/chat/artifact?id=" +
-              encodeURIComponent(job.id) +
-              "&token=" +
-              encodeURIComponent(token);
-            a.textContent = "Download latest export";
-            a.download = "preview.mp4";
-            el.append(a);
-          } else
-            el.textContent = job.waitingForRender
-              ? "Waiting for render slot…"
-              : "Preview · " + job.status;
-          return el;
-        }),
-    );
+    downloadRequestedExport(s);
     const next = JSON.stringify(s.messages);
     if (next !== signature) {
       const list = $("#messages");
@@ -526,13 +517,6 @@ if (!token || !editorToken) {
       event.preventDefault();
       const link = latestState?.links?.find((l) => l.id === a.dataset.tool);
       if (link) openTool(link);
-    }
-    if (a.dataset.artifact) {
-      a.href =
-        "/chat/artifact?id=" +
-        encodeURIComponent(a.dataset.artifact) +
-        "&token=" +
-        encodeURIComponent(token);
     }
   });
   async function importVideo() {
@@ -600,7 +584,18 @@ if (!token || !editorToken) {
       send();
     }
   };
-  $("#render").onclick = () => call("render").catch(showError);
+  $("#render").onclick = async () => {
+    $("#render").disabled = true;
+    try {
+      const job = await call("render");
+      requestedExport = job.id;
+      downloadRequestedExport(latestState);
+    } catch (error) {
+      showError(error);
+    } finally {
+      $("#render").disabled = !!latestState?.locked || !!latestState?.running;
+    }
+  };
   $("#stop").onclick = () => call("stop").catch(showError);
   $("#suggestion").onclick = () => {
     $("#prompt").value = $("#suggestion").dataset.prompt;
