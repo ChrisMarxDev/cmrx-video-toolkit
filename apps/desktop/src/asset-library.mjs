@@ -16,9 +16,10 @@ const kind = (name) =>
 const str = (v, fallback = "", max = 2048) =>
   typeof v === "string" ? v.slice(0, max) : fallback;
 export class AssetLibrary {
-  constructor({ workspace, root, trash }) {
+  constructor({ workspace, root, trash, workspaceRoot }) {
     this.workspace = workspace;
     this.profile = root;
+    this.workspaceRoot = workspaceRoot;
     this.trash = trash;
     this.settingsFile = path.join(root, "asset-library.json");
     fs.mkdirSync(root, { recursive: true });
@@ -31,7 +32,9 @@ export class AssetLibrary {
         configured = true;
       }
     } catch {}
-    if (!configured) fs.mkdirSync(this.library, { recursive: true });
+    if (workspaceRoot) this.library = path.join(workspaceRoot, "assets");
+    if (workspaceRoot || !configured)
+      fs.mkdirSync(this.library, { recursive: true });
     fs.mkdirSync(path.join(workspace, "assets"), { recursive: true });
   }
   loadNames() {
@@ -51,11 +54,16 @@ export class AssetLibrary {
     this.refreshFolder();
     return {
       folder: this.library,
+      workspaceOwned: !!this.workspaceRoot,
       projectFolder: path.join(this.workspace, "assets"),
       offline: !fs.existsSync(this.library),
     };
   }
   setFolder(folder) {
+    if (this.workspaceRoot)
+      throw Error(
+        "Assets belong to this workspace. Open another workspace to switch libraries.",
+      );
     const real = fs.realpathSync(folder);
     if (!fs.statSync(real).isDirectory()) throw Error("Choose a folder");
     this.library = real;
@@ -75,6 +83,7 @@ export class AssetLibrary {
     return fs.realpathSync(root);
   }
   refreshFolder() {
+    if (this.workspaceRoot) return;
     try {
       const folder = JSON.parse(fs.readFileSync(this.settingsFile)).folder;
       if (typeof folder === "string" && path.isAbsolute(folder))

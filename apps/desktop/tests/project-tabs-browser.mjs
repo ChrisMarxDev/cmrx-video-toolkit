@@ -76,9 +76,7 @@ try {
   }
   const a = await create("Alpha");
   const initial = JSON.parse(
-    fs.readFileSync(
-      path.join(root, "projects/Alpha/.cmrx-editor/project.json"),
-    ),
+    fs.readFileSync(path.join(root, "projects/projects/Alpha/project.json")),
   );
   assert.equal(initial.name, "Alpha");
   assert.deepEqual([initial.width, initial.height], [1920, 1080]);
@@ -158,7 +156,7 @@ try {
         canceled: false,
         filePaths: [folder],
       })),
-    path.join(root, "projects/Alpha"),
+    path.join(root, "projects/projects/Alpha"),
   );
   await shell
     .getByRole("button", { name: "Open or create project", exact: true })
@@ -256,7 +254,7 @@ try {
   assert(
     !fs
       .readFileSync(
-        path.join(root, "projects/Alpha/.cmrx-editor/script.md"),
+        path.join(root, "projects/projects/Alpha/script.md"),
         "utf8",
       )
       .includes("must-not-run"),

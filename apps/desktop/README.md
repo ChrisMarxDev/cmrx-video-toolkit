@@ -28,10 +28,12 @@ provider CLI and guides account sign-in; users do not need a globally installed
 Codex or Claude CLI. Subscription eligibility and provider limits apply. This
 manages the provider runtime only, not Flutter or the media/compiler toolchain.
 
-A project is a normal folder containing `.cmrx-editor/` for media, source, timeline,
-chat and generated previews. The + menu creates/opens projects and lists recents;
-open tabs restore across launches. Account state, shared skills, connections and
-library settings belong to the app profile, separately from project files.
+A workspace contains shared `assets/`, `skills/`, `AGENTS.md` and `projects/`.
+Each project has visible source, media, timeline and chat files. The + menu
+creates/opens workspaces and project tabs; both restore across launches. Shared
+creative files stay in the workspace, with credentials and toolchains device-local.
+See [workspace structure and Git boundaries](WORKSPACES.md). Old `.cmrx-editor/`
+projects remain supported in place.
 
 ## Agent and editing
 
@@ -41,7 +43,7 @@ connections and named secret keys are configured in Settings; no publishing serv
 is hardcoded. Credentials and project media must never be committed to this repo.
 
 Project instructions, memory and skills are discovered from the project folder;
-shared skills can be installed through Settings. The toolkit skill catalog and
+workspace skills can be installed through Settings. The toolkit skill catalog and
 [video-project skill](skills/video-project/SKILL.md) supply editing guidance.
 Arbitrary source runs through the offline rendering worker. The provider agent
 and network-capable connection broker are separate processes from that worker;

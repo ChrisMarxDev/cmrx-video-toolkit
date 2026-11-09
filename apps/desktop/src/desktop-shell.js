@@ -82,6 +82,31 @@ function update(next) {
     $("#tabs")
       .querySelector(`[data-project="${CSS.escape(focused)}"]`)
       ?.focus();
+  $("#workspace-name").textContent =
+    next.workspace?.name ||
+    "Choose a workspace when you create your first project";
+  $("#workspace-show").hidden = !next.workspace;
+  $("#workspace-projects").replaceChildren();
+  for (const p of next.workspaceProjects || []) {
+    if (next.tabs.some((t) => t.folder === p.folder)) continue;
+    const b = document.createElement("button");
+    b.textContent = p.name;
+    b.title = p.folder;
+    b.onclick = async () => {
+      await menu(false);
+      act("open", { folder: p.folder });
+    };
+    $("#workspace-projects").append(b);
+  }
+  $("#workspace-recents").replaceChildren();
+  for (const w of next.workspaces || []) {
+    if (w.folder === next.workspace?.folder) continue;
+    const b = document.createElement("button");
+    b.textContent = w.name;
+    b.title = w.folder;
+    b.onclick = () => act("workspace-open", { folder: w.folder });
+    $("#workspace-recents").append(b);
+  }
   $("#recents").replaceChildren();
   for (const p of next.recents) {
     const b = document.createElement("button");
@@ -118,15 +143,18 @@ $("#open").onclick = async () => {
 };
 $("#settings").onclick = () => act("settings");
 $("#new").onclick = () => nameDialog();
+for (const action of ["workspace-create", "workspace-open", "workspace-show"])
+  $("#" + action).onclick = () => act(action);
 $("#cancel-name").onclick = () => $("#name-dialog").close();
 $("#name-dialog").onclose = () => act("overlay", { open: false });
 $("#name-form").onsubmit = async (e) => {
   e.preventDefault();
   try {
-    await command(renaming ? "rename" : "create", {
+    const result = await command(renaming ? "rename" : "create", {
       name: $("#name").value,
       id: renaming?.id,
     });
+    if (result?.canceled) return;
     $("#name-dialog").close();
     $("#name-form").reset();
     $("#name-error").textContent = "";

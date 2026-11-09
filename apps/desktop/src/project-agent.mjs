@@ -7,12 +7,12 @@ import { Connections } from "./connections.mjs";
 import { readWeb, fetchPublic } from "./web-access.mjs";
 import { inspectFrame, inspectImage } from "./visual-inspection.mjs";
 export class ProjectAgent {
-  constructor({ root, workspace, codec, onChange = () => {} }) {
+  constructor({ root, workspace, workspaceRoot, codec, onChange = () => {} }) {
     this.root = root;
     this.workspace = workspace;
     this.onChange = onChange;
     this.secrets = new SecretStore(root, codec);
-    this.skills = new ProjectSkills({ root, workspace });
+    this.skills = new ProjectSkills({ root, workspace, workspaceRoot });
     this.connections = new Connections({
       root,
       secrets: this.secrets,
@@ -57,6 +57,7 @@ export class ProjectAgent {
       importedAssets,
       assetLibrary: this.assets?.settings(),
       projectPath: this.workspace,
+      workspaceInstructions: this.skills.workspaceText(),
       instructions: this.skills.text("AGENTS.md"),
       memory: this.skills.text("memory.md"),
       skills: this.skills.catalog(),
@@ -111,7 +112,8 @@ export class ProjectAgent {
   }
   async tool(name, args, { editor, playground }) {
     if (name === "assets_list") return this.assets.list(args);
-    if (name === "asset_read") return this.assets.inspect(args.scope, args.path);
+    if (name === "asset_read")
+      return this.assets.inspect(args.scope, args.path);
     if (name === "asset_use") return this.assets.use(args);
     if (name === "asset_promote") return this.assets.promote(args.path);
     if (name === "skills_list") return this.skills.catalog();

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { workspaceFor } from "./workspace-library.mjs";
 import { randomUUID } from "node:crypto";
 
 export class ProjectLibrary {
@@ -30,13 +31,22 @@ export class ProjectLibrary {
         JSON.parse(fs.readFileSync(path.join(real, "project.json")))
           .schemaVersion === 1;
     } catch {}
-    const workspace = legacy ? real : path.join(real, ".cmrx-editor");
+    const owner = workspaceFor(real);
+    if (owner && path.dirname(real) !== path.join(owner.folder, "projects"))
+      throw Error("Open a project inside the workspace projects folder");
+    const hidden = path.join(real, ".cmrx-editor");
+    // Old projects remain byte-for-byte in place. New workspace projects are visible.
+    const workspace =
+      legacy || (owner && !fs.existsSync(hidden)) ? real : hidden;
+    if (fs.existsSync(workspace) && fs.lstatSync(workspace).isSymbolicLink())
+      throw Error("Project content folder cannot be a symlink");
     fs.mkdirSync(workspace, { recursive: true });
     fs.accessSync(workspace, fs.constants.W_OK);
     const existing = this.items.find((p) => p.folder === real);
     const project = {
       id: existing?.id || randomUUID(),
       folder: real,
+      workspaceRoot: owner?.folder,
       workspace,
       name: this.name(workspace, path.basename(real)),
       openedAt: new Date().toISOString(),

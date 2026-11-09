@@ -14,7 +14,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   const dialog = el("dialog");
   dialog.id = "assets-dialog";
   dialog.setAttribute("aria-label", "Asset manager");
-  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Library</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><p id="assets-status" role="status"></p><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
+  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Workspace</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><p id="assets-status" role="status"></p><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
   document.body.append(dialog);
   const settings = el("section");
   settings.className = "asset-library-settings";
@@ -26,6 +26,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   chips.setAttribute("aria-label", "Attached assets");
   $("#prompt").parentNode.insertBefore(chips, $("#prompt"));
   let attached = [],
+    workspaceOwned = false,
     scope = "library",
     folder = "",
     items = [],
@@ -218,7 +219,9 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
           "p",
           query || type
             ? "No matching assets."
-            : "No assets here yet. Choose a library folder in Settings, or save a project asset.",
+            : workspaceOwned
+              ? "No assets yet. Add files to the workspace assets folder, or save a project asset."
+              : "No assets here yet. Choose a library folder in Settings, or save a project asset.",
         ),
       );
   }
@@ -227,7 +230,15 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     const result = await call("assets-list", { scope, folder, query });
     if (seq !== sequence) return;
     items = result.items;
+    workspaceOwned = !!result.settings.workspaceOwned;
     $("#asset-library-folder").value = result.settings.folder;
+    $("#asset-library-choose").hidden = !!result.settings.workspaceOwned;
+    $("#assets-library").textContent = result.settings.workspaceOwned
+      ? "Workspace"
+      : "Library";
+    settings.querySelector("h3").textContent = result.settings.workspaceOwned
+      ? "Workspace assets"
+      : "Asset library";
     $("#asset-library-state").textContent = result.settings.offline
       ? "Library folder is offline. Project copies remain available."
       : "";
@@ -261,7 +272,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     crumbs.replaceChildren();
     const root = el(
       "button",
-      scope === "library" ? "Library" : "Project assets",
+      scope === "library" ? "Workspace assets" : "Project assets",
     );
     root.type = "button";
     root.title =

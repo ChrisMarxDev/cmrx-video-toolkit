@@ -37,14 +37,20 @@ else {
     try {
       const { startApp } = await import("./server.mjs");
       const { ProjectLibrary } = await import("./project-library.mjs");
+      const { WorkspaceLibrary } = await import("./workspace-library.mjs");
       const { DesktopSession, RenderQueue } =
         await import("./desktop-session.mjs");
       const library = new ProjectLibrary(app.getPath("userData")),
         session = new DesktopSession(app.getPath("userData")),
         renderQueue = new RenderQueue();
       const defaults =
+        process.env.CHAT_WORKSPACE_DIR ||
         process.env.CHAT_PROJECTS_DIR ||
-        path.join(app.getPath("documents"), "CMRX Projects");
+        path.join(app.getPath("documents"), "CMRX Workspace");
+      const workspaces = new WorkspaceLibrary(
+        app.getPath("userData"),
+        defaults,
+      );
       const factory = process.env.CHAT_DESKTOP_TEST_PROVIDER
         ? (
             await import(
@@ -118,6 +124,9 @@ else {
             activity: e.service.state.activity,
           })),
           active,
+          workspace: workspaces.current,
+          workspaces: workspaces.list(),
+          workspaceProjects: workspaces.projects(),
           recents: library
             .list()
             .filter(
@@ -181,6 +190,9 @@ else {
         });
         const service = await startApp({
           workspace: project.workspace,
+          workspaceRoot: isUtility
+            ? undefined
+            : project.workspaceRoot || workspaces.ensure().folder,
           projectInfo: { ...project, selected: !isUtility },
           desktopTabs: true,
           renderQueue,
@@ -270,6 +282,8 @@ else {
       function select(id) {
         const previous = current();
         active = id;
+        if (current()?.project.workspaceRoot)
+          workspaces.select(current().project.workspaceRoot);
         settingsOnly = false;
         if (previous && previous !== current())
           previous.view.webContents
@@ -283,6 +297,7 @@ else {
         publish();
       }
       async function open(project) {
+        project.workspaceRoot ||= workspaces.ensure().folder;
         let e = entries.find((e) => e.project.workspace === project.workspace);
         if (!e) {
           e = await createEntry(project);
@@ -374,21 +389,86 @@ else {
             return;
           }
           if (action === "close") return closeTab(data.id);
+          if (action === "workspace-open" || action === "workspace-create") {
+            let folder = data.folder;
+            if (folder && !workspaces.list().some((w) => w.folder === folder))
+              throw Error("Choose a known workspace or use the folder picker");
+            if (!folder) {
+              const r = await dialog.showOpenDialog(win, {
+                title:
+                  action === "workspace-create"
+                    ? "Choose a folder for your workspace"
+                    : "Open workspace",
+                properties:
+                  action === "workspace-create"
+                    ? ["openDirectory", "createDirectory"]
+                    : ["openDirectory"],
+              });
+              if (r.canceled) return;
+              folder = r.filePaths[0];
+            }
+            workspaces.select(folder, {
+              create: action === "workspace-create",
+            });
+            active = null;
+            settingsOnly = false;
+            show();
+            persist();
+            publish();
+            return;
+          }
+          if (action === "workspace-show") {
+            const w = workspaces.ensure();
+            await shell.openPath(w.folder);
+            return;
+          }
           if (action === "create") {
-            const p = library.create(defaults, data.name);
+            // First creation chooses the workspace; no creative files go in the app profile.
+            if (
+              !workspaces.current &&
+              !workspaces.saved.folder &&
+              !process.env.CHAT_PROJECTS_DIR &&
+              !process.env.CHAT_WORKSPACE_DIR
+            ) {
+              const r = await dialog.showOpenDialog(win, {
+                title: "Choose a folder for your workspace",
+                properties: ["openDirectory", "createDirectory"],
+              });
+              if (r.canceled) return { canceled: true };
+              workspaces.select(r.filePaths[0], { create: true });
+            }
+            const owner = workspaces.ensure();
+            const p = library.create(
+              path.join(owner.folder, "projects"),
+              data.name,
+            );
             await open(p);
             return;
           }
           if (action === "open") {
             let project;
             if (data.recentId) project = library.recent(data.recentId);
-            else {
+            else if (data.folder) {
+              if (!workspaces.projects().some((p) => p.folder === data.folder))
+                throw Error("Choose a workspace project");
+              project = library.open(data.folder);
+            } else {
               const r = await dialog.showOpenDialog(win, {
                 title: "Open project folder",
                 properties: ["openDirectory"],
               });
               if (r.canceled) return;
-              project = library.open(r.filePaths[0]);
+              const folder = r.filePaths[0];
+              if (
+                require("node:fs").existsSync(
+                  path.join(folder, "workspace.yaml"),
+                )
+              ) {
+                workspaces.select(folder);
+                publish();
+                return;
+              }
+              project = library.open(folder);
             }
             await open(project);
             return;
@@ -407,7 +487,9 @@ else {
           if (action === "rename") {
             const e = entries.find((e) => e.project.id === data.id);
             if (e) {
+              const owner = e.project.workspaceRoot;
               e.project = library.rename(e.project, data.name);
+              e.project.workspaceRoot ||= owner;
               e.service.state.projectInfo.name = e.project.name;
               e.service.publish();
               persist();
@@ -449,7 +531,15 @@ else {
       win.on("resize", layout);
       await win.loadFile(rootFile);
       const index = process.argv.indexOf("--workspace");
+      if (workspaces.saved.folder) {
+        try {
+          workspaces.select(workspaces.saved.folder);
+        } catch {
+          /* offline workspace remains listed in the folder picker */
+        }
+      }
       const restoredActive = session.active;
+      const restoredWorkspace = workspaces.saved.folder;
       for (const folder of session.folders) {
         try {
           await open(library.open(folder));
@@ -464,14 +554,28 @@ else {
       }
       const restored = entries.find((e) => e.project.folder === restoredActive);
       if (restored) select(restored.project.id);
+      else if (restoredActive === null && restoredWorkspace) {
+        try {
+          workspaces.select(restoredWorkspace);
+          active = null;
+        } catch {}
+      }
       if (index >= 0) {
         try {
-          await open(library.open(process.argv[index + 1]));
+          const folder = process.argv[index + 1];
+          if (
+            require("node:fs").existsSync(path.join(folder, "workspace.yaml"))
+          ) {
+            workspaces.select(folder);
+            active = null;
+            persist();
+          } else await open(library.open(folder));
         } catch (error) {
           dialog.showErrorBox("Could not open project", error.message);
         }
       }
       show();
+      persist();
       publish();
       // Accounts are enabled only by an explicit Connect during this app launch.
       // Once enabled, sibling services reuse credentials with independent sessions.

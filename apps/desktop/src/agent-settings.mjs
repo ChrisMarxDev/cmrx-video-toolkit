@@ -22,7 +22,11 @@ export function setupAgentUI({ call, onError, openTool }) {
   const panels = { accounts };
   let state = {},
     signature = "",
+    notesLoaded = false,
+    workspaceBaseline = "";
+  dialog.addEventListener("close", () => {
     notesLoaded = false;
+  });
   for (const [id, title] of [
     ["accounts", "Accounts"],
     ["connections", "Connections"],
@@ -54,7 +58,7 @@ export function setupAgentUI({ call, onError, openTool }) {
   );
   panels.connections.innerHTML = `<h3>Secret keys</h3><p class="settings-caption">Name a key, then attach it to a connection. Keys never go into chat.</p><form id="secret-form"><input name="id" type="hidden"><label>Key name<input name="name" required maxlength="100" placeholder="My publishing key"></label><label>Secret key<input name="value" type="password" required autocomplete="new-password" spellcheck="false" placeholder="Paste your key"></label><button type="submit">Save key</button></form><div id="secret-list"></div><h3>Connections</h3><form id="connection-form"><input name="id" type="hidden"><label>Name<input name="name" required maxlength="100" placeholder="Name this tool"></label><label>Type<select name="type"><option value="mcp">MCP server</option><option value="http">HTTP API</option><option value="stdio">Local MCP · advanced</option></select></label><label id="connection-url-label">Address<input name="url" type="url" placeholder="https://example.com/mcp"></label><label>Key<select name="secretId"><option value="">No key needed</option></select></label><details><summary>Advanced</summary><label>Key header<input name="header" value="Authorization"></label><p class="settings-caption">Authorization uses Bearer. Other headers send the key as entered.</p><div id="local-connection-options" hidden><label>Executable<input name="command" placeholder="/absolute/path/to/server"></label><label>Arguments · JSON array<textarea name="args" rows="2">[]</textarea></label><label>Key environment name<input name="envName" value="API_KEY"></label><p class="settings-caption">Local servers run on your device. Choose an executable you trust.</p></div></details><div class="settings-row"><button type="submit">Save connection</button><button type="button" id="connection-reset">Clear</button></div></form><div id="connection-list"></div><p id="key-storage" class="settings-caption"></p>`;
   panels.skills.innerHTML = `<div class="settings-row"><h3>Skills library</h3><button id="skill-install" type="button">Add skill folder</button></div><p class="settings-caption">A folder with SKILL.md, scripts and supporting files.</p><div id="skill-list"></div>`;
-  panels.project.innerHTML = `<form id="project-notes-form"><label>Project instructions<textarea id="project-instructions" rows="6" placeholder="Audience, style, language, workflow…"></textarea></label><label>Project memory<textarea id="project-memory" rows="6" placeholder="Decisions and preferences to remember…"></textarea></label><button type="submit">Save project notes</button></form>`;
+  panels.project.innerHTML = `<form id="project-notes-form"><label id="workspace-instructions-label" hidden>Workspace instructions<textarea id="workspace-instructions" rows="4"></textarea></label><label>Project instructions<textarea id="project-instructions" rows="6" placeholder="Audience, style, language, workflow…"></textarea></label><label>Project memory<textarea id="project-memory" rows="6" placeholder="Decisions and preferences to remember…"></textarea></label><button type="submit">Save project notes</button></form>`;
   const keyForm = $("#secret-form"),
     connectionForm = $("#connection-form");
   const run = async (fn) => {
@@ -99,6 +103,18 @@ export function setupAgentUI({ call, onError, openTool }) {
   $("#project-notes-form").onsubmit = (e) => {
     e.preventDefault();
     run(async () => {
+      if (
+        state.workspaceFolder &&
+        $("#workspace-instructions").value !== workspaceBaseline
+      ) {
+        await call("project-notes", {
+          file: "AGENTS.md",
+          scope: "workspace",
+          expectedText: workspaceBaseline,
+          text: $("#workspace-instructions").value,
+        });
+        workspaceBaseline = $("#workspace-instructions").value;
+      }
       await call("project-notes", {
         file: "AGENTS.md",
         text: $("#project-instructions").value,
@@ -112,7 +128,15 @@ export function setupAgentUI({ call, onError, openTool }) {
   async function load() {
     const s = await call("agent-settings");
     state = { ...state, ...s };
+    if (
+      !notesLoaded ||
+      $("#workspace-instructions").value === workspaceBaseline
+    ) {
+      workspaceBaseline = s.workspaceInstructions || "";
+      $("#workspace-instructions").value = workspaceBaseline;
+    }
     if (!notesLoaded) {
+      $("#workspace-instructions-label").hidden = !s.workspaceFolder;
       $("#project-instructions").value = s.instructions;
       $("#project-memory").value = s.memory;
       notesLoaded = true;
@@ -126,6 +150,9 @@ export function setupAgentUI({ call, onError, openTool }) {
   }
   function update(s) {
     state = { ...state, ...s };
+    for (const id of ["skills", "project"])
+      nav.querySelector(`[data-tab="${id}"]`).hidden =
+        state.projectInfo?.selected === false;
     const next = JSON.stringify([
       state.connections,
       state.secrets,

@@ -1,16 +1,18 @@
 # Folder-based asset library
 
-Open **Assets** beside the project name. Switch between **Library** and **Project**,
+Open **Assets** beside the project name. Switch between **Workspace** and **Project**,
 open folders, search names/descriptions/tags and filter by type. Choose a card to
 inspect its preview and metadata; **Attach to chat** prepares a project copy and
 adds a compact attachment. Describe the intended use, then Send. Selection does
 not edit the timeline. Sent/queued messages retain project-relative asset references.
 
-Settings → Project → Asset library provides **Choose folder** and **Open folder**.
-The initial library is `asset-library/` under the app's agent profile; selecting a
-folder switches libraries without moving or deleting the previous folder. The
-configured path persists across projects and app launches. An unavailable external
-folder appears offline; existing project copies remain available.
+Workspace projects use `<workspace>/assets/` as their shared library. Assets offers
+Workspace and Project views; Settings → Project → Workspace assets opens that
+folder. To switch libraries, open another workspace. Selecting assets copies them
+into the project before use. There is no global library in workspace mode.
+See [workspace layout](WORKSPACES.md). Older headless integrations retain their
+configurable library API for compatibility; the desktop workspace UI does not
+expose it.
 
 ## Files and bundles
 
@@ -77,7 +79,7 @@ or send the message. Preview creation is a separate agent task.
 ## Project copies and authoring
 
 Shared assets copy to `assets/library/<folder-or-file>` inside the managed project
-workspace. In a normal selected project folder this is under `.cmrx-editor/`.
+workspace. New project folders contain assets directly; legacy projects retain `.cmrx-editor/`.
 Existing names receive numeric suffixes; originals are never overwritten.
 Project-local assets attach directly. Changes to library files do not update copies.
 An unsent attachment is a UI selection; copied files remain in Project assets even

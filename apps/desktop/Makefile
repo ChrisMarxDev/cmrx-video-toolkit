@@ -18,6 +18,7 @@ install-launcher: build
 .PHONY: browser-check
 # Exercise native project tabs and lifecycle. Usage: make browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
 browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/workspace-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/project-tabs-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" CHAT_TEST_VIDEO="$(CHAT_TEST_VIDEO)" node tests/stepper-browser.mjs
 

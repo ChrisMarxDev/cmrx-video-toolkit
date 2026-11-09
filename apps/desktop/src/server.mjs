@@ -33,6 +33,7 @@ export async function startApp({
   recentProjects = () => [],
   playgroundFactory,
   agentRoot,
+  workspaceRoot,
   secretCodec,
   pickSkill,
   pickAssetLibrary,
@@ -122,7 +123,17 @@ export async function startApp({
   }
   const token = randomBytes(32).toString("hex"),
     clients = new Set();
-  const historyFile = path.join(workspace, ".editor/chat.json");
+  const chatFolder = workspaceRoot
+    ? path.join(workspace, "chats")
+    : path.join(workspace, ".editor");
+  fs.mkdirSync(chatFolder, { recursive: true });
+  const historyFile = path.join(
+    chatFolder,
+    workspaceRoot ? "history.json" : "chat.json",
+  );
+  const oldHistory = path.join(workspace, ".editor/chat.json");
+  if (workspaceRoot && !fs.existsSync(historyFile) && fs.existsSync(oldHistory))
+    fs.copyFileSync(oldHistory, historyFile, fs.constants.COPYFILE_EXCL);
   let history = [];
   try {
     history = JSON.parse(fs.readFileSync(historyFile));
@@ -243,6 +254,7 @@ export async function startApp({
   agent = new ProjectAgent({
     root: agentRoot,
     workspace,
+    workspaceRoot,
     codec: secretCodec,
     onChange: publish,
   });
@@ -251,12 +263,13 @@ export async function startApp({
     : new Playground({
         workspace,
         onChange: publish,
-        skillRoot: path.join(agentRoot, "skills"),
+        skillRoot: agent.skills.shared,
         renderQueue,
       });
   const assets = new AssetLibrary({
     workspace,
     root: agentRoot,
+    workspaceRoot,
     trash: trashAsset,
   });
   agent.assets = assets;
@@ -833,7 +846,12 @@ export async function startApp({
           if (url.pathname === "/chat/connection-test")
             result = await agent.connections.test(body.id);
           if (url.pathname === "/chat/project-notes")
-            result = agent.skills.write(body.file, body.text);
+            result = agent.skills.write(
+              body.file,
+              body.text,
+              body.scope,
+              body.expectedText,
+            );
           if (url.pathname === "/chat/skill-install") {
             if (!pickSkill)
               throw Error("Choose a skill folder in the desktop app");

@@ -111,7 +111,7 @@ try {
   assert.equal(
     JSON.parse(
       fs.readFileSync(
-        path.join(root, "projects/First video/.cmrx-editor/project.json"),
+        path.join(root, "projects/projects/First video/project.json"),
       ),
     ).clips.length,
     0,
@@ -161,7 +161,7 @@ try {
   assert.equal(
     JSON.parse(
       fs.readFileSync(
-        path.join(root, "projects/First video/.cmrx-editor/project.json"),
+        path.join(root, "projects/projects/First video/project.json"),
       ),
     ).clips.length,
     1,

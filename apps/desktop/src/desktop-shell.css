@@ -233,3 +233,15 @@ footer button {
     animation: none;
   }
 }
+
+.workspace-caption {
+  padding: 8px 12px;
+  color: #b9adc9;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#menu {
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+}

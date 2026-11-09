@@ -3,9 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 const appSkills = fileURLToPath(new URL("../skills/", import.meta.url));
-const toolkit = fileURLToPath(
-  new URL("../../../.skills/", import.meta.url),
-);
+const toolkit = fileURLToPath(new URL("../../../.skills/", import.meta.url));
 function within(root, file) {
   const lexicalRoot = path.resolve(root),
     lexicalFile = path.resolve(file);
@@ -21,18 +19,22 @@ function within(root, file) {
   return actual;
 }
 export class ProjectSkills {
-  constructor({ workspace, root }) {
+  constructor({ workspace, root, workspaceRoot }) {
     this.workspace = workspace;
     this.root = root;
+    this.workspaceRoot = workspaceRoot;
+    this.shared = workspaceRoot
+      ? path.join(workspaceRoot, "skills")
+      : path.join(root, "skills");
     fs.mkdirSync(path.join(workspace, "skills"), { recursive: true });
-    fs.mkdirSync(path.join(root, "skills"), { recursive: true });
+    fs.mkdirSync(this.shared, { recursive: true });
   }
   catalog() {
     const result = [];
     for (const [scope, root] of [
       ["app", appSkills],
       ["toolkit", toolkit],
-      ["installed", path.join(this.root, "skills")],
+      [this.workspaceRoot ? "workspace" : "installed", this.shared],
       ["project", path.join(this.workspace, "skills")],
     ]) {
       if (!fs.existsSync(root) || fs.lstatSync(root).isSymbolicLink()) continue;
@@ -64,8 +66,8 @@ export class ProjectSkills {
         ? appSkills
         : scope === "toolkit"
           ? toolkit
-          : scope === "installed"
-            ? path.join(this.root, "skills")
+          : ["installed", "workspace"].includes(scope)
+            ? this.shared
             : path.join(this.workspace, "skills");
     const dir = within(root, path.join(root, name));
     const target = within(dir, path.resolve(dir, file));
@@ -79,12 +81,14 @@ export class ProjectSkills {
           ? `/app-skills/${name}`
           : scope === "toolkit"
             ? `/toolkit/.skills/${name}`
-            : scope === "installed"
+            : ["installed", "workspace"].includes(scope)
               ? `/skills/${name}`
               : `/work/skills/${name}`,
     };
   }
   install(folder) {
+    if (fs.lstatSync(this.shared).isSymbolicLink())
+      throw Error("Skill library cannot be a symlink");
     const source = fs.realpathSync(folder),
       main = path.join(source, "SKILL.md");
     const text = fs.readFileSync(main, "utf8");
@@ -111,7 +115,7 @@ export class ProjectSkills {
       }
     };
     visit(source);
-    const dest = path.join(this.root, "skills", name);
+    const dest = path.join(this.shared, name);
     if (fs.existsSync(dest))
       throw Error("A skill with this name is already installed");
     fs.mkdirSync(dest);
@@ -129,9 +133,19 @@ export class ProjectSkills {
   settings() {
     return {
       instructions: this.text("AGENTS.md"),
+      workspaceInstructions: this.workspaceText(),
+      workspaceFolder: this.workspaceRoot,
       memory: this.text("memory.md"),
       skills: this.catalog(),
     };
+  }
+  workspaceText() {
+    if (!this.workspaceRoot) return "";
+    const file = path.join(this.workspaceRoot, "AGENTS.md");
+    if (!fs.existsSync(file)) return "";
+    if (fs.lstatSync(file).isSymbolicLink() || fs.statSync(file).size > 100000)
+      throw Error("Invalid workspace instructions");
+    return fs.readFileSync(file, "utf8");
   }
   text(file) {
     if (!["AGENTS.md", "memory.md"].includes(file))
@@ -142,16 +156,32 @@ export class ProjectSkills {
       throw Error("Invalid project notes");
     return fs.readFileSync(p, "utf8");
   }
-  write(file, text) {
+  write(file, text, scope = "project", expectedText) {
     if (
       !["AGENTS.md", "memory.md"].includes(file) ||
       typeof text !== "string" ||
       text.length > 100000
     )
       throw Error("Invalid project notes");
-    const p = path.join(this.workspace, file);
+    if (
+      scope !== "project" &&
+      (scope !== "workspace" || file !== "AGENTS.md" || !this.workspaceRoot)
+    )
+      throw Error("Invalid note scope");
+    const p = path.join(
+      scope === "workspace" ? this.workspaceRoot : this.workspace,
+      file,
+    );
     if (fs.existsSync(p) && fs.lstatSync(p).isSymbolicLink())
       throw Error("Symlinks are not allowed");
+    if (
+      scope === "workspace" &&
+      expectedText !== undefined &&
+      this.workspaceText() !== expectedText
+    )
+      throw Error(
+        "Workspace instructions changed in another project. Reopen Settings before saving.",
+      );
     const tmp = p + "." + Date.now() + ".tmp";
     fs.writeFileSync(tmp, text, { mode: 0o600, flag: "wx" });
     fs.renameSync(tmp, p);
