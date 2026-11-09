@@ -1006,3 +1006,9 @@ a {
 .message-body :not(pre) > code {
   overflow-wrap: anywhere;
 }
+
+.asset-chip img {
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}

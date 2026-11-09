@@ -32,6 +32,61 @@ if (!token || !editorToken) {
   assetStatus.setAttribute("role", "status");
   $("#prompt").parentNode.append(assetStatus);
   let dropping = false;
+  async function importFiles(files, { attach = false } = {}) {
+    if (dropping || latestState?.locked) {
+      showError(Error("Wait for the current edit or import to finish"));
+      return;
+    }
+    if (
+      files.length > 20 ||
+      (attach && files.length + assetManager.attachments().length > 20)
+    ) {
+      showError(Error("Attach up to 20 assets per message"));
+      return;
+    }
+    dropping = true;
+    $("#send").disabled = true;
+    const saved = [];
+    try {
+      for (const file of files) {
+        if (file.size > 2 * 1024 ** 3)
+          throw Error("Files must be smaller than 2 GB");
+        const extension =
+          {
+            "image/png": "png",
+            "image/jpeg": "jpg",
+            "image/webp": "webp",
+            "image/gif": "gif",
+            "image/bmp": "bmp",
+            "image/svg+xml": "svg",
+          }[file.type] || "bin";
+        const name = file.name || "pasted-image." + extension;
+        assetStatus.textContent = "Importing " + name + "…";
+        const response = await fetch("/chat/asset-import", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "X-File-Name": encodeURIComponent(name),
+            "Content-Type": "application/octet-stream",
+          },
+          body: file,
+        });
+        const result = await response.json();
+        if (!response.ok) throw Error(result.error || "Import failed");
+        if (attach) assetManager.addImported(result);
+        saved.push(result.name);
+        if (result.warning) showError(Error(result.warning));
+      }
+    } catch (error) {
+      showError(error);
+    } finally {
+      dropping = false;
+      $("#send").disabled = !connected || !!latestState?.switching || sending;
+      assetStatus.textContent = saved.length
+        ? "Added: " + saved.join(", ")
+        : "No files added";
+    }
+  }
   function acceptDrops(doc) {
     doc.addEventListener("dragover", (e) => {
       if (!Array.from(e.dataTransfer?.types || []).includes("Files")) return;
@@ -40,50 +95,29 @@ if (!token || !editorToken) {
         latestState?.locked || dropping ? "none" : "copy";
       assetStatus.textContent = "Drop files to add them to this project";
     });
-    doc.addEventListener("drop", async (e) => {
+    doc.addEventListener("drop", (e) => {
       const files = Array.from(e.dataTransfer?.files || []);
       if (!files.length) return;
       e.preventDefault();
       e.stopPropagation();
-      if (dropping || latestState?.locked) {
-        showError(Error("Wait for the current edit or import to finish"));
-        return;
-      }
-      if (files.length > 20) {
-        showError(Error("Drop up to 20 files at once"));
-        return;
-      }
-      dropping = true;
-      const saved = [];
-      try {
-        for (const file of files) {
-          if (file.size > 2 * 1024 ** 3)
-            throw Error("Files must be smaller than 2 GB");
-          assetStatus.textContent = "Importing " + file.name + "…";
-          const response = await fetch("/chat/asset-import", {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + token,
-              "X-File-Name": encodeURIComponent(file.name),
-              "Content-Type": "application/octet-stream",
-            },
-            body: file,
-          });
-          const result = await response.json();
-          if (!response.ok) throw Error(result.error || "Import failed");
-          saved.push(result.name);
-          if (result.warning) showError(Error(result.warning));
-        }
-      } catch (error) {
-        showError(error);
-      } finally {
-        dropping = false;
-        assetStatus.textContent = saved.length
-          ? "Added: " + saved.join(", ")
-          : "No files added";
-      }
+      importFiles(files);
     });
   }
+  $("#prompt").addEventListener("paste", (e) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const images = items
+      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .filter(Boolean);
+    const files = images.length
+      ? images
+      : Array.from(e.clipboardData?.files || []).filter((file) =>
+          file.type.startsWith("image/"),
+        );
+    if (!files.length) return; // Plain text keeps normal browser paste behavior.
+    e.preventDefault();
+    importFiles(files, { attach: true });
+  });
   acceptDrops(document);
   $("#editor").addEventListener("load", () => {
     if ($("#editor").contentDocument) acceptDrops($("#editor").contentDocument);
@@ -292,7 +326,7 @@ if (!token || !editorToken) {
     $("#prompt").placeholder = blank
       ? "Describe your idea, or work on your script…"
       : "Ask for an edit, or refer to a comment…";
-    $("#send").disabled = !connected || !!s.switching || sending;
+    $("#send").disabled = !connected || !!s.switching || sending || dropping;
     $("#send").textContent =
       s.locked || s.running || s.queue?.length || s.queuePaused
         ? "Queue"
@@ -479,6 +513,7 @@ if (!token || !editorToken) {
     if (
       (!text && !queuedComments.length && !assetManager.attachments().length) ||
       sending ||
+      dropping ||
       !connected
     )
       return;
@@ -502,7 +537,7 @@ if (!token || !editorToken) {
       showError(e);
     } finally {
       sending = false;
-      $("#send").disabled = !connected || !!latestState?.switching;
+      $("#send").disabled = !connected || !!latestState?.switching || dropping;
     }
   }
   $("form").onsubmit = (e) => {

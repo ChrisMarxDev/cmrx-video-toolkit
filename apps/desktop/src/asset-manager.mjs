@@ -46,6 +46,13 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
       ...attached.map((item) => {
         const chip = el("span");
         chip.className = "asset-chip";
+        if (/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(item.path)) {
+          const thumbnail = document.createElement("img");
+          thumbnail.src = previewURL(item);
+          thumbnail.alt = "";
+          thumbnail.width = thumbnail.height = 32;
+          chip.append(thumbnail);
+        }
         chip.append(el("span", item.name));
         const remove = el("button", "×");
         remove.type = "button";
@@ -338,6 +345,19 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     });
   $("#settings-open").addEventListener("click", () => refresh().catch(onError));
   return {
+    addImported(asset) {
+      if (attached.length >= 20)
+        throw Error("Attach up to 20 assets per message");
+      if (!asset.path?.startsWith("assets/"))
+        throw Error("Invalid imported asset path");
+      const item = {
+        scope: "project",
+        path: asset.path.slice("assets/".length),
+        name: asset.name,
+      };
+      if (!attached.some((a) => a.path === item.path)) attached.push(item);
+      renderChips();
+    },
     attachments: () =>
       attached.map((a) => ({ scope: "project", path: a.path })),
     clear: () => {

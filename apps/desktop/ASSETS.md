@@ -14,6 +14,16 @@ See [workspace layout](WORKSPACES.md). Older headless integrations retain their
 configurable library API for compatibility; the desktop workspace UI does not
 expose it.
 
+## Paste images into chat
+
+Copy an image or screenshot and paste into the message field with Ctrl+V (Command+V
+on macOS). The original clipboard image bytes are saved under project
+`assets/imports/` and attached as a removable thumbnail. Removing the attachment
+keeps the saved project asset. You can send images with a text description or on
+their own; the agent can inspect their actual pixels through workspace_image.
+Normal text paste is unchanged. Imports share existing project locks and size
+limits; Send waits for the upload, and a failed upload keeps the text draft.
+
 ## Files and bundles
 
 Ordinary images, videos and audio files need no manifest. Other file formats remain
