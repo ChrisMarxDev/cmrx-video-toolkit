@@ -28,6 +28,7 @@ deps:
 	npm ci --ignore-scripts
 # Verify connections, keys, skills, confirmations and in-app tools: make agent-browser-check [EDITOR_PLAYWRIGHT=/path/to/playwright]
 agent-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-controls-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/image-paste-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/markdown-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" EDITOR_RESULTS="$(EDITOR_RESULTS)" node tests/project-agent-browser.mjs

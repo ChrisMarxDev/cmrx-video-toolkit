@@ -10,9 +10,7 @@ import {
   bindGraphicsComposition,
 } from "./graphics-clips.mjs";
 const templates = fileURLToPath(new URL("../templates/", import.meta.url));
-const toolkit = fileURLToPath(
-  new URL("../../../", import.meta.url),
-);
+const toolkit = fileURLToPath(new URL("../../../", import.meta.url));
 const pin = "10e442c1bb469118516df3335547f85ec92155e6";
 const sourceRoots = ["lib", "assets", "shaders", "test", "pubspec.yaml"];
 const roots = [...sourceRoots, "tools", "skills", "script.md"];
@@ -154,7 +152,7 @@ export class Playground {
     return { path: name, saved: true };
   }
   fingerprint() {
-    const h = createHash("sha256").update("graphics-filmstrips-v2");
+    const h = createHash("sha256").update("graphics-preview-tracks-v3");
     for (const f of [
       "project.json",
       ...this.files()
@@ -377,6 +375,13 @@ export class Playground {
         "cmrx_full_capture_test.dart",
         "cmrx_overlay_capture_test.dart",
         "timeline_thumbnails.dart",
+        ...fs
+          .readdirSync(work)
+          .filter((f) =>
+            /^(overlay_track_\d+|cmrx_overlay_track_\d+_capture_test)\.dart$/.test(
+              f,
+            ),
+          ),
       ]) {
         const file = path.join(work, root);
         if (fs.existsSync(file)) a.push("--ro-bind", file, "/work/" + root);
@@ -494,6 +499,17 @@ export class Playground {
       fingerprint: this.fingerprint(),
       createdAt: new Date().toISOString(),
     };
+    const previewTracks = [
+      ...new Set(
+        project.clips.filter((c) => c.kind === "graphics").map((c) => c.track),
+      ),
+    ].sort((a, b) => a - b);
+    if (
+      previewTracks.some(
+        (track) => !Number.isInteger(track) || track < 0 || track > 10000,
+      )
+    )
+      throw Error("Invalid graphics preview track");
     const dest = path.join(this.jobsDir, j.id);
     fs.mkdirSync(path.join(dest, "lib"), { recursive: true });
     for (const f of ["project.json", ...this.files()]) {
@@ -542,6 +558,19 @@ export class Playground {
           .replace("__CAPTURE_THUMBNAILS__", String(mode === "overlay"))
           .replaceAll("__PROJECT_PACKAGE__", packageName),
       );
+    for (const track of previewTracks) {
+      fs.writeFileSync(
+        path.join(dest, `overlay_track_${track}.dart`),
+        `import 'package:fluvie/fluvie.dart' show Video;\nimport 'overlay.dart' as base;\nFuture<Video> build() => base.build(previewTrack: ${track});\nvoid main() {}\n`,
+      );
+      fs.writeFileSync(
+        path.join(dest, `cmrx_overlay_track_${track}_capture_test.dart`),
+        harness
+          .replace("__TARGET__", `overlay_track_${track}.dart`)
+          .replace("__CAPTURE_THUMBNAILS__", "false")
+          .replaceAll("__PROJECT_PACKAGE__", packageName),
+      );
+    }
     this.jobs.push(j);
     this.persist();
     // The job has an immutable source+manifest snapshot, independent of the chat turn.
@@ -608,82 +637,111 @@ export class Playground {
           await this.verifyTiming(dest, "preview.mp4", j);
           j.artifact = true;
         }
-        try {
-          await this.execRaw(
-            [
-              "dart",
-              "run",
-              "packages/fluvie_cli/bin/fluvie.dart",
-              "render",
-              "/work/overlay.dart",
-              "--project",
-              "/work",
-              "--entry",
-              "build",
-              "--harness",
-              "/work/cmrx_overlay_capture_test.dart",
-              "--no-cache",
-              "--out",
-              "/work/overlay.webm",
-              "--format",
-              "transparent",
-              "--toolchain",
-              "system",
-              "--no-download",
-              "--machine",
-            ],
-            dest,
-            "/runtime/fluvie",
-            600000,
-            true,
-          );
-        } catch (error) {
-          // Fluvie10e442c compares VP9's default ffprobe pixel format to yuva420p.
-          // FFmpeg's native VP9 decoder omits alpha; libvpx-vp9 decodes it correctly.
-          const receipt = path.join(dest, "overlay.failed.render.json");
-          let verification;
+        const renderAlpha = async (name, target, capture) => {
           try {
-            const stat = fs.lstatSync(receipt);
-            if (stat.isFile() && !stat.isSymbolicLink() && stat.size < 2000000)
-              verification = JSON.parse(fs.readFileSync(receipt)).verification;
-          } catch {}
-          const mismatch = verification?.mismatches;
-          if (!(
-            verification?.observed?.hasAlpha &&
-            mismatch?.length === 1 &&
-            mismatch[0].code === "pixelFormat" &&
-            mismatch[0].expected === "yuva420p" &&
-            mismatch[0].actual === "yuv420p"
-          ))
-            throw error;
-          // Do not waive verification: decode every alpha frame with the alpha-capable decoder.
-          await this.execRaw(
-            [
-              "ffmpeg",
-              "-v",
-              "error",
-              "-c:v",
-              "libvpx-vp9",
-              "-i",
-              "/work/overlay.webm",
-              "-vf",
-              "alphaextract",
-              "-f",
-              "null",
-              "-",
-            ],
-            dest,
-            "/work",
-            120000,
-            true,
-          );
-        }
+            await this.execRaw(
+              [
+                "dart",
+                "run",
+                "packages/fluvie_cli/bin/fluvie.dart",
+                "render",
+                "/work/" + target,
+                "--project",
+                "/work",
+                "--entry",
+                "build",
+                "--harness",
+                "/work/" + capture,
+                "--no-cache",
+                "--out",
+                "/work/" + name + ".webm",
+                "--format",
+                "transparent",
+                "--toolchain",
+                "system",
+                "--no-download",
+                "--machine",
+              ],
+              dest,
+              "/runtime/fluvie",
+              600000,
+              true,
+            );
+          } catch (error) {
+            // Fluvie10e442c compares VP9's default ffprobe pixel format to yuva420p.
+            // FFmpeg's native VP9 decoder omits alpha; libvpx-vp9 decodes it correctly.
+            const receipt = path.join(dest, name + ".failed.render.json");
+            let verification;
+            try {
+              const stat = fs.lstatSync(receipt);
+              if (
+                stat.isFile() &&
+                !stat.isSymbolicLink() &&
+                stat.size < 2000000
+              )
+                verification = JSON.parse(
+                  fs.readFileSync(receipt),
+                ).verification;
+            } catch {}
+            const mismatch = verification?.mismatches;
+            if (!(
+              verification?.observed?.hasAlpha &&
+              mismatch?.length === 1 &&
+              mismatch[0].code === "pixelFormat" &&
+              mismatch[0].expected === "yuva420p" &&
+              mismatch[0].actual === "yuv420p"
+            ))
+              throw error;
+            // Do not waive verification: decode every alpha frame with the alpha-capable decoder.
+            await this.execRaw(
+              [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-c:v",
+                "libvpx-vp9",
+                "-i",
+                "/work/" + name + ".webm",
+                "-vf",
+                "alphaextract",
+                "-f",
+                "null",
+                "-",
+              ],
+              dest,
+              "/work",
+              120000,
+              true,
+            );
+          }
 
-        if (j.cancelRequested) throw Error("Canceled");
-        const overlay = fs.lstatSync(path.join(dest, "overlay.webm"));
-        if (!overlay.isFile() || overlay.isSymbolicLink())
-          throw Error("Invalid graphics cache");
-        await this.verifyTiming(dest, "overlay.webm", j);
+          if (j.cancelRequested) throw Error("Canceled");
+          const overlay = fs.lstatSync(path.join(dest, name + ".webm"));
+          if (!overlay.isFile() || overlay.isSymbolicLink())
+            throw Error("Invalid graphics cache");
+          await this.verifyTiming(dest, name + ".webm", j);
+        };
+        await renderAlpha(
+          "overlay",
+          "overlay.dart",
+          "cmrx_overlay_capture_test.dart",
+        );
+        for (const track of previewTracks) {
+          if (j.cancelRequested) throw Error("Canceled");
+          const name = `overlay_track_${track}`;
+          if (previewTracks.length === 1 && !project.layers?.[track]?.disabled)
+            fs.copyFileSync(
+              path.join(dest, "overlay.webm"),
+              path.join(dest, name + ".webm"),
+            );
+          else
+            await renderAlpha(
+              name,
+              name + ".dart",
+              `cmrx_${name}_capture_test.dart`,
+            );
+        }
+        if (previewTracks.length) j.previewTracks = previewTracks;
         j.overlay = true;
         j.thumbnails =
           fs.existsSync(path.join(dest, "graphics-thumbnails.json")) &&
@@ -724,14 +782,33 @@ export class Playground {
       }
     } catch {}
   }
-  overlayArtifact(id) {
+  overlayArtifact(id, track) {
     if (
       !this.jobs.some(
         (j) => j.id === id && j.status === "complete" && j.overlay,
       )
     )
       return null;
-    return path.join(this.jobsDir, id, "overlay.webm");
+    const job = this.jobs.find((j) => j.id === id);
+    let name = "overlay.webm";
+    if (track !== undefined && track !== null) {
+      if (
+        !/^\d+$/.test(String(track)) ||
+        !job.previewTracks?.includes(Number(track))
+      )
+        return null;
+      name = `overlay_track_${Number(track)}.webm`;
+    }
+    const dir = path.join(this.jobsDir, id);
+    if (path.dirname(dir) !== this.jobsDir) return null;
+    try {
+      const file = path.join(dir, name);
+      if (fs.lstatSync(dir).isSymbolicLink()) return null;
+      const stat = fs.lstatSync(file);
+      return stat.isFile() && !stat.isSymbolicLink() ? file : null;
+    } catch {
+      return null;
+    }
   }
   artifact(id) {
     if (

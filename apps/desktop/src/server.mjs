@@ -579,7 +579,7 @@ export async function startApp({
           const id = url.searchParams.get("id");
           const isOverlay = url.pathname === "/chat/overlay";
           const file = isOverlay
-            ? playground.overlayArtifact(id)
+            ? playground.overlayArtifact(id, url.searchParams.get("track"))
             : playground.artifact(id);
           if (file) {
             const size = fs.statSync(file).size;

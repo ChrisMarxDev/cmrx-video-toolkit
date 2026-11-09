@@ -21,3 +21,10 @@ comment, transcript, layer and render operations. Existing source and output tim
 remain distinct. See [schema contract](SCHEMA.md), `project.schema.json` and
 `src/server.ts` for the API. `make mcp WORKSPACE=…` starts its MCP Apps adapter for
 a running workspace; ordinary browser review does not require an MCP host.
+
+In the standalone editor, layer mute/disable operations remain saved, revision-checked
+edits with undo/export semantics. When embedded in the desktop app's preview bridge,
+those buttons instead control temporary local audio/visibility, including during
+agent/render locks. Structural edits retain client and server locking; timeline
+seeking, panning and preview layer inspection remain available. Preview overrides
+are not persisted to project.json or undo history.

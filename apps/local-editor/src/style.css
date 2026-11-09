@@ -1024,3 +1024,14 @@ button:has(> .icon) {
 .clip.graphic:has(.clip-media) .clip-text small {
   display: none;
 }
+
+.preview-layer-refresh {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 5px 8px;
+  background: #17171be6;
+  color: white;
+  font-size: 10px;
+  border-radius: 4px;
+}

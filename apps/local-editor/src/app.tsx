@@ -134,6 +134,7 @@ type PreviewBridge = {
     duration: number;
     id: string;
     thumbnails?: boolean;
+    previewTracks?: number[];
   };
 };
 function GraphicsLayer({
@@ -141,11 +142,13 @@ function GraphicsLayer({
   time,
   playing,
   playbackRate,
+  track,
 }: {
   overlay: NonNullable<PreviewBridge["overlay"]>;
   time: number;
   playing: boolean;
   playbackRate: number;
+  track?: number;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -166,6 +169,7 @@ function GraphicsLayer({
     <video
       aria-label="Flutter graphics layer"
       data-overlay={overlay.id}
+      data-preview-track={track}
       ref={ref}
       src={overlay.url}
       muted
@@ -299,6 +303,9 @@ function App() {
   const [previewBridge, setPreviewBridge] = useState<PreviewBridge | null>(
     null,
   );
+  const [previewLayers, setPreviewLayers] = useState<
+    Record<number, { muted?: boolean; disabled?: boolean }>
+  >({});
   useEffect(() => {
     const receive = (e: MessageEvent) => {
       if (
@@ -319,6 +326,14 @@ function App() {
         return;
       const overlay = e.data.overlay;
       if (overlay) {
+        if (
+          overlay.previewTracks !== undefined &&
+          (!Array.isArray(overlay.previewTracks) ||
+            overlay.previewTracks.some(
+              (t: number) => !Number.isInteger(t) || t < 0 || t > 10000,
+            ))
+        )
+          return;
         try {
           const url = new URL(overlay.url, location.origin);
           if (
@@ -436,6 +451,39 @@ function App() {
     return () => events.close();
   }, []);
   const p = state?.project;
+  const layerState = (track: number) =>
+    previewBridge
+      ? { ...p?.layers?.[track], ...previewLayers[track] }
+      : p?.layers?.[track];
+  function toggleLayer(track: number, flag: "muted" | "disabled") {
+    if (previewBridge) {
+      setPreviewLayers((previous) => {
+        const flags = { ...previous[track] };
+        const next = !(flags[flag] ?? p?.layers?.[track]?.[flag]);
+        if (next === !!p?.layers?.[track]?.[flag]) delete flags[flag];
+        else flags[flag] = next;
+        const result = { ...previous };
+        if (Object.keys(flags).length) result[track] = flags;
+        else delete result[track];
+        return result;
+      });
+    } else
+      void mutate("layer", {
+        track,
+        patch: { [flag]: !p?.layers?.[track]?.[flag] },
+      });
+  }
+  const needsLayerCache =
+    !!previewBridge?.overlay &&
+    !previewBridge.overlay.previewTracks?.length &&
+    Object.keys(previewLayers).some(
+      (track) =>
+        previewLayers[Number(track)]?.disabled !== undefined &&
+        p?.clips.some(
+          (c) => c.kind === "graphics" && c.track === Number(track),
+        ),
+    );
+
   useEffect(() => {
     if (p && !p.clips.some((clip) => clip.id === selected))
       setSelected(p.clips[0]?.id || "");
@@ -815,15 +863,11 @@ function App() {
         ["m", "v"].includes(key) &&
         c &&
         p &&
-        !disabled &&
+        (!!previewBridge || !disabled) &&
         !e.repeat
       ) {
         e.preventDefault();
-        const flag = key === "m" ? "muted" : "disabled";
-        void mutate("layer", {
-          track: c.track,
-          patch: { [flag]: !p.layers?.[c.track]?.[flag] },
-        });
+        toggleLayer(c.track, key === "m" ? "muted" : "disabled");
       } else if (key === "m" && !disabled && !e.repeat) {
         e.preventDefault();
         beginComment();
@@ -1112,7 +1156,7 @@ function App() {
                       }}
                     >
                       {sorted
-                        .filter((clip) => !p!.layers?.[clip.track]?.disabled)
+                        .filter((clip) => !layerState(clip.track)?.disabled)
                         .map((clip) =>
                           clip.kind === "video" ? (
                             <VideoLayer
@@ -1120,8 +1164,7 @@ function App() {
                               clip={{
                                 ...clip,
                                 muted:
-                                  clip.muted ||
-                                  !!p!.layers?.[clip.track]?.muted,
+                                  clip.muted || !!layerState(clip.track)?.muted,
                               }}
                               time={time}
                               playing={playing}
@@ -1172,13 +1215,50 @@ function App() {
                             </div>
                           ),
                         )}
-                      {previewBridge?.overlay && (
-                        <GraphicsLayer
-                          overlay={previewBridge.overlay}
-                          time={time}
-                          playing={playing}
-                          playbackRate={playbackRate}
-                        />
+                      {previewBridge?.overlay &&
+                        (previewBridge.overlay.previewTracks?.length
+                          ? previewBridge.overlay.previewTracks
+                              .filter(
+                                (track) =>
+                                  !layerState(track)?.disabled &&
+                                  p!.clips.some(
+                                    (c) =>
+                                      c.kind === "graphics" &&
+                                      c.track === track,
+                                  ),
+                              )
+                              .map((track) => {
+                                const url = new URL(
+                                  previewBridge.overlay!.url,
+                                  location.origin,
+                                );
+                                url.searchParams.set("track", String(track));
+                                return (
+                                  <GraphicsLayer
+                                    key={track}
+                                    track={track}
+                                    overlay={{
+                                      ...previewBridge.overlay!,
+                                      url: url.href,
+                                    }}
+                                    time={time}
+                                    playing={playing}
+                                    playbackRate={playbackRate}
+                                  />
+                                );
+                              })
+                          : !needsLayerCache && (
+                              <GraphicsLayer
+                                overlay={previewBridge.overlay}
+                                time={time}
+                                playing={playing}
+                                playbackRate={playbackRate}
+                              />
+                            ))}
+                      {needsLayerCache && (
+                        <output className="preview-layer-refresh" role="status">
+                          Updating layer previews…
+                        </output>
                       )}
                     </div>
                   </div>
@@ -1579,10 +1659,7 @@ function App() {
           }
         }}
       />
-      <section
-        className="panel timeline-panel"
-        inert={previewBridge?.locked || undefined}
-      >
+      <section className="panel timeline-panel">
         {draft && (
           <output className="edit-feedback" aria-live="off">
             {drag.current?.mode === "move" ? "↔" : "↤↦"}{" "}
@@ -1824,43 +1901,41 @@ function App() {
                 className="track"
                 key={track}
                 data-track={track}
-                data-muted={!!p!.layers?.[track]?.muted}
-                data-disabled={!!p!.layers?.[track]?.disabled}
+                data-muted={!!layerState(track)?.muted}
+                data-disabled={!!layerState(track)?.disabled}
                 style={{ height: laneCount * LANE_HEIGHT }}
               >
                 <span className="track-name">
                   Layer {track}
                   <span className="layer-controls">
                     <button
-                      aria-label={`${p!.layers?.[track]?.muted ? "Unmute" : "Mute"} layer ${track}`}
-                      aria-pressed={!!p!.layers?.[track]?.muted}
-                      title="Mute layer audio (Shift+M for selected layer)"
-                      disabled={disabled}
-                      onClick={() =>
-                        mutate("layer", {
-                          track,
-                          patch: { muted: !p!.layers?.[track]?.muted },
-                        })
+                      aria-label={`${layerState(track)?.muted ? "Unmute" : "Mute"} layer ${track}`}
+                      aria-pressed={!!layerState(track)?.muted}
+                      title={
+                        previewBridge
+                          ? "Mute preview audio only · Shift+M · exports unchanged"
+                          : "Mute layer audio (Shift+M for selected layer)"
                       }
+                      disabled={previewBridge ? false : disabled}
+                      onClick={() => toggleLayer(track, "muted")}
                     >
                       <Icon
-                        name={p!.layers?.[track]?.muted ? "mute" : "volume"}
+                        name={layerState(track)?.muted ? "mute" : "volume"}
                       />
                     </button>
                     <button
-                      aria-label={`${p!.layers?.[track]?.disabled ? "Enable" : "Disable"} layer ${track}`}
-                      aria-pressed={!!p!.layers?.[track]?.disabled}
-                      title="Disable layer video and audio (Shift+V for selected layer)"
-                      disabled={disabled}
-                      onClick={() =>
-                        mutate("layer", {
-                          track,
-                          patch: { disabled: !p!.layers?.[track]?.disabled },
-                        })
+                      aria-label={`${layerState(track)?.disabled ? (previewBridge ? "Show" : "Enable") : previewBridge ? "Hide" : "Disable"} layer ${track}`}
+                      aria-pressed={!!layerState(track)?.disabled}
+                      title={
+                        previewBridge
+                          ? "Hide preview video and audio only · Shift+V · exports unchanged"
+                          : "Disable layer video and audio (Shift+V for selected layer)"
                       }
+                      disabled={previewBridge ? false : disabled}
+                      onClick={() => toggleLayer(track, "disabled")}
                     >
                       <Icon
-                        name={p!.layers?.[track]?.disabled ? "eye-off" : "eye"}
+                        name={layerState(track)?.disabled ? "eye-off" : "eye"}
                       />
                     </button>
                   </span>
@@ -1896,8 +1971,8 @@ function App() {
                               ...clip,
                               muted:
                                 clip.muted ||
-                                !!p!.layers?.[clip.track]?.muted ||
-                                !!p!.layers?.[clip.track]?.disabled,
+                                !!layerState(clip.track)?.muted ||
+                                !!layerState(clip.track)?.disabled,
                             }}
                             asset={p!.assets.find(
                               (a) => a.id === clip.assetId,

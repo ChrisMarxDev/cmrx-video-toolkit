@@ -19,14 +19,14 @@ export function graphicsDispatcher(project, packageName) {
 import 'package:${packageName}/graphics.dart' as legacy;
 export 'package:${packageName}/graphics.dart' hide buildGraphics;
 ${sources.map((source, i) => `import ${literal("package:" + packageName + "/" + source.slice(4))} as layer${i};`).join("\n")}
-Widget buildGraphics(double time, Map<String,dynamic> manifest) {
+Widget buildGraphics(double time, Map<String,dynamic> manifest, {int? previewTrack}) {
  final clips=List<Map<String,dynamic>>.from(manifest['clips']).where((c)=>c['kind']=='graphics').toList()
  ..sort((a,b)=>(a['track'] as num).compareTo(b['track'] as num));
  if(clips.isEmpty) return legacy.buildGraphics(time,manifest);
  final layers=Map<String,dynamic>.from(manifest['layers']??{});
  return Stack(fit:StackFit.expand,clipBehavior:Clip.hardEdge,children:[
   for(final clip in clips)
-   if(layers['\${clip['track']}']?['disabled']!=true && time>=clip['start'] && time<clip['start']+clip['duration'])
+   if((previewTrack==null || clip['track']==previewTrack) && layers['\${clip['track']}']?['disabled']!=true && time>=clip['start'] && time<clip['start']+clip['duration'])
     Positioned(left:(clip['x'] as num).toDouble(),top:(clip['y'] as num).toDouble(),width:(clip['width'] as num).toDouble(),height:(clip['height'] as num).toDouble(),
      child:_graphic(clip['props']['source'],(clip['in']+time-clip['start']).toDouble(),{...manifest,'graphicsClip':clip})),
  ]);

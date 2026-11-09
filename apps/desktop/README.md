@@ -49,6 +49,11 @@ Arbitrary source runs through the offline rendering worker. The provider agent
 and network-capable connection broker are separate processes from that worker;
 this is not an operating-system sandbox around the entire app.
 
+The layer speaker/eye buttons in the embedded editor are temporary preview controls:
+they stay available during agent/render work and never change the timeline or
+export. Shift+M/Shift+V toggle the selected layer. Reopening the view resets these
+local overrides; tell the agent when a layer should be excluded from the export.
+
 Generated graphics remain distinct clips above footage. Trim/split/delete and
 undo preserve their source timing. Preview and export use the same composition;
 rendered drafts do not replace the underlying editable project. Heavy rendering
@@ -73,3 +78,9 @@ App releases belong to this repository and use `desktop-vX.Y.Z` tags, independen
 of toolkit versions. See [release procedure](RELEASING.md). Current automation
 validates and prepares a **draft prerelease source archive**, not an AppImage or
 DMG. No automatic download, install or application restart is implemented.
+
+Graphics preview caches contain independently composited full-resolution tracks.
+Older combined caches refresh automatically; per-layer inspection may briefly show
+an updating indicator during that first rebuild. Multiple graphics tracks require
+additional cache render passes. The stored timeline and full export are unchanged
+by preview visibility/mute controls.
