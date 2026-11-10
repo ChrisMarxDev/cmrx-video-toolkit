@@ -385,3 +385,74 @@ test("Codex steering uses the active turn precondition and never starts a second
   await assert.rejects(provider.steer("Too late", {}), /finished/);
   assert.equal(calls.length, 1);
 });
+
+test("queued editing preempts disposable previews but waits for explicit exports", async () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.homedir(), ".cache/cmrx-preview-priority-"),
+  );
+  let app, emit;
+  const calls = [];
+  try {
+    app = await startApp({
+      workspace,
+      autoPreview: false,
+      providerFactory: ({ onEvent }) => {
+        emit = onEvent;
+        return {
+          async start() {},
+          async account() {
+            return { connected: true };
+          },
+          async models() {
+            return [{ id: "test", name: "Test", isDefault: true }];
+          },
+          async prompt(text) {
+            calls.push(text);
+          },
+          close() {},
+        };
+      },
+    });
+    const post = (route, body = {}) =>
+      fetch(app.url + "/chat/" + route, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + app.token },
+        body: JSON.stringify(body),
+      });
+    await post("login", { provider: "chatgpt" });
+    const preview = { id: "background", kind: "overlay", status: "running" };
+    app.playground.jobs.push(preview);
+    app.playground.renderTask = Promise.resolve();
+    let canceled = false;
+    app.playground.cancel = () => {
+      canceled = true;
+      preview.status = "canceled";
+    };
+    assert.equal(
+      (await (await post("send", { text: "Fix title" })).json()).queued,
+      true,
+    );
+    await waitFor(
+      () => calls,
+      (value) => value.length === 1,
+    );
+    assert.equal(canceled, true);
+    assert.deepEqual(calls, ["Fix title"]);
+    await emit({ type: "complete" });
+    const exported = { id: "export", kind: "export", status: "running" };
+    app.playground.jobs.push(exported);
+    await post("send", { text: "Next edit" });
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    assert.equal(calls.length, 1);
+    exported.status = "complete";
+    await waitFor(
+      () => calls,
+      (value) => value.length === 2,
+    );
+    assert.deepEqual(calls, ["Fix title", "Next edit"]);
+    await emit({ type: "complete" });
+  } finally {
+    await app?.close();
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});

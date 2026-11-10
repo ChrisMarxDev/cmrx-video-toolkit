@@ -1330,7 +1330,8 @@ export async function startApp({
       publish();
       if (
         !locked() &&
-        !playground.running &&
+        // startMessage cancels disposable overlay refreshes. Explicit exports
+        // remain protected by locked(); background previews must not delay chat.
         state.queue.length &&
         !state.queuePaused &&
         state.connected
