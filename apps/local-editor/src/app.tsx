@@ -1080,12 +1080,8 @@ function App() {
   if (!state)
     return (
       <main className="loading">
-        <h1>CMRX Workspace</h1>
-        <p>{notice || "Connecting to your local workspace…"}</p>
-        <p>
-          Start the server and use its printed URL. No cloud account is
-          required.
-        </p>
+        <span className="matrix-loader" aria-hidden="true" />
+        <p role="status">{notice || "Opening workspace…"}</p>
       </main>
     );
   const clips = p!.clips.map((clip) =>

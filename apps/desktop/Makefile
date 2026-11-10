@@ -50,3 +50,8 @@ verify-linux-package:
 # Verify timeline selection, ripple edits and context menu: make range-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
 range-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/range-browser.mjs
+
+.PHONY: design-browser-check
+# Check setup progress, matrix loaders and first chat: make design-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
+design-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/design-browser.mjs

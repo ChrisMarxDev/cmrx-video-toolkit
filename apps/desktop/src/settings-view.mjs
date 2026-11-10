@@ -112,12 +112,16 @@ export function setupProviderUI({ call, onError }) {
         dialog.close();
       } catch {}
     };
+    const progress = elem("div", "setup-install");
+    progress.hidden = true;
+    progress.innerHTML = `<div class="install-heading"><span class="matrix-loader" aria-hidden="true"></span><span class="install-label"></span><span class="install-percent"></span></div><div class="dither-progress" role="progressbar" aria-label="Connection setup"><span class="dither-progress-fill"></span></div>`;
     actions.append(login, use, refresh, logout, cancel);
     card.prepend(heading, copy, detail, error);
-    card.append(actions, link);
+    card.append(progress, actions, link);
     cards.append(card);
     cardNodes.set(id, {
       status,
+      progress,
       detail,
       error,
       login,
@@ -287,17 +291,49 @@ export function setupProviderUI({ call, onError }) {
       const n = cardNodes.get(entry.id),
         busy = pending || state.busy;
       n.status.textContent = entry.preparing
-        ? "Preparing…"
+        ? "Setting up"
         : entry.authenticating
           ? "Finish sign-in in your browser"
           : entry.connected
             ? "Connected"
             : "Not connected";
       n.status.classList.toggle("connected", entry.connected);
+      n.progress.hidden = !entry.preparing;
+      if (entry.preparing) {
+        const percent = entry.preparing.percent;
+        const known =
+          entry.preparing.phase === "downloading" && Number.isFinite(percent);
+        const label =
+          {
+            downloading: "Downloading connection",
+            verifying: "Checking download",
+            checking: "Preparing connection",
+            connecting: "Opening sign-in",
+          }[entry.preparing.phase] || "Setting up";
+        n.progress.querySelector(".install-label").textContent = label;
+        n.progress.querySelector(".install-percent").textContent = known
+          ? Math.round(percent) + "%"
+          : "";
+        const bar = n.progress.querySelector(".dither-progress");
+        bar.dataset.determinate = String(known);
+        bar.setAttribute(
+          "aria-valuetext",
+          known ? label + " · " + Math.round(percent) + "%" : label,
+        );
+        if (known) bar.setAttribute("aria-valuenow", String(percent));
+        else bar.removeAttribute("aria-valuenow");
+        bar.setAttribute("aria-valuemin", "0");
+        bar.setAttribute("aria-valuemax", "100");
+        bar.style.setProperty(
+          "--install-progress",
+          known ? Math.min(100, Math.max(0, percent)) + "%" : "35%",
+        );
+      }
       setBrandedText(
         n.detail,
-        entry.preparing?.text ||
-          (entry.connected
+        entry.preparing
+          ? ""
+          : entry.connected
             ? entry.id === "chatgpt"
               ? "ChatGPT subscription"
               : entry.authMethod?.toLowerCase().includes("api")
@@ -306,8 +342,8 @@ export function setupProviderUI({ call, onError }) {
                   ? "Claude " + entry.plan + " plan"
                   : "Claude Code account"
             : entry.authenticating
-              ? "A secure sign-in page opens in your browser. Return here when you’re done."
-              : "Usage limits follow your plan."),
+              ? "Finish in your browser."
+              : "",
       );
       setBrandedText(
         n.error,

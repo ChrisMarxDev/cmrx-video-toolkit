@@ -55,12 +55,10 @@ await Promise.all([
     target: "node22",
   }),
 ]);
+await copyFile("src/matrix-loader.css", "dist/public/matrix-loader.css");
 await copyFile("src/index.html", "dist/public/index.html");
 await copyFile("src/resize-handles.css", "dist/public/resize-handles.css");
-await copyFile(
-  "resources/fonts/Fraunces.ttf",
-  "dist/public/Fraunces.ttf",
-);
+await copyFile("resources/fonts/Fraunces.ttf", "dist/public/Fraunces.ttf");
 await copyFile(
   "resources/fonts/Fraunces-OFL.txt",
   "dist/public/Fraunces-OFL.txt",

@@ -1,0 +1,84 @@
+/* Shared square-cell loading language: chat, player, shell and setup. */
+.matrix-loader,
+.player-spinner,
+.dot.working {
+  display: inline-block;
+  position: relative;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  --matrix-dim: color-mix(in srgb, currentColor 20%, transparent);
+}
+.matrix-loader[hidden] {
+  display: none;
+}
+.matrix-loader::before,
+.player-spinner::before,
+.dot.working::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  box-shadow:
+    7px 0 currentColor,
+    14px 0 var(--matrix-dim),
+    0 7px var(--matrix-dim),
+    7px 7px currentColor,
+    14px 7px var(--matrix-dim),
+    0 14px var(--matrix-dim),
+    7px 14px var(--matrix-dim),
+    14px 14px currentColor;
+  animation: matrix-cells 1.2s steps(1, end) infinite;
+}
+@keyframes matrix-cells {
+  25% {
+    background: var(--matrix-dim);
+    box-shadow:
+      7px 0 var(--matrix-dim),
+      14px 0 currentColor,
+      0 7px currentColor,
+      7px 7px var(--matrix-dim),
+      14px 7px currentColor,
+      0 14px var(--matrix-dim),
+      7px 14px currentColor,
+      14px 14px var(--matrix-dim);
+  }
+  50% {
+    background: currentColor;
+    box-shadow:
+      7px 0 var(--matrix-dim),
+      14px 0 var(--matrix-dim),
+      0 7px var(--matrix-dim),
+      7px 7px currentColor,
+      14px 7px currentColor,
+      0 14px currentColor,
+      7px 14px var(--matrix-dim),
+      14px 14px var(--matrix-dim);
+  }
+  75% {
+    background: var(--matrix-dim);
+    box-shadow:
+      7px 0 currentColor,
+      14px 0 var(--matrix-dim),
+      0 7px currentColor,
+      7px 7px currentColor,
+      14px 7px var(--matrix-dim),
+      0 14px var(--matrix-dim),
+      7px 14px currentColor,
+      14px 14px currentColor;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .matrix-loader::before,
+  .player-spinner::before,
+  .dot.working::before {
+    animation: none;
+  }
+}

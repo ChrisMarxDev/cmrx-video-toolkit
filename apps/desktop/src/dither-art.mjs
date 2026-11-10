@@ -33,7 +33,22 @@ function draw(canvas) {
         v = (y + 0.5) / h;
       let density,
         color = lavender;
-      if (gradient) {
+      if (canvas.dataset.dither === "portal") {
+        // Sculpted orbital field: fixed Bayer cells, composited motion in CSS.
+        const nx = (u - 0.5) * 2.5,
+          ny = (v - 0.5) * 2.9;
+        const angle = Math.atan2(ny, nx),
+          radius = Math.hypot(nx, ny);
+        const ring = Math.exp(-Math.pow((radius - 0.72) / 0.19, 2));
+        const light = 0.25 + 0.7 * Math.max(0, Math.cos(angle + 2.15));
+        const horizon = Math.exp(-Math.pow((ny + 0.03) / 0.025, 2)) * 0.24;
+        const core = sphere(u * 320, v * 190, 160, 95, 30);
+        density = Math.max(
+          ring * light,
+          horizon * (1 - Math.min(1, Math.abs(nx))),
+          core * 0.85,
+        );
+      } else if (gradient) {
         // A broad folded light field, tapering into untouched chrome.
         density = clamp(
           (0.5 + 0.3 * Math.sin(u * 8 + v * 4)) * (1 - v) ** 2 * 0.5,

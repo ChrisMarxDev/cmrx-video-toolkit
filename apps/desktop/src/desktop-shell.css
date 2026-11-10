@@ -85,8 +85,8 @@ button[role="tab"] {
   background: #7d728a;
 }
 .dot.working {
-  background: #c9ed54;
-  animation: pulse 1.5s infinite;
+  background: none;
+  animation: none;
 }
 .dot.attention {
   background: #f3ad74;
@@ -222,16 +222,6 @@ footer button {
 #name-error {
   color: #f4bbc6;
   font-size: 12px;
-}
-@keyframes pulse {
-  50% {
-    opacity: 0.3;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .dot.working {
-    animation: none;
-  }
 }
 
 .workspace-caption {

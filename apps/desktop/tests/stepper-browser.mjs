@@ -166,6 +166,18 @@ try {
     ).clips.length,
     1,
   );
+  await shell.emulateMedia({ reducedMotion: "no-preference" });
+  await page.locator("#prompt").fill("Draft a short opening");
+  await page.locator("#prompt").press("Enter");
+  await shell.locator(".dot.working").first().waitFor();
+  assert.equal(
+    await shell
+      .locator(".dot.working")
+      .first()
+      .evaluate((el) => getComputedStyle(el, "::before").animationName),
+    "matrix-cells",
+  );
+  await shell.locator(".dot.working").waitFor({ state: "hidden" });
   assert.deepEqual(errors, []);
   console.log(
     "PASS: native animated stepper, back/skip/connect, canceled picker, real video import/filmstrip, replay, reduced motion and preserved project. Evidence " +

@@ -479,6 +479,7 @@ if (!token || !editorToken) {
       s.importing ? "Cancel import" : "Stop",
     );
     $("#stop").title = s.importing ? "Cancel import" : "Stop";
+    $("#activity-matrix").hidden = !(s.busy || s.importing || s.switching);
     setBrandedText($("#activity"), s.activity);
     setBrandedText(
       $("#error"),
