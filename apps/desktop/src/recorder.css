@@ -5,6 +5,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
   background: var(--app-page);
@@ -13,35 +16,49 @@ body {
     14px "Space Grotesk",
     system-ui,
     sans-serif;
+  user-select: none;
 }
 main {
   padding: 24px;
-  max-width: 720px;
-  margin: auto;
 }
 h1 {
-  font-size: 28px;
-  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
 }
 h2 {
-  font-size: 24px;
+  font-size: 20px;
+  font-weight: 500;
 }
 header {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 p {
   color: var(--app-text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
+}
+p:empty {
+  display: none;
+}
+header p {
+  margin: 6px 0 0;
+  font-size: 12px;
 }
 label {
   display: grid;
-  gap: 8px;
-  margin: 16px 0;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
 }
 .screen-choice {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-height: 32px;
+  margin-bottom: 20px;
+}
+input[type="checkbox"] {
+  accent-color: var(--app-focus);
 }
 select,
 button {
@@ -50,14 +67,15 @@ button {
   border: 1px solid var(--app-border);
   background: var(--app-surface-raised);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 10px 12px;
+  min-height: 44px;
 }
 select {
   width: 100%;
+  min-width: 0;
 }
 button {
   cursor: pointer;
-  margin: 8px 8px 8px 0;
 }
 button:hover:not(:disabled) {
   background: var(--app-hover);
@@ -77,38 +95,62 @@ button:disabled {
   outline: 2px solid var(--app-focus);
   outline-offset: 3px;
 }
+footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+#cancel {
+  background: transparent;
+  border-color: transparent;
+}
 #camera-preview {
   display: block;
   width: 100%;
-  max-height: 180px;
+  height: 128px;
   object-fit: contain;
   background: #000;
-  border-radius: 16px;
-  margin: 16px 0;
+  border-radius: 12px;
+  margin: 16px 0 0;
 }
 #error {
   color: var(--app-danger-text);
   overflow-wrap: anywhere;
+  user-select: text;
+}
+#capture {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+body:has(#capture:not([hidden])) header,
+body:has(#saving:not([hidden])) header {
+  display: none;
 }
 .capture-clock {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   font:
-    40px ui-monospace,
+    24px ui-monospace,
     monospace;
-  margin: 48px 0 24px;
 }
 .record-mark {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   background: var(--app-danger-text);
+}
+#shortcut {
+  display: none;
 }
 #saving {
   display: flex;
   align-items: center;
   gap: 16px;
-  min-height: 200px;
+  min-height: 72px;
 }
 #sources {
   position: fixed;
@@ -117,13 +159,16 @@ button:disabled {
   padding: 24px;
   overflow: auto;
 }
+#sources h2 {
+  margin-top: 0;
+}
 #source-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
+  margin-bottom: 16px;
 }
 #source-list button {
-  margin: 0;
   text-align: left;
   overflow-wrap: anywhere;
 }
@@ -132,13 +177,6 @@ button:disabled {
   display: block;
   margin-bottom: 12px;
 }
-#complete {
-  margin-top: 48px;
-}
-
-header p {
-  margin: 8px 0 0;
-}
-input[type="checkbox"] {
-  accent-color: var(--app-focus);
+#complete button {
+  margin: 8px 8px 0 0;
 }

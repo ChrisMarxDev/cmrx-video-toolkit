@@ -107,3 +107,6 @@ reserved destructive-action tokens. Project-to-library saving is not a removal.
 Add to timeline opens the native video file picker. Editor labels and controls are
 not text-selectable; inputs, comment fields and editable text retain selection.
 Chat content remains selectable.
+
+Recording uses a compact source-selection popup, then a timer/Stop control.
+Successful saves close it automatically; errors keep recovery actions visible.

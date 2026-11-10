@@ -16,10 +16,18 @@ let begun = false,
 function error(e) {
   $("#error").textContent = e.message || String(e);
 }
+function resize() {
+  const view = !$("#sources").hidden ? "sources" : phase;
+  void call("layout", {
+    view,
+    height: Math.ceil($("main").getBoundingClientRect().height),
+  }).catch(() => {});
+}
 function show(next) {
   phase = next;
   for (const id of ["setup", "capture", "saving", "complete"])
     $("#" + id).hidden = id !== next;
+  resize();
 }
 function release() {
   for (const stream of [camera, microphone, screen])
@@ -116,8 +124,7 @@ async function save() {
   $("#retry").hidden = true;
   try {
     await call("finish", { offsets });
-    show("complete");
-    $("#error").textContent = "";
+    await call("close");
   } catch (e) {
     phase = "interrupted";
     $("#saving").hidden = true;
@@ -254,6 +261,7 @@ $("#start").onclick = async () => {
       recorder.start(1000);
       return r;
     });
+    $("#stop").title = result.shortcut || "Stop & save";
     $("#shortcut").textContent = result.shortcut
       ? result.shortcut + " · Stop & save"
       : "";
@@ -285,12 +293,19 @@ $("#stop").onclick = () => void stop();
 $("#retry").onclick = () => void save();
 $("#folder").onclick = () => call("folder").catch(error);
 $("#done").onclick = () => call("close");
+$("#cancel").onclick = () => call("close");
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || preparing) return;
+  if (!$("#sources").hidden) $("#source-cancel").click();
+  else if (phase === "setup") void call("close");
+});
 window.recording.onStop(() => {
   if (preparing) stopRequested = true;
   else void stop();
 });
 window.recording.onSources((sources) => {
   $("#sources").hidden = false;
+  resize();
   $("#source-list").replaceChildren();
   for (const source of sources) {
     const b = document.createElement("button"),
@@ -300,6 +315,7 @@ window.recording.onSources((sources) => {
     b.append(img, document.createTextNode(source.name));
     b.onclick = () => {
       $("#sources").hidden = true;
+      resize();
       call("source", { id: source.id }).catch(error);
     };
     $("#source-list").append(b);
@@ -307,6 +323,7 @@ window.recording.onSources((sources) => {
 });
 $("#source-cancel").onclick = () => {
   $("#sources").hidden = true;
+  resize();
   call("source", { id: null }).catch(error);
 };
 window.addEventListener("beforeunload", release);
@@ -324,3 +341,6 @@ if (info.interrupted) {
   $("#recovery").hidden = false;
   $("#recovery").onclick = () => call("recovery").catch(error);
 }
+
+new ResizeObserver(resize).observe($("main"));
+resize();

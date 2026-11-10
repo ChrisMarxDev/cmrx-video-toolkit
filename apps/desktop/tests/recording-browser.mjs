@@ -36,6 +36,9 @@ try {
   app = await electron.launch({
     executablePath: process.env.EDITOR_ELECTRON || "/usr/bin/electron43",
     args: [
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--disable-background-timer-throttling",
       "--user-data-dir=" + path.join(root, "profile"),
       fileURLToPath(new URL("../src/desktop.cjs", import.meta.url)),
       "--workspace",
@@ -94,14 +97,25 @@ try {
       const c = document.createElement("canvas");
       c.width = 640;
       c.height = 360;
+      c.style.cssText =
+        "position:fixed;top:0;left:0;width:2px;height:2px;pointer-events:none";
+      document.body.append(c);
       const ctx = c.getContext("2d");
+      let frame = 0;
       const paint = () => {
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 640, 360);
-        requestAnimationFrame(paint);
+        ctx.fillStyle = "white";
+        ctx.fillRect((frame++ % 100) * 6, 0, 4, 4);
       };
+      const stream = c.captureStream(0);
+      setInterval(() => {
+        paint();
+        stream.getVideoTracks()[0].requestFrame();
+      }, 1000 / 30);
       paint();
-      return c.captureStream(30);
+      stream.getVideoTracks()[0].requestFrame();
+      return stream;
     };
     Object.defineProperty(navigator.mediaDevices, "enumerateDevices", {
       value: async () => devices,
@@ -142,6 +156,7 @@ try {
   );
   assert.equal(await recorder.locator("#camera").inputValue(), "cam-b");
   assert.equal(await recorder.locator("#microphone").inputValue(), "mic-a");
+  await recorder.waitForFunction(() => innerWidth <= 480 && innerHeight < 580);
   await recorder.screenshot({ path: path.join(root, "setup.png") });
   await recorder
     .getByRole("button", { name: "Start recording", exact: true })
@@ -153,6 +168,7 @@ try {
     .locator("#clock")
     .getByText("00:02", { exact: true })
     .waitFor();
+  await recorder.waitForFunction(() => innerWidth <= 360 && innerHeight <= 180);
   await recorder.screenshot({ path: path.join(root, "recording.png") });
   // OS source ending must stop all independent tracks and save them once.
   if (process.env.CHAT_TEST_RECORDING_CLOSE === "1") {
@@ -172,10 +188,8 @@ try {
         .dispatchEvent(new Event("ended")),
     );
   }
-  await recorder
-    .getByRole("heading", { name: "Ready to edit.", exact: true })
-    .waitFor({ timeout: 30000 });
-  await recorder.screenshot({ path: path.join(root, "saved.png") });
+  if (!recorder.isClosed())
+    await recorder.waitForEvent("close", { timeout: 30000 });
   const folders = fs.readdirSync(path.join(project, "assets/recordings"));
   assert.equal(folders.length, 1);
   const folder = path.join(project, "assets/recordings", folders[0]);
@@ -214,7 +228,7 @@ try {
     original,
     "capture leaves the timeline untouched",
   );
-  await recorder.getByRole("button", { name: "Done", exact: true }).click();
+
   await page.getByRole("button", { name: "Assets", exact: true }).click();
   await page.locator("#assets-project").click();
   await page
@@ -226,6 +240,7 @@ try {
       "screen + camera + microphone",
     ),
   );
+  await page.screenshot({ path: path.join(root, "saved.png") });
   assert.deepEqual(errors, []);
   console.log(
     "PASS: native recorder entry, selectable camera, actual separate MediaRecorder streams, IPC save/remux, stop/save handling, decoded red/blue media, asset discovery and unchanged timeline. Synthetic devices; OS picker/hardware not exercised. " +

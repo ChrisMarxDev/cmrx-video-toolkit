@@ -18,7 +18,7 @@
   <body>
     <main>
       <header>
-        <h1>Record</h1>
+        <h1>What do you want to record?</h1>
         <p id="project"></p>
       </header>
       <section id="setup">
@@ -34,15 +34,18 @@
             <option value="">Off</option>
             <option value="default">Default microphone</option>
           </select></label
-        ><video id="camera-preview" autoplay muted playsinline hidden></video
-        ><button id="start" class="primary">Start recording</button>
+        ><video id="camera-preview" autoplay muted playsinline hidden></video>
+        <footer>
+          <button id="cancel">Cancel</button
+          ><button id="start" class="primary">Start recording</button>
+        </footer>
       </section>
       <section id="capture" hidden>
         <div class="capture-clock">
           <span class="record-mark" aria-hidden="true"></span
           ><output id="clock">00:00</output>
         </div>
-        <p id="capture-label">Recording separate sources</p>
+
         <p id="shortcut"></p>
         <button id="stop" class="primary">Stop & save</button>
       </section>
@@ -51,10 +54,10 @@
         <p>Saving recording…</p>
       </section>
       <section id="complete" hidden>
-        <h2>Ready to edit.</h2>
-        <p>Separate sources saved to project assets.</p>
+        <h2>Recording interrupted</h2>
+        <p>Partial sources are retained in the project.</p>
         <button id="folder">Open recording folder</button
-        ><button id="done" class="primary">Done</button>
+        ><button id="done" class="primary">Close</button>
       </section>
       <p id="status" role="status"></p>
       <button id="recovery" hidden>Open interrupted recording files</button>

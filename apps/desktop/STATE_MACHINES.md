@@ -125,8 +125,10 @@ passed; new pure/runtime-service tests check the shared state contract.
 ## Recorder ownership and persistence
 
 The recorder is independent of timeline/agent ownership. One trusted native window
-owns a fixed project. Renderer phases are setup → capture → saving → complete, with
-interrupted/save-retry exits. Device preflight is versioned; stale device enumeration
+owns a fixed project. Renderer phases are setup → capture → saving → closed on success, with
+interrupted/save-retry exits. The legacy complete section is only an interruption
+recovery surface; successful captures have no completion screen. The setup popup
+fits its source controls and shrinks to timer/Stop while recording. Device preflight is versioned; stale device enumeration
 or permission results cannot replace a newer selection. Screen, camera and microphone
 encode independently with bounded queued chunk IPC and approximate shared-clock offsets.
 

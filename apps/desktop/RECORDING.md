@@ -3,14 +3,17 @@
 Open a project, then choose **Record screen or camera…** from the timeline's
 right-click / More menu. Add to timeline continues to open the ordinary file picker.
 
-Select a screen/window, camera and optional microphone. Camera and microphone can
+A compact popup lets you choose screen/window capture, a camera and an optional
+microphone. Start opens the OS screen picker (or thumbnail chooser), then shrinks
+the popup to a timer and Stop button. Stop saves the take and closes the popup
+automatically; no completion screen needs dismissing. Camera and microphone can
 also be used without a screen. Camera selection has a local setup preview. Start
 recording, then Stop & save. If registered by the OS, Ctrl/⌘+Shift+F9 stops capture;
-the recorder always retains its Stop button. Ending screen sharing stops and saves
+the recorder always retains its Stop button; hover it for the shortcut. Ending screen sharing stops and saves
 the other tracks too. Closing the recorder during capture requests Stop & save.
 
 There is no system-audio capture, baked camera overlay or automatic timeline edit.
-The recorder is a separate capture/control window; the editor retains one player.
+The recorder is a compact capture popup; the editor retains one player.
 Recording controls are available independently of the chat provider connection.
 
 ## Project files

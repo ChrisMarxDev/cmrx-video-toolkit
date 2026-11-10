@@ -69,6 +69,29 @@ export function createRecorder({
         platform: process.platform,
         interrupted: recoverRecordings(owner.workspace).length,
       };
+    if (action === "layout") {
+      if (
+        ![
+          "setup",
+          "capture",
+          "saving",
+          "complete",
+          "interrupted",
+          "sources",
+        ].includes(data.view)
+      )
+        return;
+      const compact = ["capture", "saving"].includes(data.view);
+      const width = data.view === "sources" ? 680 : compact ? 340 : 460;
+      const height =
+        data.view === "sources"
+          ? 520
+          : Math.max(120, Math.min(640, Number(data.height) || 360));
+      const [currentWidth, currentHeight] = win.getContentSize();
+      if (width !== currentWidth || height !== currentHeight)
+        win.setContentSize(width, height);
+      return;
+    }
     if (action === "permission") {
       if (!["camera", "microphone"].includes(data.kind))
         throw Error("Unknown capture device");
@@ -179,10 +202,13 @@ export function createRecorder({
       writer = null;
       phase = "setup";
       win = new BrowserWindow({
-        width: 680,
-        height: 740,
-        minWidth: 520,
-        minHeight: 540,
+        width: 460,
+        height: 380,
+        minWidth: 320,
+        minHeight: 120,
+        resizable: false,
+        maximizable: false,
+        autoHideMenuBar: true,
         title: "Record · " + project.name,
         parent,
         backgroundColor: "#121214",
@@ -241,7 +267,7 @@ export function createRecorder({
           stop();
         });
       }
-      win.destroy();
+      if (win && !win.isDestroyed()) win.destroy();
     },
   };
 }
