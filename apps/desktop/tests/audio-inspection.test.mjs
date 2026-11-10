@@ -52,7 +52,11 @@ test("agent audio inspection measures source/export gain and silence without exp
     assert(original.peakDbFS > -39 && original.peakDbFS < -37);
     assert.equal(original.clippingRisk, false);
     const rendered = await inspect({ jobId: "complete" });
-    assert(Math.abs(rendered.peakDbFS - original.peakDbFS - 20) < 0.5);
+    // Lossy AAC can introduce transient peak overshoot across encoder versions.
+    // Average energy measures the applied gain; still verify peak/clipping output.
+    assert(Math.abs(rendered.rmsDbFS - original.rmsDbFS - 20) < 0.5);
+    assert(rendered.peakDbFS > original.peakDbFS + 19);
+    assert.equal(rendered.clippingRisk, false);
     assert.equal(rendered.sampleRate, 44100);
     assert(rendered.sampleCount > 40000);
     assert.equal((await inspect({ assetId: "silent" })).silent, true);
