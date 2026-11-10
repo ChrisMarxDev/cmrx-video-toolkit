@@ -206,7 +206,11 @@ const apps = await packager({
   osxUniversal: false,
   appCategoryType: "public.app-category.video",
   darwinDarkModeSupport: true,
-  extendInfo: { LSMinimumSystemVersion: "15.0" },
+  extendInfo: {
+    LSMinimumSystemVersion: "15.0",
+    NSCameraUsageDescription: "Record camera footage for your video project when you choose camera recording.",
+    NSMicrophoneUsageDescription: "Record microphone audio for your video project when you choose audio recording.",
+  },
   download: {
     checksums: {
       "electron-v43.0.0-darwin-arm64.zip":
