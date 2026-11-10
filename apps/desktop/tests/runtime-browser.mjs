@@ -124,7 +124,7 @@ try {
   assert.deepEqual(parentTokens, editorTokens);
   assert.equal(parentTokens[0], "#100b18");
   assert.equal(parentTokens[1], "#dfd6f4");
-  assert.equal(parentTokens[2], "#d5ff45");
+  assert.equal(parentTokens[2], "#c8c6d0");
   const dot = editor.locator(".workspace-status");
   await dot.hover();
   await editor.locator(".workspace-status-tip").waitFor();
@@ -156,11 +156,15 @@ try {
     await page.getByRole("button", { name: "Stop", exact: true }).isVisible(),
   );
   await page.screenshot({ path: path.join(root, "working.png") });
+  await editor
+    .getByRole("button", { name: "More timeline actions", exact: true })
+    .click();
   assert(
     await editor
-      .getByRole("button", { name: "Export video", exact: true })
+      .getByRole("menuitem", { name: "Export video", exact: true })
       .isDisabled(),
   );
+  await page.keyboard.press("Escape");
   await emit({ type: "complete" });
   await editor.locator(".player-working").waitFor({ state: "hidden" });
   await page
@@ -188,7 +192,10 @@ try {
     (response) => new URL(response.url()).pathname === "/chat/render",
   );
   await editor
-    .getByRole("button", { name: "Export video", exact: true })
+    .getByRole("button", { name: "More timeline actions", exact: true })
+    .click();
+  await editor
+    .getByRole("menuitem", { name: "Export video", exact: true })
     .click();
   await exported;
   assert.equal(exports, 1);

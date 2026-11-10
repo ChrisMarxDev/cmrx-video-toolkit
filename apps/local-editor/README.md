@@ -28,3 +28,12 @@ those buttons instead control temporary local audio/visibility, including during
 agent/render locks. Structural edits retain client and server locking; timeline
 seeking, panning and preview layer inspection remain available. Preview overrides
 are not persisted to project.json or undo history.
+
+Timeline range edits: Shift-drag the ruler, or mark the playhead with I/O, then
+Shift+Backspace removes that time across all tracks and closes the gap. The operation
+is frame-snapped, revision-checked and one Undo restores it. Clip/source comments
+keep their source anchors (removed content stays as an orphaned note); timeline
+comments shift with the edit, clamping moments inside the removed range to its start.
+Right-click the timeline or open More for range actions, split, delete, history,
+transcript and shortcuts. Desktop also exposes Export there. Backspace deletes a
+selected clip without closing its gap. Escape clears a range or dismisses the menu.

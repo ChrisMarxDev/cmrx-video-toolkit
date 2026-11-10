@@ -1049,3 +1049,18 @@ button:active:not(:disabled) {
 .model-preferences {
   border-color: var(--app-divider);
 }
+
+.model-status.connected {
+  background: var(--app-text-muted);
+}
+
+.provider-state.connected,
+#model-select option::checkmark {
+  color: var(--app-text);
+}
+#model-select option:checked {
+  background: var(--app-selected);
+}
+.setup-steps .complete .step-bar {
+  background: var(--app-text-muted);
+}

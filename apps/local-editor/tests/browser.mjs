@@ -322,7 +322,7 @@ try {
   await page
     .locator(`[data-clip="${commented.comments[0].anchor.clipId}"]`)
     .click();
-  await page.getByRole("button", { name: "Remove", exact: true }).click();
+  await page.keyboard.press("Backspace");
   await committed();
   await page
     .getByRole("button", { name: "Clip removed", exact: true })

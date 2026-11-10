@@ -45,3 +45,8 @@ package-linux:
 # Exercise the unpacked candidate with bundled Electron/SDK and fresh HOME: make verify-linux-package LINUX_APP_DIR=/path/to/app PACKAGE_TEST_DIR=/new/output
 verify-linux-package:
 	node scripts/verify-linux.mjs --app "$(LINUX_APP_DIR)" --output "$(PACKAGE_TEST_DIR)"
+
+.PHONY: range-browser-check
+# Verify timeline selection, ripple edits and context menu: make range-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
+range-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/range-browser.mjs

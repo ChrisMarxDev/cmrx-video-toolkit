@@ -6,7 +6,14 @@ import path from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { setTimeout as wait } from "node:timers/promises";
-import { validate, dragClip, splitClip, chooseTake } from "../dist/model.mjs";
+import {
+  validate,
+  dragClip,
+  splitClip,
+  chooseTake,
+  rippleDeleteRange,
+  locateComment,
+} from "../dist/model.mjs";
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "editor-fixture-"));
 execFileSync(process.execPath, ["scripts/demo.mjs", "--workspace", fixture]);
 after(() => fs.rmSync(fixture, { recursive: true, force: true }));
@@ -604,15 +611,125 @@ test("empty projects create timed graphics layers with revisions, source validat
     await call("undo", { revision: 3 });
     doc = JSON.parse(fs.readFileSync(path.join(root, "project.json")));
     assert.equal(doc.clips.length, 2);
-    await call('selection', {clipId: badge.id, time: 7.5});
-    await call('selection', {time: -1}, 400);
+    await call("selection", { clipId: badge.id, time: 7.5 });
+    await call("selection", { time: -1 }, 400);
     await server.stop();
     server = await start(root);
-    const restored = await fetch(server.connection.url + '/api/state', {headers:{Authorization:'Bearer '+server.connection.token}}).then(r=>r.json());
-    assert.deepEqual(restored.selection, {clipId: badge.id, time:7.5});
+    const restored = await fetch(server.connection.url + "/api/state", {
+      headers: { Authorization: "Bearer " + server.connection.token },
+    }).then((r) => r.json());
+    assert.deepEqual(restored.selection, { clipId: badge.id, time: 7.5 });
     assert.equal(restored.project.revision, doc.revision);
   } finally {
     await server?.stop();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("ripple range removes time across layers and preserves source clocks, comments and opaque data", () => {
+  const p = clean();
+  const c = p.clips[0];
+  p.clips = [
+    { ...c, id: "long", start: 0, in: 0, duration: 6 },
+    { ...c, id: "upper", track: 1, start: 1, in: 0, duration: 4 },
+    { ...c, id: "later", start: 6, in: 0, duration: 2 },
+  ];
+  p.comments = [
+    {
+      id: "right",
+      body: "right",
+      status: "open",
+      createdRevision: 0,
+      anchor: { type: "clip", clipId: "long", sourceTime: 4 },
+    },
+    {
+      id: "removed",
+      body: "removed",
+      status: "open",
+      createdRevision: 0,
+      anchor: { type: "clip", clipId: "long", sourceTime: 2.5 },
+    },
+    {
+      id: "moment",
+      body: "moment",
+      status: "open",
+      createdRevision: 0,
+      anchor: { type: "timeline", time: 7 },
+    },
+  ];
+  const before = structuredClone(p);
+  const result = rippleDeleteRange(p, 2, 3);
+  assert.deepEqual(p, before);
+  assert.deepEqual(result.assets, p.assets);
+  assert.deepEqual(result.notes, p.notes);
+  assert.deepEqual(
+    result.clips
+      .filter((c) => c.track === 0)
+      .map((c) => [c.start, c.in, c.duration])
+      .sort((a, b) => a[0] - b[0]),
+    [
+      [0, 0, 2],
+      [2, 3, 3],
+      [5, 0, 2],
+    ],
+  );
+  assert.deepEqual(
+    result.clips
+      .filter((c) => c.track === 1)
+      .map((c) => [c.start, c.in, c.duration]),
+    [
+      [1, 0, 1],
+      [2, 2, 2],
+    ],
+  );
+  assert.equal(locateComment(result, result.comments[0]).time, 3);
+  assert.equal(locateComment(result, result.comments[1]).reason, "trimmed-out");
+  assert.equal(result.comments[2].anchor.time, 6);
+  assert.deepEqual(
+    rippleDeleteRange(p, 3, 2).clips.map((c) => [c.start, c.in, c.duration]),
+    result.clips.map((c) => [c.start, c.in, c.duration]),
+  );
+  assert.throws(() => rippleDeleteRange(p, 2, 2));
+  assert.throws(() => rippleDeleteRange(p, -1, 2));
+  assert.throws(() => rippleDeleteRange(p, 0, Infinity));
+  assert.equal(rippleDeleteRange(p, 0, 8).clips.length, 0);
+});
+
+test("ripple API is revision checked and one undo restores all tracks", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "editor-ripple-"));
+  fs.cpSync(fixture, root, { recursive: true });
+  fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(clean()));
+  const server = await start(root),
+    conn = server.connection;
+  const request = (route, body) =>
+    fetch(conn.url + "/api/" + route, {
+      method: body ? "POST" : "GET",
+      headers: {
+        Authorization: "Bearer " + conn.token,
+        "Content-Type": "application/json",
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+  try {
+    const before = (await (await request("state")).json()).project;
+    assert.equal(
+      (await request("ripple-delete", { revision: 0, start: 1, end: 2 }))
+        .status,
+      200,
+    );
+    assert.equal(
+      (await request("ripple-delete", { revision: 0, start: 1, end: 2 }))
+        .status,
+      409,
+    );
+    const changed = (await (await request("state")).json()).project;
+    assert.equal(changed.revision, 1);
+    assert.equal((await request("undo", { revision: 1 })).status, 200);
+    const restored = (await (await request("state")).json()).project;
+    assert.deepEqual(restored.clips, before.clips);
+    assert.deepEqual(restored.assets, before.assets);
+  } finally {
+    await server.stop();
     fs.rmSync(root, { recursive: true, force: true });
   }
 });

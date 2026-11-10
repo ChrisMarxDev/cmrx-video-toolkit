@@ -447,6 +447,54 @@ export function splitClip(p: Project, id: string, time: number): Project {
   c.duration = left;
   return validate(next);
 }
+/** Remove project time across all tracks, preserving source clocks and metadata. */
+export function rippleDeleteRange(
+  p: Project,
+  from: number,
+  to: number,
+): Project {
+  if (!Number.isFinite(from) || !Number.isFinite(to))
+    throw Error("Invalid range");
+  const frame = 1 / p.fps;
+  const start = Math.round(Math.min(from, to) * p.fps) / p.fps;
+  const stop = Math.round(Math.max(from, to) * p.fps) / p.fps;
+  if (start < 0 || stop > end(p) + frame / 2 || stop - start < frame - 1e-8)
+    throw Error("Select at least one frame within the timeline");
+  const next = clone(p),
+    removed = stop - start;
+  next.clips = next.clips.flatMap((c) => {
+    const finish = c.start + c.duration;
+    if (finish <= start) return [c];
+    if (c.start >= stop)
+      return [{ ...c, start: Math.max(0, c.start - removed) }];
+    const pieces: Clip[] = [];
+    const left = start - c.start,
+      right = finish - stop;
+    if (left >= frame - 1e-8)
+      pieces.push({ ...clone(c), duration: Math.max(frame, left) });
+    if (right >= frame - 1e-8) {
+      const piece = {
+        ...clone(c),
+        id: pieces.length ? `clip-${crypto.randomUUID()}` : c.id,
+        start: Math.max(start, c.start - removed),
+        in: c.in + stop - c.start,
+        duration: Math.max(frame, right),
+      };
+      pieces.push(piece);
+      for (const note of next.comments ?? []) {
+        const a = note.anchor;
+        if (a.type === "clip" && a.clipId === c.id && a.sourceTime >= piece.in)
+          a.clipId = piece.id;
+      }
+    }
+    return pieces;
+  });
+  for (const note of next.comments ?? []) {
+    if (note.anchor.type === "timeline" && note.anchor.time >= start)
+      note.anchor.time = Math.max(start, note.anchor.time - removed);
+  }
+  return validate(next);
+}
 export function dragClip(
   p: Project,
   c: Clip,

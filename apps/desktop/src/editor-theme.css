@@ -13,7 +13,7 @@
   --lav: var(--app-hover);
   --muted: var(--app-text-muted);
   --border: var(--app-border);
-  --accent: #c9b3e9;
+  --accent: var(--app-focus);
   font-family: "Space Grotesk", sans-serif;
   background: var(--app-page);
   scrollbar-color: #51465f transparent;
@@ -200,7 +200,7 @@ button:hover:not(:disabled) {
   color: #d3baf2;
 }
 .zoom input {
-  accent-color: #c9b3e9;
+  accent-color: var(--app-focus);
 }
 .comments {
   background: var(--app-surface);
@@ -435,4 +435,42 @@ button:active:not(:disabled) {
 }
 .stage {
   box-shadow: none;
+}
+
+/* Core work stays visible; secondary operations live in the timeline menu. */
+.workspace-export,
+.header-actions button[aria-label="Toggle transcript"],
+.header-actions button[aria-label="Keyboard shortcuts"],
+.timeline-tools button[aria-label="Undo"],
+.timeline-tools button[aria-label="Redo"] {
+  display: none;
+}
+.timeline-context-menu {
+  background: var(--app-surface-overlay);
+  border-color: var(--app-border);
+  color: var(--app-text);
+}
+.timeline-range {
+  background: #ffffff12;
+  border-color: var(--app-focus);
+}
+
+.clip.selected {
+  box-shadow: none;
+}
+.clip.video {
+  background: #65656c;
+  border-color: var(--app-border);
+}
+.clip.video .clip-text {
+  background: #dddde3dd;
+}
+.clip.selected .handle,
+.clip:hover .handle {
+  background: var(--app-action);
+  color: var(--app-action-text);
+}
+
+.track-name .layer-controls {
+  display: none;
 }

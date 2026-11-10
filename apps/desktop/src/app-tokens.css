@@ -5,15 +5,14 @@
   --app-color-ink: #24143d;
   --app-color-lavender: #dfd6f4;
   --app-color-lime: #d5ff45;
-  --app-text: #f5f1fc;
-  --app-text-muted: #c1b8d0;
-  --app-page: var(--app-color-obsidian);
-  --app-surface: color-mix(in srgb, var(--app-color-ink) 45%, var(--app-page));
-  --app-surface-raised: color-mix(
-    in srgb,
-    var(--app-color-ink) 80%,
-    var(--app-page)
-  );
+  --app-neutral-canvas: #121214;
+  --app-neutral-panel: #19191c;
+  --app-neutral-input: #242427;
+  --app-text: #eeeeef;
+  --app-text-muted: #b3b3ba;
+  --app-page: var(--app-neutral-canvas);
+  --app-surface: var(--app-neutral-panel);
+  --app-surface-raised: var(--app-neutral-input);
   --app-hover: color-mix(
     in srgb,
     var(--app-color-lavender) 12%,
@@ -37,7 +36,7 @@
   );
   --resize-handle: var(--app-border);
   --resize-handle-active: var(--app-focus);
-  --app-action: var(--app-color-lavender);
+  --app-action: #e1e1e6;
   --app-action-hover: color-mix(in srgb, var(--app-action) 85%, white);
   --app-action-pressed: color-mix(
     in srgb,
@@ -46,9 +45,9 @@
   );
   --app-surface-input: var(--app-surface-raised);
   --app-surface-message: var(--app-surface);
-  --app-action-text: var(--app-color-ink);
-  --app-focus: var(--app-color-lime);
-  --app-playhead: var(--app-color-lime);
+  --app-action-text: #202024;
+  --app-focus: #c8c6d0;
+  --app-playhead: #eeeef0;
   --app-font-ui: "Space Grotesk", system-ui, sans-serif;
   --app-font-headline: "Fraunces", Georgia, serif;
   --app-font-technical: "IBM Plex Mono", ui-monospace, monospace;

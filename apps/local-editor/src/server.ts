@@ -10,6 +10,7 @@ import {
   patchLayer,
   chooseTake,
   splitClip,
+  rippleDeleteRange,
   addComment,
   updateComment,
   clone,
@@ -336,6 +337,11 @@ const server = createServer(async (req, res) => {
       case "/api/split":
         value = workspace.update(body.revision, (p) =>
           splitClip(p, body.id, body.time),
+        );
+        break;
+      case "/api/ripple-delete":
+        value = workspace.update(body.revision, (p) =>
+          rippleDeleteRange(p, body.start, body.end),
         );
         break;
       case "/api/delete":

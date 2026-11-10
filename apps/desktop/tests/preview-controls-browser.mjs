@@ -208,8 +208,16 @@ try {
   await page.goto(url + "/#token=" + token + "&editorToken=" + editorToken);
   const editor = page.frameLocator("#editor");
   await editor
-    .getByRole("button", { name: "Hide layer 1", exact: true })
-    .waitFor();
+    .locator('.layer-controls button[aria-label="Hide layer 1"]')
+    .waitFor({ state: "attached" });
+  const inspectLayer = async (name) => {
+    const track = name.match(/layer (\d+)/)[1];
+    await editor
+      .locator(`[data-track="${track}"] [data-clip]`)
+      .first()
+      .click({ button: "right" });
+    await editor.getByRole("menuitem", { name, exact: true }).click();
+  };
   const projectFile = path.join(workspace, "project.json"),
     before = fs.readFileSync(projectFile, "utf8");
   const state = await fetch(url + "/chat/state", {
@@ -284,52 +292,44 @@ try {
     ["Hide layer 2", "Show layer 2"],
   ];
   for (const [name] of controls)
-    assert(await editor.getByRole("button", { name, exact: true }).isEnabled());
-  await editor
-    .getByRole("button", { name: "Mute layer 0", exact: true })
-    .click();
+    assert(
+      await editor
+        .locator(`.layer-controls button[aria-label="${name}"]`)
+        .isEnabled(),
+    );
+  await inspectLayer("Mute layer 0");
   assert(
     await editor
       .locator(".stage video:not([data-overlay])")
       .evaluate((v) => v.muted),
   );
-  await editor
-    .getByRole("button", { name: "Hide layer 1", exact: true })
-    .click();
+  await inspectLayer("Hide layer 1");
   await seek();
   colors = await pixels();
   assert(gray(colors[0]) && blue(colors[1]), JSON.stringify(colors));
-  await editor
-    .getByRole("button", { name: "Show layer 1", exact: true })
-    .click();
-  await editor
-    .getByRole("button", { name: "Hide layer 2", exact: true })
-    .click();
+  await inspectLayer("Show layer 1");
+  await inspectLayer("Hide layer 2");
   await seek();
   colors = await pixels();
   assert(red(colors[0]) && gray(colors[1]), JSON.stringify(colors));
-  await editor
-    .getByRole("button", { name: "Hide layer 0", exact: true })
-    .click();
+  await inspectLayer("Hide layer 0");
   assert.equal(
     await editor.locator(".stage video:not([data-overlay])").count(),
     0,
   );
-  await editor
-    .getByRole("button", { name: "Show layer 0", exact: true })
-    .click();
+  await inspectLayer("Show layer 0");
   await editor.locator('[data-clip="footage"]').focus();
   await page.keyboard.press("Shift+M");
   assert.equal(
     await editor
-      .getByRole("button", { name: "Mute layer 0", exact: true })
+      .locator('.layer-controls button[aria-label="Mute layer 0"]')
       .getAttribute("aria-pressed"),
     "false",
   );
   await page.keyboard.press("Shift+V");
   assert(
     await editor
-      .getByRole("button", { name: "Show layer 0", exact: true })
+      .locator('.layer-controls button[aria-label="Show layer 0"]')
       .isEnabled(),
   );
   assert.equal(fs.readFileSync(projectFile, "utf8"), before);

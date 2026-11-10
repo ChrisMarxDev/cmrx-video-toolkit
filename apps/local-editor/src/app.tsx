@@ -297,6 +297,9 @@ const shortcuts = [
   ["Alt + ← / → on pane header", "Move pane"],
   ["Enter", "Post / save comment"],
   ["Shift + Enter", "New line in comment"],
+  ["I / O", "Mark timeline range start / end"],
+  ["Shift + drag ruler", "Select timeline range"],
+  ["Shift + Backspace", "Remove range and close gap across all layers"],
   ["Ctrl/⌘ + Z", "Undo"],
   ["Ctrl/⌘ + Shift + Z", "Redo"],
   ["Ctrl + Y", "Redo"],
@@ -427,6 +430,35 @@ function App() {
     setPanning(false);
   };
   const zoomAnchor = useRef<{ time: number; x: number } | null>(null);
+  const [range, setRange] = useState<{ start: number; end: number } | null>(
+    null,
+  );
+  const rangeDrag = useRef<number | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    time: number;
+    clipId?: string;
+  } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!contextMenu) return;
+    menuRef.current
+      ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+      ?.focus();
+    const dismiss = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setContextMenu(null);
+    };
+    window.addEventListener("pointerdown", dismiss);
+    return () => window.removeEventListener("pointerdown", dismiss);
+  }, [contextMenu]);
+  async function removeRange() {
+    if (!range || disabled) return;
+    if (await mutate("ripple-delete", range)) {
+      setTime(Math.min(range.start, range.end));
+      setRange(null);
+    }
+  }
   const scrub = useRef(false);
   const takeRange = useRef<{ start: number; end: number } | null>(null);
   const commentInput = useRef<HTMLTextAreaElement>(null);
@@ -767,6 +799,13 @@ function App() {
         ["ArrowLeft", "ArrowRight"].includes(e.key)
       )
         return;
+      if (e.key === "Escape" && (contextMenu || range)) {
+        e.preventDefault();
+        setContextMenu(null);
+        setRange(null);
+        return;
+      }
+      if (contextMenu) return;
       if (e.key === "Escape" && showShortcuts) {
         e.preventDefault();
         setShowShortcuts(false);
@@ -909,8 +948,25 @@ function App() {
       ) {
         e.preventDefault();
         void mutate("split", { id: c.id, time });
+      } else if ((key === "i" || key === "o") && !e.repeat) {
+        e.preventDefault();
+        setRange((r) =>
+          key === "i"
+            ? { start: time, end: r?.end ?? time }
+            : { start: r?.start ?? time, end: time },
+        );
+      } else if (
+        e.shiftKey &&
+        (key === "backspace" || key === "delete") &&
+        range &&
+        !disabled &&
+        !e.repeat
+      ) {
+        e.preventDefault();
+        void removeRange();
       } else if (
         (key === "delete" || key === "backspace") &&
+        !e.shiftKey &&
         !disabled &&
         !e.repeat &&
         c
@@ -1133,6 +1189,24 @@ function App() {
             <Icon name="keyboard" />
           </button>
         </div>
+        <button
+          className="workspace-more"
+          aria-label="More timeline actions"
+          aria-haspopup="menu"
+          aria-expanded={!!contextMenu}
+          title="More actions"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setContextMenu({
+              x: Math.max(8, Math.min(rect.left, window.innerWidth - 280)),
+              y: rect.bottom + 8,
+              time,
+              clipId: selected ?? undefined,
+            });
+          }}
+        >
+          ⋯
+        </button>
         {previewBridge?.activity && (
           <button
             className="workspace-export"
@@ -1795,15 +1869,6 @@ function App() {
               <Icon name="split" />
             </button>
             <button
-              disabled={disabled || !selectedClip}
-              onClick={() => mutate("delete", { id: selected })}
-              aria-label="Remove"
-              title="Remove (Delete / Backspace)"
-              aria-keyshortcuts="Delete Backspace"
-            >
-              <Icon name="remove" />
-            </button>
-            <button
               disabled={disabled || !state.canUndo}
               onClick={() => mutate("undo")}
               aria-label="Undo"
@@ -1849,6 +1914,31 @@ function App() {
         <div
           className={`timeline-scroll ${handReady ? "hand-ready" : ""} ${panning ? "panning" : ""}`}
           ref={timelineScroll}
+          tabIndex={-1}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            const ruler = e.currentTarget.querySelector<HTMLElement>(".ruler");
+            if (!ruler) return;
+            const clipId = (e.target as HTMLElement).closest<HTMLElement>(
+              "[data-clip]",
+            )?.dataset.clip;
+            if (clipId) setSelected(clipId);
+            setContextMenu({
+              x: Math.max(8, Math.min(e.clientX, window.innerWidth - 280)),
+              y: Math.max(8, Math.min(e.clientY, window.innerHeight - 430)),
+              time: Math.max(
+                0,
+                Math.min(
+                  duration,
+                  Math.round(
+                    ((e.clientX - ruler.getBoundingClientRect().left) / zoom) *
+                      p!.fps,
+                  ) / p!.fps,
+                ),
+              ),
+              clipId,
+            });
+          }}
           onPointerDownCapture={(e) => {
             if (!spaceGesture.current.held && e.button !== 1) return;
             if (e.button !== 0 && e.button !== 1) return;
@@ -1912,26 +2002,64 @@ function App() {
               className="ruler"
               role="slider"
               aria-label="Timeline playhead"
+              title="Seek · Shift-drag to select a range"
               aria-valuemin={0}
               aria-valuemax={duration}
               aria-valuenow={time}
               tabIndex={0}
               onPointerDown={(e) => {
-                if ((e.target as HTMLElement).closest("button")) return;
+                if (
+                  e.button !== 0 ||
+                  (e.target as HTMLElement).closest("button")
+                )
+                  return;
                 e.preventDefault();
                 e.currentTarget.focus({ preventScroll: true });
                 e.currentTarget.setPointerCapture(e.pointerId);
-                scrub.current = true;
-                seek(e.clientX, e.currentTarget);
+                const t = Math.max(
+                  0,
+                  Math.min(
+                    duration,
+                    Math.round(
+                      ((e.clientX -
+                        e.currentTarget.getBoundingClientRect().left) /
+                        zoom) *
+                        p!.fps,
+                    ) / p!.fps,
+                  ),
+                );
+                if (e.shiftKey) {
+                  rangeDrag.current = t;
+                  setRange({ start: t, end: t });
+                } else {
+                  scrub.current = true;
+                  seek(e.clientX, e.currentTarget);
+                }
               }}
               onPointerMove={(e) => {
-                if (scrub.current) seek(e.clientX, e.currentTarget);
+                if (rangeDrag.current !== null) {
+                  const t = Math.max(
+                    0,
+                    Math.min(
+                      duration,
+                      Math.round(
+                        ((e.clientX -
+                          e.currentTarget.getBoundingClientRect().left) /
+                          zoom) *
+                          p!.fps,
+                      ) / p!.fps,
+                    ),
+                  );
+                  setRange({ start: rangeDrag.current, end: t });
+                } else if (scrub.current) seek(e.clientX, e.currentTarget);
               }}
               onPointerUp={() => {
                 scrub.current = false;
+                rangeDrag.current = null;
               }}
               onPointerCancel={() => {
                 scrub.current = false;
+                rangeDrag.current = null;
               }}
               style={{ marginLeft: 100 }}
             >
@@ -1976,6 +2104,16 @@ function App() {
                   );
                 })}
             </div>
+            {range && (
+              <div
+                className="timeline-range"
+                aria-label="Selected timeline range"
+                style={{
+                  left: 100 + Math.min(range.start, range.end) * zoom,
+                  width: Math.abs(range.end - range.start) * zoom,
+                }}
+              />
+            )}
             {layoutTimeline(clips, zoom).map(({ track, items, laneCount }) => (
               <div
                 className="track"
@@ -2153,6 +2291,214 @@ function App() {
           </div>
         </div>
       </section>
+      {contextMenu && (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label="Timeline actions"
+          className="timeline-context-menu"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            maxHeight: window.innerHeight - contextMenu.y - 8,
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setContextMenu(null);
+              timelineScroll.current?.focus();
+            }
+            if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+              e.preventDefault();
+              const buttons = Array.from(
+                e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  "button:not(:disabled)",
+                ),
+              );
+              const i = buttons.indexOf(
+                document.activeElement as HTMLButtonElement,
+              );
+              buttons[
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? buttons.length - 1
+                    : (i + (e.key === "ArrowUp" ? -1 : 1) + buttons.length) %
+                      buttons.length
+              ]?.focus();
+            }
+            if (e.key === "Tab") setContextMenu(null);
+          }}
+        >
+          <button
+            role="menuitem"
+            disabled={disabled}
+            onClick={() => {
+              setPlaying(false);
+              setTime(contextMenu.time);
+              setCommentTarget({ type: "timeline", time: contextMenu.time });
+              setShowComments(true);
+              setContextMenu(null);
+              requestAnimationFrame(() => commentInput.current?.focus());
+            }}
+          >
+            Add comment <kbd>M</kbd>
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setRange((r) => ({
+                start: contextMenu.time,
+                end: r?.end ?? contextMenu.time,
+              }));
+              setContextMenu(null);
+            }}
+          >
+            Mark range start <kbd>I</kbd>
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setRange((r) => ({
+                start: r?.start ?? contextMenu.time,
+                end: contextMenu.time,
+              }));
+              setContextMenu(null);
+            }}
+          >
+            Mark range end <kbd>O</kbd>
+          </button>
+          <button
+            role="menuitem"
+            disabled={
+              disabled ||
+              !range ||
+              Math.abs(range.end - range.start) < 1 / p!.fps - 1e-8
+            }
+            onClick={() => {
+              void removeRange();
+              setContextMenu(null);
+            }}
+          >
+            Remove range & close gap <kbd>⇧⌫</kbd>
+          </button>
+          <button
+            role="menuitem"
+            disabled={
+              disabled ||
+              !contextMenu.clipId ||
+              !clips.some(
+                (c) =>
+                  c.id === contextMenu.clipId &&
+                  contextMenu.time > c.start &&
+                  contextMenu.time < c.start + c.duration,
+              )
+            }
+            onClick={() => {
+              void mutate("split", {
+                id: contextMenu.clipId,
+                time: contextMenu.time,
+              });
+              setContextMenu(null);
+            }}
+          >
+            Split here <kbd>S</kbd>
+          </button>
+          <button
+            role="menuitem"
+            disabled={disabled || !contextMenu.clipId}
+            onClick={() => {
+              void mutate("delete", { id: contextMenu.clipId });
+              setContextMenu(null);
+            }}
+          >
+            Delete clip <kbd>⌫</kbd>
+          </button>
+          {(() => {
+            const clip = p!.clips.find((c) => c.id === contextMenu.clipId);
+            if (!clip) return null;
+            return (["muted", "disabled"] as const).map((flag) => {
+              const active = !!layerState(clip.track)?.[flag];
+              const name =
+                flag === "muted"
+                  ? active
+                    ? "Unmute"
+                    : "Mute"
+                  : active
+                    ? "Show"
+                    : "Hide";
+              return (
+                <button
+                  key={flag}
+                  role="menuitem"
+                  aria-label={`${name} layer ${clip.track}`}
+                  disabled={!previewBridge && disabled}
+                  onClick={() => {
+                    toggleLayer(clip.track, flag);
+                    setContextMenu(null);
+                  }}
+                >
+                  {name} layer {clip.track}
+                  <kbd>{flag === "muted" ? "⇧M" : "⇧V"}</kbd>
+                </button>
+              );
+            });
+          })()}
+          <hr />
+          <button
+            role="menuitem"
+            disabled={disabled || !state.canUndo}
+            onClick={() => {
+              void mutate("undo");
+              setContextMenu(null);
+            }}
+          >
+            Undo <kbd>⌘/Ctrl Z</kbd>
+          </button>
+          <button
+            role="menuitem"
+            disabled={disabled || !state.canRedo}
+            onClick={() => {
+              void mutate("redo");
+              setContextMenu(null);
+            }}
+          >
+            Redo <kbd>⇧⌘/Ctrl Z</kbd>
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setShowTranscript((v) => !v);
+              setContextMenu(null);
+            }}
+          >
+            Transcript
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setShowShortcuts(true);
+              setContextMenu(null);
+            }}
+          >
+            Keyboard shortcuts
+          </button>
+          {previewBridge && (
+            <button
+              role="menuitem"
+              disabled={previewBridge.activity?.exportDisabled}
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "cmrx:export" },
+                  location.origin,
+                );
+                setContextMenu(null);
+              }}
+            >
+              Export video
+            </button>
+          )}
+        </div>
+      )}
     </main>
   );
 }

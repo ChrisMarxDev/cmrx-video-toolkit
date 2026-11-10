@@ -1,7 +1,7 @@
 # Desktop app design system
 
-Status: theme, density, type roles and accent allocation approved by the owner on
-2026-11-10. Shared foundations are implemented; component/state review continues.
+Status: app rules approved and refined by the owner on 2026-11-10.
+Current direction: neutral working surfaces and restrained controls. Shared foundations are implemented; component/state review continues.
 Use `.agents/skills/design-system/SKILL.md` for system work. It is development
 guidance, separate from the video-editing agent's creative skill catalog.
 
@@ -17,11 +17,11 @@ The app's local design system must be independently usable from this repository.
 
 | Foundation seed | Value / role | Status |
 | --- | --- | --- |
-| Obsidian | `#100B18`, dark page foundation | Approved seed |
-| Purple ink | `#24143D`, brand ink / purple surface | Approved seed |
+| Obsidian | `#100B18`, original brand foundation | Approved seed |
+| Purple ink | `#24143D`, brand seed | Brand reference; neutral work surfaces below |
 | White | `#FFFFFF`, light paper | Approved seed; light theme deferred |
-| Lavender | `#DFD6F4`, secondary/action field | Approved action field |
-| Lime | `#D5FF45`, playhead/focus/selection signal | Approved active signal |
+| Lavender | `#DFD6F4`, brand seed | Neutral action field now preferred |
+| Lime | `#D5FF45`, brand seed | Not a working-control accent |
 | Dark text / muted | `#F5F1FC` / `#C1B8D0` | Approved seed; combination-level contrast review remains |
 | UI / headline / technical | Space Grotesk / Fraunces / IBM Plex Mono | Approved roles below; technical font has a system-monospace fallback |
 | Spacing | 4, 8, 16, 24, 32, 48, 80 px | Approved starting scale; dense timeline geometry retains measured exceptions |
@@ -43,7 +43,7 @@ The app's local design system must be independently usable from this repository.
 | First-run/settings blocks | `src/onboarding.mjs`, `src/settings-view.mjs`, `src/agent-settings.mjs` | Native setup and async states need design-system review after rules settle |
 
 `src/app-tokens.css` is the app's canonical token source, loaded by chat, native
-shell and the embedded editor theme. It owns brand primitives, derived quiet-purple
+shell and the embedded editor theme. It owns brand primitives, neutral working
 surfaces, text/border/action/focus roles, spacing and radius roles. Components use
 semantic roles; avoid adding another raw near-purple in a consumer stylesheet.
 Standalone editor defaults and generated-video styles remain independent.
@@ -84,8 +84,9 @@ silently promoted to new canonical tokens. No light theme is implemented.
 3. Fraunces for welcome, empty-state and onboarding editorial headlines; Space
    Grotesk for the working UI, including dense panel labels; mono for technical
    values/timecodes. This is an app-only refinement of the broader headline rule.
-4. Quiet obsidian/purple surfaces, lavender actions, lime for playhead/focus/selection.
-   Avoid large lime decoration or accidental light text on lavender actions.
+4. Neutral charcoal working surfaces and composer; soft neutral primary actions.
+   Avoid lime-on-purple controls: the owner finds them toy-like. Focus, selection
+   and playhead use restrained light-neutral signals.
 5. Restrained dither flourishes around onboarding and empty states. Do not texture
    the user's video, text fields or busy editing controls by default.
 
@@ -112,10 +113,10 @@ contrast pair or screen has received visual approval.
 3. **Divide by purpose.** Use spacing first, a fine line for adjacent sections, and
    the shared transparent handle where resizing is possible. Never stack borders,
    shadows and cards to describe the same boundary.
-4. **Three button roles.** Filled lavender for the main action in a work area;
+4. **Three button roles.** Soft neutral fill for the main action in a work area;
    outlined for alternatives; quiet icons for repeatable tools. Selected tools keep
    a tinted background. Destructive actions stay distinct from primary actions.
-5. **Consistent states.** Hover brightens, press deepens, lime outlines keyboard
+5. **Consistent states.** Hover brightens, press deepens, a light-neutral outline marks keyboard
    focus. Disabled controls stay recognizable. Loading reflects actual work and
    leaves available actions usable. Errors show a short explanation and recovery.
 6. **Show, then explain.** Prefer thumbnails, familiar icons, cursor changes and
@@ -123,12 +124,15 @@ contrast pair or screen has received visual approval.
    in tooltips and the shortcuts panel, not persistent instruction strips. Keep
    unfamiliar decisions such as Steer, connection and recovery actions named.
 7. **Readable chat.** Assistant text sits on the canvas; user and queued messages
-   get a subtle surface. One raised composer holds attachments, model and actions.
+   get a subtle surface. One neutral raised composer holds attachments, model and actions.
    Send/Queue use an arrow, Stop a square, and timed notes a comment-plus icon.
 8. **Room to breathe.** Use 16–24px between blocks, 12–16px inside content surfaces,
    8px between controls, and 32–36px tool targets. Setup actions are at least 44px.
    Preserve dense timeline geometry where it improves precision; avoid tiny targets.
-9. **Quiet decoration.** Dither imagery belongs to welcome/empty states. Actual
+9. **Core actions first.** Chat, timed comments and small cuts stay visible. Delete
+   uses Backspace. Layer inspection, transcript, undo/redo, shortcuts and export live in the timeline
+   right-click / More menu; do not fill the core workspace with secondary actions.
+10. **Quiet decoration.** Dither imagery belongs to welcome/empty states. Actual
    assets use real previews. Keep working surfaces clear and video pixels untouched.
 
 Implementation: `src/app-tokens.css` owns roles; `src/app-polish.css` applies chat,
@@ -144,3 +148,7 @@ paragraph, or decoration that competes with the user's content.
 
 These rules apply to the app, not generated videos. Legacy component exceptions
 still need review; this pass establishes and applies the shared hierarchy.
+
+Timeline ranges: Shift-drag the ruler, or use I/O at the playhead. Shift+Backspace
+removes the range across all tracks and closes the gap in one undoable edit. Escape
+clears the range/menu. Hover labels and the shortcuts panel explain these gestures.
