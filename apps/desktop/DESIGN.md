@@ -6,7 +6,8 @@ generated videos follow their own project style. Use the app development skill a
 
 1. **Lead with the work.** Chat, timed comments, seeking and small cuts are core.
    Keep those visible. Put secondary operations in the timeline right-click / More
-   menu. Redo stays visible in the timeline tools. Backspace replaces the delete button.
+   menu. Redo stays visible in the timeline tools; Transcript sits beside Comments.
+   Backspace replaces the delete button.
 2. **One video.** Tabs above; chat left; one composited player and timeline right.
    Keep controls beside their content. Do not add watch/download players to chat.
 3. **Neutral working surfaces.** Use charcoal for the canvas and composer, soft

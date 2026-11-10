@@ -423,7 +423,6 @@ button:active:not(:disabled) {
 
 /* Core work stays visible; secondary operations live in the timeline menu. */
 .workspace-export,
-.header-actions button[aria-label="Toggle transcript"],
 .header-actions button[aria-label="Keyboard shortcuts"],
 .timeline-tools button[aria-label="Undo"] {
   display: none;
