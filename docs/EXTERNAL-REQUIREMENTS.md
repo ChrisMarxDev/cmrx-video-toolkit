@@ -244,3 +244,12 @@ notarization and disk-image tools plus an appropriate Developer ID identity.
 GitHub CLI is used for authorized release actions. These are maintainer
 requirements, not dependencies for end users editing videos. Credentials remain
 in secure local/CI storage; no signing material ships with the skill.
+
+### Linux installer candidate
+
+`make desktop-package-linux` builds a Debian/Ubuntu amd64 candidate containing
+Electron 43.0.0 and the pinned Flutter/Dart/Fluvie SDK plus offline public package
+cache. Native dependencies are declared in its Debian control metadata so the
+system package installer resolves them. Builder SDK/cache paths are build inputs,
+not end-user requirements. This does not yet establish clean-machine GUI/install
+acceptance or macOS support. See apps/desktop/RELEASING.md.

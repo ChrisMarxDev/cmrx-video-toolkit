@@ -1,0 +1,49 @@
+name: Installed Linux desktop candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  installed-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Prepare pinned build-only SDK and package sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.7-stable.tar.xz -o "$RUNNER_TEMP/flutter.tar.xz"
+          echo "af7455f540df951184c7953fbe3cf884766e7541dacf8571f9f582db03dd6230  $RUNNER_TEMP/flutter.tar.xz" | sha256sum -c -
+          tar -xf "$RUNNER_TEMP/flutter.tar.xz" -C "$RUNNER_TEMP"
+          rm "$RUNNER_TEMP/flutter.tar.xz"
+          export PATH="$RUNNER_TEMP/flutter/bin:$PATH"
+          export PUB_CACHE="$RUNNER_TEMP/pub-cache"
+          mkdir -p "$PUB_CACHE/git"
+          git clone https://github.com/SimonErich/fluvie.git "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6"
+          git -C "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6" checkout 10e442c1bb469118516df3335547f85ec92155e6
+          flutter precache --linux
+          cd "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6"
+          flutter pub get
+          git restore -- pubspec.lock
+      - name: Build native installer with bundled video engine
+        run: |
+          make desktop-install
+          make desktop-package-linux PACKAGE_DIR="$RUNNER_TEMP/candidate" FLUTTER_SDK="$RUNNER_TEMP/flutter" PUB_CACHE_DIR="$RUNNER_TEMP/pub-cache"
+      - name: Remove builder toolchains and install candidate with automatic dependencies
+        run: |
+          rm -rf "$RUNNER_TEMP/flutter" "$RUNNER_TEMP/pub-cache" "$RUNNER_TEMP/candidate/payload"
+          sudo apt-get update
+          sudo apt-get install -y "$RUNNER_TEMP"/candidate/*.deb
+      - name: Verify installed arbitrary Flutter rendering with fresh HOME
+        run: |
+          make -C apps/desktop verify-linux-package LINUX_APP_DIR=/opt/cmrx-video-toolkit PACKAGE_TEST_DIR="$RUNNER_TEMP/installed-test"
+      - name: Report exact installer identity
+        if: always()
+        run: |
+          ls -lh "$RUNNER_TEMP"/candidate/*.deb || true
+          cat "$RUNNER_TEMP"/candidate/*.sha256 || true
+          cat "$RUNNER_TEMP"/installed-test/profile/result.json || true

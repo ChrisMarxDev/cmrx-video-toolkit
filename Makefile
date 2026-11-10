@@ -253,3 +253,8 @@ desktop-deploy-check:
 # Read-only Mac release readiness; blockers exit 2: make desktop-deploy-preflight
 desktop-deploy-preflight:
 	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy preflight TOOLKIT="$(CURDIR)"
+
+.PHONY: desktop-package-linux
+# Build the Linux installer candidate: make desktop-package-linux PACKAGE_DIR=/absolute/output FLUTTER_SDK=/absolute/sdk PUB_CACHE_DIR=/absolute/cache
+desktop-package-linux:
+	$(MAKE) -C apps/desktop package-linux PACKAGE_DIR="$(PACKAGE_DIR)" FLUTTER_SDK="$(FLUTTER_SDK)" PUB_CACHE_DIR="$(PUB_CACHE_DIR)"

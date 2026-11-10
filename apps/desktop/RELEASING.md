@@ -50,3 +50,32 @@ clean-machine acceptance and signing/notarization where applicable. A lightweigh
 GitHub release check should filter `desktop-v` releases and offer an explicit
 Download action; it must not confuse toolkit releases with app updates. This check
 is not implemented by this extraction.
+
+## Debian/Ubuntu amd64 candidate
+
+`make desktop-package-linux PACKAGE_DIR=/absolute/new-output
+FLUTTER_SDK=/absolute/pinned-sdk PUB_CACHE_DIR=/absolute/builder-cache` produces a
+native `.deb`. SDK and cache paths are **builder inputs only**. The installed app
+includes Electron 43.0.0, Flutter 3.47.7/Dart, the pinned Fluvie source and offline
+package sources; native system dependencies are declared for the graphical package
+installer to resolve. The app launcher uses the packaged engine without user PATH,
+Flutter or Pub-cache configuration. The compiler remains capable of new arbitrary
+Flutter source, not only predefined graphics.
+
+This first target is Debian/Ubuntu on AMD64; it is not a macOS, ARM or universal
+Linux installer. Native package installation may ask for administrator permission
+and needs repository access to fetch dependencies. Do not ask end users to run the
+maintainer build commands above.
+
+Verify an installed/unpacked candidate with `make -C apps/desktop
+verify-linux-package LINUX_APP_DIR=/path/to/application
+PACKAGE_TEST_DIR=/absolute/new-test-output`. It uses the bundled Electron runtime,
+a fresh HOME, isolated SDK/cache, actual authored graphics plus footage/audio, and
+checks encoded duration/resolution/audio and decoding. It does not authenticate a
+real model account or prove that a GUI package manager resolves dependencies.
+
+The manually dispatched `Installed Linux desktop candidate` CI workflow removes
+builder toolchains, installs the actual `.deb` using the OS dependency resolver,
+then runs the installed-app rendering check. Passing local smoke tests alone does
+not establish clean Ubuntu installation. No new tag or release is created by it.
+Existing source-tag releases remain separate until installer acceptance passes.

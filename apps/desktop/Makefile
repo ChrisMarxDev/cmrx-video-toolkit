@@ -35,3 +35,13 @@ agent-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/markdown-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" EDITOR_RESULTS="$(EDITOR_RESULTS)" node tests/project-agent-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" EDITOR_RESULTS="$(EDITOR_RESULTS)" node tests/asset-library-browser.mjs
+
+.PHONY: package-linux
+# Build a Debian/Ubuntu amd64 installer outside the repo: make package-linux PACKAGE_DIR=/absolute/output FLUTTER_SDK=/absolute/sdk PUB_CACHE_DIR=/absolute/cache
+package-linux:
+	python3 scripts/package-linux.py --output "$(PACKAGE_DIR)" --sdk "$(FLUTTER_SDK)" --pub-cache "$(PUB_CACHE_DIR)"
+
+.PHONY: verify-linux-package
+# Exercise the unpacked candidate with bundled Electron/SDK and fresh HOME: make verify-linux-package LINUX_APP_DIR=/path/to/app PACKAGE_TEST_DIR=/new/output
+verify-linux-package:
+	node scripts/verify-linux.mjs --app "$(LINUX_APP_DIR)" --output "$(PACKAGE_TEST_DIR)"

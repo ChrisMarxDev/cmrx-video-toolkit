@@ -35,6 +35,8 @@ else {
   });
   app.whenReady().then(async () => {
     try {
+      const { configureBundledEngine } = await import("./bundled-engine.mjs");
+      configureBundledEngine({ root: path.resolve(__dirname, "../../.."), data: app.getPath("userData") });
       const { startApp } = await import("./server.mjs");
       const { ProjectLibrary } = await import("./project-library.mjs");
       const { WorkspaceLibrary } = await import("./workspace-library.mjs");

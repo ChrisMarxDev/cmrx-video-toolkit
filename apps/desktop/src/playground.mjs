@@ -251,8 +251,8 @@ export class Playground {
     this.worker =
       process.env.CHAT_WORKER_ROOT ||
       path.join(
-        os.homedir(),
-        ".local/share/cmrx-chat-editor/workers",
+        process.env.CHAT_WORKER_BASE ||
+          path.join(os.homedir(), ".local/share/cmrx-chat-editor/workers"),
         createHash("sha256").update(this.workspace).digest("hex").slice(0, 16),
       );
     fs.mkdirSync(this.worker, { recursive: true });

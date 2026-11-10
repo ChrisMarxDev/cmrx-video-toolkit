@@ -4,8 +4,10 @@ A local video workspace with subscription-backed chat, one composited player,
 editable footage/audio and arbitrary Flutter graphics. Start from a video or an
 empty project, describe an edit, then seek, trim and leave timed comments.
 
-**Developer preview.** Linux is the currently tested platform. This is not yet a
-self-contained download for nontechnical users. macOS packaging and the native
+**Developer preview.** Linux is the currently tested platform. A Debian/Ubuntu
+AMD64 installer candidate now bundles the video SDK and declares automatic native
+dependencies; clean-machine installation acceptance is a separate release gate.
+Checkout-based launch still uses developer-installed tools. macOS packaging and the native
 render worker still need implementation and acceptance testing.
 
 ## Run from a checkout
