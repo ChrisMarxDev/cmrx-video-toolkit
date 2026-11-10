@@ -251,11 +251,19 @@ Dependencies, optional services and media assets retain their own terms; see
 
 Built by [Chris Marx Studio](https://cmrx.dev).
 
-## Desktop playground preview
+## Desktop Mac beta
 
-The subscription-backed desktop app now lives in [apps/desktop](apps/desktop/README.md),
-with its JavaScript editor in `apps/local-editor`. Run `make desktop-install` and
-`make desktop` after installing the documented development requirements. This is
-currently a Linux developer preview, not a self-contained installer. Desktop
-release drafts use separate `desktop-vX.Y.Z` tags in this repository; see
-[release procedure](apps/desktop/RELEASING.md). Existing editor commands remain unchanged.
+[Download CMRX Chat Editor 0.1.0 for Apple Silicon](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/download/desktop-v0.1.0/CMRX-Chat-Editor-0.1.0-macOS-arm64.dmg).
+The Developer ID signed and Apple-notarized beta requires macOS 15 or later.
+Open the DMG, copy the app into Applications, eject the image, and open the app.
+The video engine is bundled; provider setup and downloads happen inside the app.
+No Terminal, Homebrew, Flutter, Node or FFmpeg installation is needed.
+
+See the [release notes and checksums](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/tag/desktop-v0.1.0)
+for tested coverage and beta limits. Use your own supported provider account.
+The [desktop documentation](apps/desktop/README.md) covers workspaces and editing.
+
+Checkout development still requires the documented tools: run
+`make desktop-install` and `make desktop`. Linux remains a developer/installer
+preview. Desktop releases use separate `desktop-vX.Y.Z` tags; see the
+[release procedure](apps/desktop/RELEASING.md).

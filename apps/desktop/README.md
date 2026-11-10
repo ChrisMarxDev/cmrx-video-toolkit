@@ -4,12 +4,16 @@ A local video workspace with subscription-backed chat, one composited player,
 editable footage/audio and arbitrary Flutter graphics. Start from a video or an
 empty project, describe an edit, then seek, trim and leave timed comments.
 
-**Developer preview.** Linux is the currently tested platform. A Debian/Ubuntu
-AMD64 installer candidate now bundles the video SDK and declares automatic native
-dependencies; clean-machine installation acceptance is a separate release gate.
-Checkout-based launch still uses developer-installed tools. Apple Silicon macOS
-packaging and a Seatbelt render worker are implemented; signed installer and
-real-account acceptance remain release gates. See [Mac candidate builds](MACOS_BUILD.md).
+**Mac beta 0.1.0:** [download the signed and notarized Apple Silicon DMG](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/download/desktop-v0.1.0/CMRX-Chat-Editor-0.1.0-macOS-arm64.dmg).
+Requires macOS 15+. Copy the app into Applications and open it; no Terminal or
+separate video/developer tools are needed. Connect your own provider account
+through onboarding. See [release notes](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/tag/desktop-v0.1.0)
+for coverage and limits; native acceptance was on macOS 27.0.1 with Apple Silicon.
+
+**Linux developer preview:** a Debian/Ubuntu AMD64 installer candidate bundles
+the video SDK and declares native dependencies; clean-machine installation
+acceptance remains a separate release gate. Checkout launch uses developer tools.
+See [Mac candidate builds](MACOS_BUILD.md) for maintainer packaging instructions.
 
 For the Mac port and installed-app acceptance, use the [Mac agent handover](MAC_HANDOVER.md)
 and the app-owned desktop deployment skill.

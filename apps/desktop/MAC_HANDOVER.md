@@ -1,5 +1,22 @@
 # Mac agent handover — 2026-11-10
 
+## Released beta — 2026-11-10
+
+[Desktop 0.1.0 is available publicly](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/tag/desktop-v0.1.0)
+for Apple Silicon, from source `3c784711f853c04966e30ed04ab12bf41b7dc7ad`.
+The app and DMG are Developer ID signed, Apple notarized and stapled. The exact
+GitHub download was checksum-verified, retained quarantine, installed with Finder,
+ejected and opened with normal Gatekeeper confirmation. The installed engine
+passed a fresh-profile 20-second render with a newly authored editable Flutter
+layer and audio. Real ChatGPT sign-in, a subscribed agent-driven edit/export,
+custom skill/asset import, worker containment and moved-project rendering passed.
+
+Minimum macOS is 15; native testing was on macOS 27.0.1. Intel, a separate clean
+Mac, minimum-OS testing, Claude sign-in and native recording permissions were not
+included in this acceptance run. See release notes for current beta limitations.
+The remainder of this document is the original handover and historical work plan;
+use the implementation and current release evidence when assessing readiness.
+
 ## Outcome
 
 Make the desktop video app usable by nontechnical Mac users: download/install,
