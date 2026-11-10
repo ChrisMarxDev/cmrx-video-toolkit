@@ -88,7 +88,9 @@ Clip `volume` is linear audio gain, 0–16, default 1 (+20 dB is 10). Use it
 for voice level changes through `editor_edit` clip patches. The player and standard
 composition honor the same value. For custom compositions, ensure `ClipAudio` uses
 the clip’s volume before exporting; never apply an export-only audio correction.
-Measure levels and leave headroom to avoid clipping.
+Measure source/export levels with `editor_audio` (assetId or completed jobId),
+and leave headroom to avoid clipping. Render folders are deliberately hidden from
+workspace_exec; use the inspection tool instead of attempting host paths.
 
 Review comments and the project revision counter are editorial metadata, not
 graphics inputs. Materialize requested visual changes into clips or authored

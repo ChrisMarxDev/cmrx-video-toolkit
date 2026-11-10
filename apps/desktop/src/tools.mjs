@@ -218,6 +218,11 @@ export const tools = [
     object({ jobId: string, assetId: string, time: number }),
   ],
   [
+    "editor_audio",
+    "Measure source or completed export audio without accessing hidden render folders. Supply exactly one assetId or jobId; optional start/duration seconds (up to 600). Returns sample peak/RMS dBFS, silence and clipping risk. Use after audio edits before resolving audio feedback.",
+    object({ jobId: string, assetId: string, start: number, duration: number }),
+  ],
+  [
     "workspace_image",
     "Inspect an image in project assets/ as an image, rather than guessing from filenames.",
     object({ path: string }, ["path"]),

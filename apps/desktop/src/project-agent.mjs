@@ -5,7 +5,11 @@ import { SecretStore } from "./secret-store.mjs";
 import { ProjectSkills } from "./project-skills.mjs";
 import { Connections } from "./connections.mjs";
 import { readWeb, fetchPublic } from "./web-access.mjs";
-import { inspectFrame, inspectImage } from "./visual-inspection.mjs";
+import {
+  inspectFrame,
+  inspectImage,
+  inspectAudio,
+} from "./visual-inspection.mjs";
 export class ProjectAgent {
   constructor({ root, workspace, workspaceRoot, codec, onChange = () => {} }) {
     this.root = root;
@@ -182,6 +186,13 @@ export class ProjectAgent {
     }
     if (name === "editor_frame")
       return inspectFrame({
+        workspace: this.workspace,
+        project: (await editor("/api/context")).project,
+        playground,
+        args,
+      });
+    if (name === "editor_audio")
+      return inspectAudio({
         workspace: this.workspace,
         project: (await editor("/api/context")).project,
         playground,
