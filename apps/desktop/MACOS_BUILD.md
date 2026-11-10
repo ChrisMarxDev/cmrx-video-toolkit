@@ -1,5 +1,11 @@
 # Apple Silicon candidate builds
 
+Future builds use `resources/macos-placeholder.icns`, generated from the sibling
+PNG with `make -C apps/desktop macos-icon`. The builder uses macOS `sips` and
+`iconutil` to include standard and Retina sizes. The generation prompt and source
+are recorded in `resources/macos-placeholder-provenance.json`. This asset was
+added after the frozen `desktop-v0.1.0` candidate and does not modify that installer.
+
 The Mac implementation bundles Electron, Flutter/Dart, Fluvie and offline Pub
 packages, plus static FFmpeg/ffprobe. Friends do not install developer tools.
 Connecting an account downloads the pinned official Codex or Claude runtime

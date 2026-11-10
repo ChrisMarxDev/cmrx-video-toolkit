@@ -66,6 +66,10 @@ secondary-browser-check: build
 recording-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/recording-browser.mjs
 .PHONY: macos-media macos-sdk package-macos sign-macos verify-macos-package macos-ui-check
+.PHONY: macos-icon
+# Rebuild the Mac placeholder icon: make macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
+macos-icon:
+	node scripts/build-macos-icon.mjs $(if $(ICON_SOURCE),--source "$(ICON_SOURCE)",) $(if $(ICON_OUTPUT),--output "$(ICON_OUTPUT)",)
 # Build pinned static media tools and their corresponding source: make macos-media MEDIA_BUILD_DIR=/new/output
 macos-media:
 	python3 scripts/build-macos-media.py --output "$(MEDIA_BUILD_DIR)"

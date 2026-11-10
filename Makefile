@@ -275,3 +275,8 @@ desktop-sign-macos:
 # Exercise packaged UI: make desktop-macos-ui-check MAC_APP=/path/App.app EDITOR_PLAYWRIGHT=/path/to/playwright
 desktop-macos-ui-check:
 	$(MAKE) -C apps/desktop macos-ui-check
+
+.PHONY: desktop-macos-icon
+# Rebuild the placeholder ICNS: make desktop-macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
+desktop-macos-icon:
+	$(MAKE) -C apps/desktop macos-icon

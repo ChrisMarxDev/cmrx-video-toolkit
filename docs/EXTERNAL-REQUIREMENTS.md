@@ -291,3 +291,8 @@ The editor wave matrix loader adapts MIT-licensed UI Ball LDRS Grid source
 (package 1.1.9, revision `f759f65beb8ab4f4a1f010438072180693ca01ec`). Its license
 and provenance are in `apps/local-editor/resources/ldrs/`; no runtime download
 or additional package is needed.
+
+Mac icon assets are generated offline from the committed PNG with the macOS
+system tools `sips` and `iconutil` (`make desktop-macos-icon`). The placeholder's
+image-generation provenance is recorded beside it; no image service is called
+by the installed app.
