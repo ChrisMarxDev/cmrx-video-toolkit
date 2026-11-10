@@ -11,4 +11,4 @@ check:
 
 # Submit once/check once/staple accepted artifact: make notarize NOTARY_ARTIFACT=/path/app.zip NOTARY_TARGET=/path/App.app NOTARY_STATE=/cache/app.json CMRX_NOTARY_PROFILE=saved-profile
 notarize:
-	python3 scripts/notarize.py --artifact "$(NOTARY_ARTIFACT)" --target "$(NOTARY_TARGET)" --state "$(NOTARY_STATE)" --profile "$(CMRX_NOTARY_PROFILE)" $(if $(NOTARY_ID),--submission-id "$(NOTARY_ID)",)
+	python3 scripts/notarize.py --artifact "$(NOTARY_ARTIFACT)" --target "$(NOTARY_TARGET)" --state "$(NOTARY_STATE)" --profile "$(CMRX_NOTARY_PROFILE)" $(if $(NOTARY_ID),--submission-id "$(NOTARY_ID)",); result=$$?; if [ $$result -eq 3 ]; then echo "Apple review is pending; rerun this same command later."; exit 0; fi; exit $$result

@@ -30,7 +30,8 @@ ditto -c -k --sequesterRsrc --keepParent "$CMRX_APP" "$CMRX_RELEASE_DIR/app-nota
 make desktop-notarize NOTARY_ARTIFACT="$CMRX_RELEASE_DIR/app-notarization.zip" NOTARY_TARGET="$CMRX_APP" NOTARY_STATE="$CMRX_RELEASE_DIR/app-notary-state.json" CMRX_NOTARY_PROFILE="$CMRX_NOTARY_PROFILE"
 ```
 
-The notarization helper submits once and checks once. Exit 3 means pending; later
+The notarization helper submits once and checks once. The Python helper exits 3
+for pending review; the Make wrapper reports it as a successful pending check. Later
 run the identical command to resume, without recreating the ZIP. Exit 2 means an
 error requiring diagnosis. State files contain paths, hashes and Apple IDs, never
 credentials. One lock prevents concurrent commands for the same receipt; all
