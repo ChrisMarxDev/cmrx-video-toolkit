@@ -253,3 +253,10 @@ cache. Native dependencies are declared in its Debian control metadata so the
 system package installer resolves them. Builder SDK/cache paths are build inputs,
 not end-user requirements. This does not yet establish clean-machine GUI/install
 acceptance or macOS support. See apps/desktop/RELEASING.md.
+
+### App design-system development guidance
+
+The desktop's `.agents/skills/design-system` copy comes from
+ChrisMarxDev/chris-skills at 505d06349752a0c4575265ab6e1d03c8bc3d99d4, retaining its
+references and conceptual-source attribution. It requires no runtime library and
+is separate from the user-facing video-creation skill catalog.

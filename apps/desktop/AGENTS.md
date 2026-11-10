@@ -8,3 +8,8 @@ toolkit's root creator catalog. Standalone deployment needs no private repositor
 Read README.md, WORKSPACES.md and RELEASING.md for current behavior and limits.
 Use synthetic fixtures, retain source provenance and keep credentials/test profiles
 out of Git. A release skill does not imply that the current source is Mac-ready.
+
+For app design-system work, read `.agents/skills/design-system/SKILL.md` and
+`DESIGN.md`. Keep implemented behavior, approved rules and interview proposals
+separate. This skill is app-development guidance, not an installed video-project
+skill; do not change generated-video styles while restyling the app.

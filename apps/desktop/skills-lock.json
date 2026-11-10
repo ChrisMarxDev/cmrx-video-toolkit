@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "skills": {
+    "design-system": {
+      "source": "ChrisMarxDev/chris-skills",
+      "ref": "505d06349752a0c4575265ab6e1d03c8bc3d99d4",
+      "sourceType": "github",
+      "skillPath": ".skills/design-system/SKILL.md",
+      "computedHash": "fb40ce3f129473998843f4a2e0aa0a4e4c83102eae50b08fd26323547d74991d",
+      "installMode": "copy"
+    }
+  }
+}
