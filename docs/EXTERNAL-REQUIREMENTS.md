@@ -293,6 +293,6 @@ and provenance are in `apps/local-editor/resources/ldrs/`; no runtime download
 or additional package is needed.
 
 Mac icon assets are generated offline from the committed PNG with the macOS
-system tools `sips` and `iconutil` (`make desktop-macos-icon`). The placeholder's
-image-generation provenance is recorded beside it; no image service is called
-by the installed app.
+system tools `sips` and `iconutil` (`make desktop-macos-icon`). The CMRX split-disc mark's
+source provenance, including its ordered-dither threshold attribution, is recorded
+beside it. No image service is called by the installed app.

@@ -1,11 +1,13 @@
 {
   "date": "2026-11-10",
-  "source": "Built-in image_gen image-generation tool",
-  "model": "Provider-managed; not explicitly selected",
-  "purpose": "Temporary Mac app icon for future builds after desktop-v0.1.0",
-  "prompt": "Create a clean placeholder macOS app icon for a desktop video editing app. Single icon, square 1024x1024 composition. Large near-black charcoal rounded square tile, standard macOS squircle silhouette with generous rounded corners, fills 90% of canvas, transparent outside the tile. Center a bold simple lime (#d5ff45) right-pointing play triangle. Under the play triangle, three short horizontal timeline clip blocks, two muted lavender (#dfd6f4) and one lime. Refined flat geometry with only a very subtle tactile edge, strong silhouette readable at 32 pixels. Balanced generous internal spacing. No text, no letters, no gradients, no glow, no extra symbols, no background scene, no mockup, no Apple logo. Deliver one isolated icon with actual transparency outside the rounded tile.",
-  "transparentBackground": true,
+  "source": "Approved CMRX lavender/lime split-disc app mark",
+  "approval": "Christopher explicitly requested the existing dithered half circles for this Mac app icon.",
+  "purpose": "Application branding for future builds after desktop-v0.1.0",
+  "geometry": "Original code-authored split disc with mirrored ordered dithering; approved 2026-10-24",
+  "thresholdSource": "https://dithercn.dev/r/dither-core.json",
+  "thresholdSourceSha256": "afdda3969adec85ffcf78b3893f9c51024af81bd6a697fd9461fac76564ae74b",
   "png": "macos-placeholder.png",
+  "pngSha256": "6709fe15d2b76bee66f6eacc7c91e53e6fceb161169676903939d9a69064ec2b",
   "icns": "macos-placeholder.icns",
   "conversion": "make -C apps/desktop macos-icon (macOS sips and iconutil)"
 }

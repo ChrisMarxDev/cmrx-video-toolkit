@@ -2,7 +2,7 @@
 
 Future builds use `resources/macos-placeholder.icns`, generated from the sibling
 PNG with `make -C apps/desktop macos-icon`. The builder uses macOS `sips` and
-`iconutil` to include standard and Retina sizes. The generation prompt and source
+`iconutil` to include standard and Retina sizes. The approved CMRX mark source and provenance
 are recorded in `resources/macos-placeholder-provenance.json`. This asset was
 added after the frozen `desktop-v0.1.0` candidate and does not modify that installer.
 
