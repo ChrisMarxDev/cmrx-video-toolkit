@@ -174,9 +174,7 @@ try {
   assert(!(await page.locator("#send .queue-arrow").isVisible()));
   assert(!(await page.locator("#stop").isVisible()));
   assert(
-    await page
-      .getByRole("button", { name: "Add a timed note", exact: true })
-      .isVisible(),
+    await page.getByRole("button", { name: "Assets", exact: true }).isVisible(),
   );
   assert(!(await editor.locator(".nav-hint").first().isVisible()));
   let exports = 0;

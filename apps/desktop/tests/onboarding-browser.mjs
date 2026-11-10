@@ -129,8 +129,8 @@ try {
     fs.readFileSync(path.join(project, ".cmrx-editor/project.json")),
   );
   assert.equal(document.assets[0].provenance.playback, "Exact source copy");
-  await page
-    .getByRole("button", { name: "Add a timed note", exact: true })
+  await frame
+    .getByRole("button", { name: "Comment here", exact: true })
     .click();
   await frame
     .getByRole("textbox", { name: "Comment", exact: true })

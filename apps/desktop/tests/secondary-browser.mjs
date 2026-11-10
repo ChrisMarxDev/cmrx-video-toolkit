@@ -176,10 +176,7 @@ try {
   );
   assert(await page.locator(".settings-tabs").isVisible());
   await page.screenshot({ path: path.join(root, "settings-connections.png") });
-  await page
-    .locator(".settings-tabs")
-    .getByRole("button", { name: "Project", exact: true })
-    .click();
+  await page.locator(".settings-tabs").locator('[data-tab="project"]').click();
   assert(!(await page.locator("#workspace-instructions-label").isVisible()));
   await page.locator("#project-instructions").fill("Keep the opening concise.");
   let release,

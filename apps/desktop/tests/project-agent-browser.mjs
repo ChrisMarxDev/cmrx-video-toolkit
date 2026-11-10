@@ -114,7 +114,7 @@ try {
       .innerText()
       .then((s) => s.includes("ui-private-token"))),
   );
-  await page.getByRole("button", { name: "Project", exact: true }).click();
+  await page.locator('[data-tab="project"]').click();
   await page
     .getByLabel("Project instructions", { exact: true })
     .fill("Use German. Preserve original audio.");

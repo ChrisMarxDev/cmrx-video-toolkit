@@ -148,9 +148,7 @@ try {
     .locator(".clip-media[data-ready=true]")
     .waitFor({ timeout: 30000 });
   await page.screenshot({ path: path.join(root, "footage-timeline.png") });
-  await page
-    .getByRole("button", { name: "Open settings", exact: true })
-    .click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
   await page
     .getByRole("button", { name: "Run setup again", exact: true })
     .click();
@@ -187,9 +185,7 @@ try {
     path.join(customSkill, "SKILL.md"),
     "---\nname: beta-custom\ndescription: A custom local beta skill\n---\nUse a lime accent in the video.\n",
   );
-  await page
-    .getByRole("button", { name: "Open settings", exact: true })
-    .click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("button", { name: "Skills", exact: true }).click();
   await app.evaluate(({ dialog }, folder) => {
     dialog.showOpenDialog = async () => ({

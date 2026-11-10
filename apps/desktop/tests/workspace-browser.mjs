@@ -75,13 +75,36 @@ try {
   assert(
     !fs.existsSync(path.join(workspace, "projects/My video/.cmrx-editor")),
   );
+  assert(!(await page.locator("#settings-open").isVisible()));
+  assert.equal(await page.locator("#chat #settings-open").count(), 0);
+  assert.equal(await page.locator("#project-name").textContent(), "My video");
+  await app.evaluate(({ shell }) => {
+    shell.openPath = async (folder) => {
+      globalThis.openedProjectFolder = folder;
+      return "";
+    };
+  });
+  await page.getByRole("button", { name: "Open folder…", exact: true }).click();
+  assert.equal(
+    await app.evaluate(() => globalThis.openedProjectFolder),
+    path.join(workspace, "projects/My video"),
+  );
   await page.getByRole("button", { name: "Assets", exact: true }).click();
   await page.getByRole("button", { name: "Workspace", exact: true }).waitFor();
+  assert.equal(await page.locator("#assets-project").textContent(), "My video");
   await page.getByRole("button", { name: "Close assets", exact: true }).click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
+  assert.equal(
+    await page.locator('[data-tab="project"]').textContent(),
+    "My video",
+  );
+  await page.locator("#settings-assets-open").click();
   await page
-    .getByRole("button", { name: "Open settings", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Project", exact: true }).click();
+    .getByRole("dialog", { name: "Asset manager", exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: "Close assets", exact: true }).click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.locator('[data-tab="project"]').click();
   await page
     .getByLabel("Workspace instructions", { exact: true })
     .fill("Shared workspace direction");
@@ -159,6 +182,7 @@ try {
     .locator("#workspace-name")
     .getByText("My Studio", { exact: true })
     .waitFor();
+  await shell.bringToFront();
   await shell.screenshot({ path: path.join(root, "workspace-menu.png") });
   console.log(
     "PASS: first workspace picker/cancel, visible project, workspace assets/instructions, workspace creation/switch/restore, stale instruction protection and project ownership. Evidence " +

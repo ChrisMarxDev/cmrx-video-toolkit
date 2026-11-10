@@ -240,7 +240,7 @@ try {
   assert(fs.existsSync(path.join(library, "halo/assetconfig.yaml")));
   await page.locator("#assets-close").click();
   await page.locator("#settings-open").click();
-  await page.getByRole("button", { name: "Project", exact: true }).click();
+  await page.locator('[data-tab="project"]').click();
   await page.locator("#asset-library-choose").click();
   await page.waitForFunction(
     (p) => document.querySelector("#asset-library-folder").value === p,

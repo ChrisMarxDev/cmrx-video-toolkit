@@ -168,6 +168,8 @@ export async function startApp({
   } catch {}
   const state = {
     desktopTabs,
+    canOpenProjectFolder:
+      typeof openAssetFolder === "function" && info.selected !== false,
     engine,
     projectInfo: info,
     onboarding,
@@ -809,6 +811,11 @@ export async function startApp({
             throw Error("Open the desktop app to choose a library folder");
           const folder = await pickAssetLibrary();
           result = folder ? assets.setFolder(folder) : { canceled: true };
+        } else if (url.pathname === "/chat/project-folder") {
+          if (!state.canOpenProjectFolder)
+            throw Error("Open a project in the desktop app to open its folder");
+          await openAssetFolder(info.folder || workspace);
+          result = { ok: true };
         } else if (url.pathname === "/chat/assets-open") {
           if (!openAssetFolder)
             throw Error("Open the desktop app to open folders");

@@ -137,14 +137,14 @@ form {
   background: var(--app-action);
   color: var(--app-action-text);
 }
-#add-note {
+#assets-open {
   padding: 0;
   border: 0;
   background: transparent;
   font-size: 11px;
   color: var(--muted);
 }
-#add-note:hover {
+#assets-open:hover {
   color: var(--ink);
 }
 .footnote {
@@ -994,17 +994,17 @@ textarea:focus-visible,
 #send[data-mode="queue"] .queue-arrow {
   display: block;
 }
-#chat #add-note,
+#chat #assets-open,
 #chat #stop {
   background: transparent;
   color: var(--app-text-muted);
 }
-#chat #add-note:hover:not(:disabled),
+#chat #assets-open:hover:not(:disabled),
 #chat #stop:hover:not(:disabled) {
   background: var(--app-hover);
   color: var(--app-text);
 }
-#chat #add-note:active:not(:disabled),
+#chat #assets-open:active:not(:disabled),
 #chat #stop:active:not(:disabled) {
   background: var(--app-selected);
 }
@@ -1455,4 +1455,51 @@ button:active:not(:disabled) {
     var(--app-danger-text) 16%,
     var(--app-danger-surface)
   );
+}
+
+/* Project context stays quiet; global settings live in the native tab bar. */
+#project-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--app-text-muted);
+}
+#project-folder-open {
+  min-height: 32px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 11px;
+}
+#project-folder-open:hover {
+  color: var(--app-text);
+  text-decoration: underline;
+}
+#browser-settings {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+#assets-open {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+}
+#assets-open svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-tabs [data-tab="project"],
+#assets-project {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

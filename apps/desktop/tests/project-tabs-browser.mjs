@@ -104,7 +104,7 @@ try {
     await a.getByRole("textbox", { name: "Message", exact: true }).inputValue(),
     "draft alpha",
   );
-  await a.getByRole("button", { name: "Open settings", exact: true }).click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
   await a
     .getByRole("dialog", { name: "Settings" })
     .getByRole("button", { name: "Connect ChatGPT", exact: true })
@@ -253,9 +253,7 @@ try {
   await reopenedA
     .getByRole("button", { name: "Connect ChatGPT", exact: true })
     .waitFor();
-  await reopenedA
-    .getByRole("button", { name: "Open settings", exact: true })
-    .click();
+  await shell.getByRole("button", { name: "Settings", exact: true }).click();
   await reopenedA
     .getByRole("dialog", { name: "Settings" })
     .getByRole("button", { name: "Connect ChatGPT", exact: true })

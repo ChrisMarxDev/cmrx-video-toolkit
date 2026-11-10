@@ -8,11 +8,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
       if (text) setBrandedText(e, text);
       return e;
     };
-  const open = el("button", "Assets");
-  open.id = "assets-open";
-  open.type = "button";
-  open.title = "Browse project and library assets";
-  $("#project-open").parentNode.append(open);
+  const open = $("#assets-open");
   const dialog = el("dialog");
   dialog.id = "assets-dialog";
   dialog.setAttribute("aria-label", "Asset manager");
@@ -37,7 +33,8 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     query = "",
     type = "",
     sequence = 0,
-    busy = false;
+    busy = false,
+    projectName = "";
   const previewURL = (item) =>
     "/chat/asset-preview?" +
     new URLSearchParams({ scope: item.scope, path: item.path, token });
@@ -328,7 +325,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
           ? workspaceOwned
             ? "Workspace assets"
             : "Library"
-          : "Project assets",
+          : projectName,
       );
       root.type = "button";
       root.title =
@@ -366,10 +363,17 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     }
   }
 
-  open.onclick = () => {
-    dialog.showModal();
+  const openManager = () => {
+    $("#settings-dialog").close();
+    if (!dialog.open) dialog.showModal();
     refresh().catch(error);
   };
+  open.onclick = openManager;
+  const settingsOpen = el("button", "Assets");
+  settingsOpen.id = "settings-assets-open";
+  settingsOpen.type = "button";
+  settingsOpen.onclick = openManager;
+  $(".settings-tabs").append(settingsOpen);
   $("#assets-close").onclick = () => dialog.close();
   dialog.addEventListener("close", () => {
     selectedAsset = null;
@@ -407,8 +411,17 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     call("assets-open", { scope: "library" }).catch((e) => {
       $("#settings-error").textContent = e.message;
     });
-  $("#settings-open").addEventListener("click", () => refresh().catch(onError));
+  $("#settings-dialog").addEventListener("toggle", () => {
+    if ($("#settings-dialog").open) refresh().catch(onError);
+  });
   return {
+    update(s) {
+      projectName = s.projectName || s.projectInfo?.name || "No project";
+      $("#assets-project").textContent = projectName;
+      $("#assets-project").title = projectName;
+      $("#assets-project").disabled = s.projectInfo?.selected === false;
+      if (s.projectInfo?.selected === false) scope = "library";
+    },
     addImported(asset) {
       if (attached.length >= 20)
         throw Error("Attach up to 20 assets per message");

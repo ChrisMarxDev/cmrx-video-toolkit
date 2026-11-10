@@ -165,10 +165,7 @@ export function setupOnboarding({ call, onError }) {
       const result = await call("import");
       if (result.assetId) await finish();
     });
-  $("#add-note").onclick = () =>
-    $("#editor")
-      .contentDocument?.querySelector('[aria-label="Comment here"]')
-      ?.click();
+  $("#project-folder-open").onclick = () => run(() => call("project-folder"));
   function update(next) {
     state = next;
     replay.hidden = !state.projectInfo?.selected;
@@ -176,6 +173,12 @@ export function setupOnboarding({ call, onError }) {
     $("#project-open").textContent = state.projectName || "Choose project";
     $("#project-open").title = state.projectInfo?.folder || "Change project";
     $("#project-open").hidden = !!state.desktopTabs;
+    $("#project-name").textContent =
+      state.projectName || state.projectInfo?.name || "";
+    $("#project-name").title = state.projectInfo?.folder || "";
+    $("#project-name").hidden = !state.desktopTabs;
+    $("#project-folder-open").hidden = !state.canOpenProjectFolder;
+    $("#browser-settings").hidden = !!state.desktopTabs;
     const show =
       !state.onboarding?.complete &&
       !(state.desktopTabs && !state.projectInfo?.selected);

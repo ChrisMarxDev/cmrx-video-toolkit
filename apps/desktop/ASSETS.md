@@ -1,13 +1,14 @@
 # Folder-based asset library
 
-Open **Assets** beside the project name. Switch between **Workspace** and **Project**,
+Open the **Assets** folder icon in the chat composer, or choose **Assets** in
+Settings. Switch between **Workspace** and the current project’s name,
 open folders, search names/descriptions/tags and filter by type. Choose a card to
 inspect its preview and metadata; **Attach to chat** prepares a project copy and
 adds a compact attachment. Describe the intended use, then Send. Selection does
 not edit the timeline. Sent/queued messages retain project-relative asset references.
 
 Workspace projects use `<workspace>/assets/` as their shared library. Assets offers
-Workspace and Project views; Settings → Project → Workspace assets opens that
+Workspace and project-named views; Settings → your project name → Workspace assets opens that
 folder. To switch libraries, open another workspace. Selecting assets copies them
 into the project before use. There is no global library in workspace mode.
 See [workspace layout](WORKSPACES.md). Older headless integrations retain their

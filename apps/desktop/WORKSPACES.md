@@ -44,7 +44,7 @@ returns to that project's owning workspace. Workspace selection, open tabs and
 recent folders are remembered locally; projects are discovered from disk when a
 workspace is opened on another machine.
 
-Assets has **Workspace** and **Project** views. Workspace assets always come from
+Assets has **Workspace** and a view named after the current project. Workspace assets always come from
 `<workspace>/assets`; no global library or arbitrary external library selector is
 exposed for workspace projects. Selecting a shared asset makes an independent
 project copy before agent use. Existing bundle previews, instructions, promotion
@@ -55,7 +55,7 @@ can discover both `workspace/name` and `project/name`, plus shipped app/toolkit
 skills. Same-named skills keep explicit scopes. The offline worker mounts the
 selected workspace skill directory at `/skills`; it does not mount every project.
 
-Settings → Project edits workspace instructions, project instructions and project
+Settings → your project name edits workspace instructions, project instructions and project
 memory. Workspace instructions apply across projects; project guidance refines
 that context. The app checks for concurrent workspace instruction changes before
 saving. Other projects' chats and source are not automatically added to context.
@@ -90,3 +90,6 @@ uses its owning workspace when present, otherwise the selected/default workspace
 for shared assets and skills. Its existing chat is copied once into project-local
 `chats/history.json`; the original is preserved. Raw old project folders are not
 silently imported into the workspace. New projects always use the visible layout.
+
+The chat header shows the project name and a small **Open folder…** action for
+its on-disk project folder. Global Settings stays in the native tab bar.

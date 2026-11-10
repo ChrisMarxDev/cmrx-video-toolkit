@@ -349,6 +349,7 @@ if (!token || !editorToken) {
       : "Missing: " + (s.engine?.missing || []).join(", ");
     providerUI.update(s);
     agentUI.update(s);
+    assetManager.update(s);
     onboarding.update(s);
     const blank = !(s.clipCount ?? s.mediaCount);
     const welcome = $("#welcome");

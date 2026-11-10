@@ -227,6 +227,11 @@ export function setupAgentUI({ call, onError, openTool }) {
   }
   function update(s) {
     state = { ...state, ...s };
+    nav.querySelector('[data-tab="project"]').textContent =
+      state.projectName || state.projectInfo?.name || "No project";
+    nav.querySelector('[data-tab="project"]').title = nav.querySelector(
+      '[data-tab="project"]',
+    ).textContent;
     for (const id of ["skills", "project"])
       nav.querySelector(`[data-tab="${id}"]`).hidden =
         state.projectInfo?.selected === false;
