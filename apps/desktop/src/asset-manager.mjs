@@ -1,3 +1,4 @@
+import { confirmRemoval } from "/confirm-removal.mjs";
 import { setBrandedText } from "/brand-ui.mjs";
 export function setupAssetManager({ call, token, onError, onPrompt }) {
   const $ = (s) => document.querySelector(s),
@@ -158,6 +159,12 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     );
     action.type = "button";
     action.onclick = async () => {
+      if (busy) return;
+      if (
+        item.scope !== "project" &&
+        !(await confirmRemoval({ kind: "asset", name: item.name }))
+      )
+        return;
       if (busy) return;
       busy = true;
       try {

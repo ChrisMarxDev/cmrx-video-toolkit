@@ -218,6 +218,10 @@ try {
   await page
     .getByRole("button", { name: "Move to trash", exact: true })
     .click();
+  await page
+    .locator(".confirm-dialog")
+    .getByRole("button", { name: "Move to trash", exact: true })
+    .click();
   await page.getByText("No matching assets.", { exact: true }).waitFor();
   assert(!fs.existsSync(bundle));
   assert(fs.existsSync(path.join(workspace, "assets/library/halo/SKILL.md")));

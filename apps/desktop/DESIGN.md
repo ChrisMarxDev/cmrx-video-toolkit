@@ -92,7 +92,14 @@ state, then restore retry controls on failure. Empty collections offer Open fold
 empty searches offer Clear filters. Preserve real media previews and source files.
 Implementation: `src/agent-settings.mjs`, `src/asset-manager.mjs`, app styles.
 
-Awaiting owner decisions (policy proposals; current behavior retained):
-- Lists first in Connections, with Add forms opened on demand.
-- Single click previews; explicit Attach to chat, without double-click attaching.
-- Confirm shared asset/key/connection removal; cuts remain immediate and undoable.
+Approved secondary-surface rules — 2026-11-10:
+- **Lists first.** Show saved keys/connections before their forms. Add opens a form;
+  Edit/Replace uses that same form. Cancel closes it and clears secret drafts.
+- **Preview, then attach.** A click previews an asset. Attach to chat is explicit;
+  double-clicking must not attach it or change the timeline.
+- **Confirm shared removals.** Name the asset/key/connection and action, focus Cancel
+  by default, and let Escape dismiss. No removal request before confirmation.
+  Timeline cuts remain immediate and undoable.
+
+Shared confirmation: `src/confirm-removal.mjs`; uses the app's neutral dialog and
+reserved destructive-action tokens. Project-to-library saving is not a removal.

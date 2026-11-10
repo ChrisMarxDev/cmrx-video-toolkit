@@ -75,6 +75,7 @@ try {
   await page.locator("#start-screen").waitFor({ state: "hidden" });
   await page.locator("#settings-open").click();
   await page.getByRole("button", { name: "Connections", exact: true }).click();
+  await page.getByRole("button", { name: "Add key", exact: true }).click();
   await page.getByLabel("Key name", { exact: true }).fill("Test key");
   await page
     .getByLabel("Secret key", { exact: true })
@@ -88,6 +89,9 @@ try {
     await page.getByLabel("Secret key", { exact: true }).inputValue(),
     "",
   );
+  await page
+    .getByRole("button", { name: "Add connection", exact: true })
+    .click();
   await page.locator('#connection-form [name="name"]').fill("Generic API");
   await page.locator('#connection-form [name="type"]').selectOption("http");
   await page

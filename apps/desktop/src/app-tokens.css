@@ -46,6 +46,8 @@
   --app-surface-input: var(--app-surface-raised);
   --app-surface-message: var(--app-surface);
   --app-action-text: #202024;
+  --app-danger-text: #f0b8c4;
+  --app-danger-surface: #3a272e;
   --app-focus: #c8c6d0;
   --app-playhead: #eeeef0;
   --app-font-ui: "Space Grotesk", system-ui, sans-serif;

@@ -1241,6 +1241,7 @@ export async function startApp({
           "/brand-ui.mjs",
           "/onboarding.mjs",
           "/agent-settings.mjs",
+          "/confirm-removal.mjs",
           "/asset-manager.mjs",
           "/app-polish.css",
           "/dither-art.mjs",

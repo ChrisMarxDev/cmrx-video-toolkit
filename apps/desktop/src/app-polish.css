@@ -1390,3 +1390,69 @@ button:active:not(:disabled) {
 .assets-empty p {
   margin: 0;
 }
+
+.settings-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+#settings-dialog .settings-row {
+  margin: 12px 0;
+}
+#settings-dialog :is(#secret-form, #connection-form) {
+  padding: 16px;
+  margin: 16px 0 24px;
+  background: var(--app-surface);
+  border-radius: var(--app-radius-control);
+}
+#settings-dialog h4 {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.settings-empty {
+  color: var(--app-text-muted);
+  font-size: 12px;
+  margin: 16px 0 24px;
+}
+.confirm-dialog {
+  width: min(420px, calc(100vw - 40px));
+  padding: 24px;
+  background: var(--app-surface-overlay);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-panel);
+}
+.confirm-dialog::backdrop {
+  background: #0009;
+}
+.confirm-dialog h2 {
+  font: 500 20px var(--app-font-ui);
+  margin: 0 0 16px;
+}
+.confirm-dialog p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--app-text-muted);
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+.confirm-dialog .danger-button {
+  color: var(--app-danger-text);
+  background: var(--app-danger-surface);
+  border-color: var(--app-danger-text);
+}
+.confirm-dialog .danger-button:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--app-danger-text) 16%,
+    var(--app-danger-surface)
+  );
+}

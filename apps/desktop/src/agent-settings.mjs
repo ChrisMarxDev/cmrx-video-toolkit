@@ -1,3 +1,4 @@
+import { confirmRemoval } from "/confirm-removal.mjs";
 import { setBrandedText } from "/brand-ui.mjs";
 const $ = (s) => document.querySelector(s);
 const element = (tag, text, cls) => {
@@ -63,16 +64,75 @@ export function setupAgentUI({ call, onError, openTool }) {
   dialog.addEventListener("cmrx:provider-settings", () =>
     nav.querySelector('[data-tab="accounts"]').click(),
   );
-  panels.connections.innerHTML = `<h3>Secret keys</h3><p class="settings-caption">Name a key, then attach it to a connection. Keys never go into chat.</p><form id="secret-form"><input name="id" type="hidden"><label>Key name<input name="name" required maxlength="100" placeholder="My publishing key"></label><label>Secret key<input name="value" type="password" required autocomplete="new-password" spellcheck="false" placeholder="Paste your key"></label><button type="submit">Save key</button></form><div id="secret-list"></div><h3>Connections</h3><form id="connection-form"><input name="id" type="hidden"><label>Name<input name="name" required maxlength="100" placeholder="Name this tool"></label><label>Type<select name="type"><option value="mcp">MCP server</option><option value="http">HTTP API</option><option value="stdio">Local MCP · advanced</option></select></label><label id="connection-url-label">Address<input name="url" type="url" placeholder="https://example.com/mcp"></label><label>Key<select name="secretId"><option value="">No key needed</option></select></label><details><summary>Advanced</summary><label>Key header<input name="header" value="Authorization"></label><p class="settings-caption">Authorization uses Bearer. Other headers send the key as entered.</p><div id="local-connection-options" hidden><label>Executable<input name="command" placeholder="/absolute/path/to/server"></label><label>Arguments · JSON array<textarea name="args" rows="2">[]</textarea></label><label>Key environment name<input name="envName" value="API_KEY"></label><p class="settings-caption">Local servers run on your device. Choose an executable you trust.</p></div></details><div class="settings-row"><button type="submit">Save connection</button><button type="button" id="connection-reset">Clear</button></div></form><div id="connection-list"></div><p id="key-storage" class="settings-caption"></p>`;
+  panels.connections.innerHTML = `
+    <div class="settings-row"><h3>Secret keys</h3><button id="key-add" type="button" aria-controls="secret-form" aria-expanded="false">Add key</button></div>
+    <p class="settings-caption">Keys never go into chat.</p><div id="secret-list"></div>
+    <form id="secret-form" hidden aria-labelledby="key-form-title"><h4 id="key-form-title">Add key</h4><input name="id" type="hidden"><label>Key name<input name="name" required maxlength="100" placeholder="My publishing key"></label><label>Secret key<input name="value" type="password" required autocomplete="new-password" spellcheck="false" placeholder="Paste your key"></label><div class="settings-form-actions"><button type="submit" class="primary">Save key</button><button id="key-cancel" type="button">Cancel</button></div></form>
+    <div class="settings-row"><h3>Connections</h3><button id="connection-add" type="button" aria-controls="connection-form" aria-expanded="false">Add connection</button></div>
+    <div id="connection-list"></div>
+    <form id="connection-form" hidden aria-labelledby="connection-form-title"><h4 id="connection-form-title">Add connection</h4><input name="id" type="hidden"><label>Name<input name="name" required maxlength="100" placeholder="Name this tool"></label><label>Type<select name="type"><option value="mcp">MCP server</option><option value="http">HTTP API</option><option value="stdio">Local MCP · advanced</option></select></label><label id="connection-url-label">Address<input name="url" type="url" placeholder="https://example.com/mcp"></label><label>Key<select name="secretId"><option value="">No key needed</option></select></label><details><summary>Advanced</summary><label>Key header<input name="header" value="Authorization"></label><p class="settings-caption">Authorization uses Bearer. Other headers send the key as entered.</p><div id="local-connection-options" hidden><label>Executable<input name="command" placeholder="/absolute/path/to/server"></label><label>Arguments · JSON array<textarea name="args" rows="2">[]</textarea></label><label>Key environment name<input name="envName" value="API_KEY"></label><p class="settings-caption">Local servers run on your device. Choose an executable you trust.</p></div></details><div class="settings-form-actions"><button type="submit" class="primary">Save connection</button><button type="button" id="connection-reset">Cancel</button></div></form><p id="key-storage" class="settings-caption"></p>`;
   panels.skills.innerHTML = `<div class="settings-row"><h3>Skills library</h3><button id="skill-install" type="button">Add skill folder</button></div><p class="settings-caption">A folder with SKILL.md, scripts and supporting files.</p><div id="skill-list"></div>`;
   panels.project.innerHTML = `<form id="project-notes-form"><label id="workspace-instructions-label" hidden>Workspace instructions<textarea id="workspace-instructions" rows="4"></textarea></label><label>Project instructions<textarea id="project-instructions" rows="6" placeholder="Audience, style, language, workflow…"></textarea></label><label>Project memory<textarea id="project-memory" rows="6" placeholder="Decisions and preferences to remember…"></textarea></label><button type="submit">Save project notes</button></form>`;
   const keyForm = $("#secret-form"),
     connectionForm = $("#connection-form");
+  function closeKeyForm() {
+    keyForm.reset();
+    keyForm.hidden = true;
+    $("#key-add").setAttribute("aria-expanded", "false");
+    $("#key-add").focus();
+  }
+  function closeConnectionForm() {
+    connectionForm.reset();
+    connectionForm.hidden = true;
+    $("#connection-add").setAttribute("aria-expanded", "false");
+    $("#connection-add").focus();
+  }
+  function showKeyForm(key) {
+    if (settingsPending) return;
+    if (!key && !keyForm.hidden) {
+      keyForm.elements.name.focus();
+      return;
+    }
+    keyForm.reset();
+    keyForm.elements.id.value = key?.id || "";
+    keyForm.elements.name.value = key?.name || "";
+    $("#key-form-title").textContent = key ? "Replace key" : "Add key";
+    keyForm.hidden = false;
+    $("#key-add").setAttribute("aria-expanded", "true");
+    (key ? keyForm.elements.value : keyForm.elements.name).focus();
+    keyForm.scrollIntoView({ block: "nearest" });
+  }
+  function showConnectionForm(connection) {
+    if (settingsPending) return;
+    if (!connection && !connectionForm.hidden) {
+      connectionForm.elements.name.focus();
+      return;
+    }
+    connectionForm.reset();
+    connectionForm.querySelector("details").open = false;
+    for (const [key, value] of Object.entries(connection || {})) {
+      if (connectionForm.elements[key])
+        connectionForm.elements[key].value = Array.isArray(value)
+          ? JSON.stringify(value)
+          : value;
+    }
+    $("#connection-form-title").textContent = connection
+      ? "Edit connection"
+      : "Add connection";
+    connectionForm.hidden = false;
+    $("#connection-add").setAttribute("aria-expanded", "true");
+    connectionForm.elements.type.onchange();
+    connectionForm.elements.name.focus();
+    connectionForm.scrollIntoView({ block: "nearest" });
+  }
+  $("#key-add").onclick = () => showKeyForm();
+  $("#key-cancel").onclick = closeKeyForm;
+  $("#connection-add").onclick = () => showConnectionForm();
   const run = async (fn) => {
     if (settingsPending) return;
     settingsPending = true;
     const submits = Array.from(
-      dialog.querySelectorAll('form button[type="submit"]'),
+      dialog.querySelectorAll("form button, #key-add, #connection-add"),
     ).map((b) => [b, b.disabled]);
     for (const [button] of submits) button.disabled = true;
     feedback.querySelector(".matrix-loader").hidden = false;
@@ -97,7 +157,7 @@ export function setupAgentUI({ call, onError, openTool }) {
     const data = Object.fromEntries(new FormData(keyForm));
     run(async () => {
       await call("secret-save", data);
-      keyForm.reset();
+      closeKeyForm();
     });
   };
   connectionForm.elements.type.onchange = () => {
@@ -112,14 +172,10 @@ export function setupAgentUI({ call, onError, openTool }) {
       const data = Object.fromEntries(new FormData(connectionForm));
       data.args = JSON.parse(data.args || "[]");
       await call("connection-save", data);
-      connectionForm.reset();
-      connectionForm.elements.type.onchange();
+      closeConnectionForm();
     });
   };
-  $("#connection-reset").onclick = () => {
-    connectionForm.reset();
-    connectionForm.elements.type.onchange();
-  };
+  $("#connection-reset").onclick = closeConnectionForm;
   $("#skill-install").onclick = () => run(() => call("skill-install"));
   $("#project-notes-form").onsubmit = (e) => {
     e.preventDefault();
@@ -194,15 +250,19 @@ export function setupAgentUI({ call, onError, openTool }) {
           row.append(element("span", k.name));
           const replace = element("button", "Replace");
           replace.type = "button";
-          replace.onclick = () => {
-            keyForm.elements.id.value = k.id;
-            keyForm.elements.name.value = k.name;
-            keyForm.elements.value.value = "";
-            keyForm.elements.value.focus();
-          };
+          replace.onclick = () => showKeyForm(k);
           const remove = element("button", "Remove");
           remove.type = "button";
-          remove.onclick = () => run(() => call("secret-remove", { id: k.id }));
+          remove.onclick = async () => {
+            if (
+              !settingsPending &&
+              (await confirmRemoval({ kind: "key", name: k.name }))
+            )
+              run(async () => {
+                await call("secret-remove", { id: k.id });
+                if (keyForm.elements.id.value === k.id) closeKeyForm();
+              });
+          };
           row.append(replace, remove);
           return row;
         }),
@@ -215,21 +275,20 @@ export function setupAgentUI({ call, onError, openTool }) {
           row.append(title);
           for (const [text, fn] of [
             ["Test", () => run(() => call("connection-test", { id: c.id }))],
-            [
-              "Edit",
-              () => {
-                for (const [key, value] of Object.entries(c)) {
-                  if (connectionForm.elements[key])
-                    connectionForm.elements[key].value = Array.isArray(value)
-                      ? JSON.stringify(value)
-                      : value;
-                }
-                connectionForm.elements.type.onchange();
-              },
-            ],
+            ["Edit", () => showConnectionForm(c)],
             [
               "Remove",
-              () => run(() => call("connection-remove", { id: c.id })),
+              async () => {
+                if (
+                  !settingsPending &&
+                  (await confirmRemoval({ kind: "connection", name: c.name }))
+                )
+                  run(async () => {
+                    await call("connection-remove", { id: c.id });
+                    if (connectionForm.elements.id.value === c.id)
+                      closeConnectionForm();
+                  });
+              },
             ],
           ]) {
             const b = element("button", text);
@@ -240,6 +299,14 @@ export function setupAgentUI({ call, onError, openTool }) {
           return row;
         }),
       );
+      if (!state.secrets?.length)
+        $("#secret-list").append(
+          element("p", "No saved keys.", "settings-empty"),
+        );
+      if (!state.connections?.length)
+        $("#connection-list").append(
+          element("p", "No connections yet.", "settings-empty"),
+        );
       $("#skill-list").replaceChildren(
         ...(state.skills || []).map((skill) => {
           const row = element("details", null, "skill-card");

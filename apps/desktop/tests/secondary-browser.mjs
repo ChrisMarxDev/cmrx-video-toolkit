@@ -59,6 +59,111 @@ try {
     .locator(".settings-tabs")
     .getByRole("button", { name: "Connections", exact: true })
     .click();
+
+  assert(await page.locator("#secret-form").isHidden());
+  assert(await page.locator("#connection-form").isHidden());
+  const removals = { key: 0, connection: 0, asset: 0 };
+  page.on("request", (request) => {
+    const route = new URL(request.url()).pathname;
+    if (route === "/chat/secret-remove") removals.key++;
+    if (route === "/chat/connection-remove") removals.connection++;
+    if (route === "/chat/assets-trash") removals.asset++;
+  });
+  const settled = () =>
+    page
+      .locator(".settings-feedback .matrix-loader")
+      .waitFor({ state: "hidden" });
+  await page.getByRole("button", { name: "Add key", exact: true }).click();
+  await page.getByLabel("Key name", { exact: true }).fill("Review key");
+  await page
+    .getByLabel("Secret key", { exact: true })
+    .fill("synthetic-review-only-value");
+  await page
+    .locator("#secret-form")
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  assert(await page.locator("#secret-form").isHidden());
+  assert.equal(
+    await page.getByLabel("Secret key", { exact: true }).inputValue(),
+    "",
+  );
+  await page.getByRole("button", { name: "Add key", exact: true }).click();
+  await page.getByLabel("Key name", { exact: true }).fill("Review key");
+  await page
+    .getByLabel("Secret key", { exact: true })
+    .fill("synthetic-review-only-value");
+  await page.getByRole("button", { name: "Save key", exact: true }).click();
+  const key = page
+    .locator("#secret-list .connection-card")
+    .filter({ hasText: "Review key" });
+  await key.waitFor();
+  await settled();
+  assert(await page.locator("#secret-form").isHidden());
+  await key.getByRole("button", { name: "Replace", exact: true }).click();
+  assert.equal(
+    await page.getByLabel("Secret key", { exact: true }).inputValue(),
+    "",
+  );
+  await page
+    .locator("#secret-form")
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add connection", exact: true })
+    .click();
+  await page
+    .locator('#connection-form [name="name"]')
+    .fill("Review connection");
+  await page.locator('#connection-form [name="type"]').selectOption("http");
+  await page
+    .getByLabel("Address", { exact: true })
+    .fill("https://example.com/api");
+  await page
+    .getByRole("button", { name: "Save connection", exact: true })
+    .click();
+  const connection = page
+    .locator("#connection-list .connection-card")
+    .filter({ hasText: "Review connection" });
+  await connection.waitFor();
+  await settled();
+  assert(await page.locator("#connection-form").isHidden());
+  await connection.getByRole("button", { name: "Edit", exact: true }).click();
+  assert.equal(
+    await page.locator('#connection-form [name="name"]').inputValue(),
+    "Review connection",
+  );
+  await page.locator("#connection-reset").click();
+  await page.screenshot({ path: path.join(root, "settings-lists.png") });
+  await connection.getByRole("button", { name: "Remove", exact: true }).click();
+  const confirm = page.locator(".confirm-dialog");
+  await confirm.waitFor();
+  assert(
+    await confirm
+      .getByRole("button", { name: "Cancel", exact: true })
+      .evaluate((el) => el === document.activeElement),
+  );
+  assert((await confirm.innerText()).includes("Review connection"));
+  await page.keyboard.press("Escape");
+  await confirm.waitFor({ state: "hidden" });
+  assert.equal(removals.connection, 0);
+  assert(await connection.isVisible());
+  await connection.getByRole("button", { name: "Remove", exact: true }).click();
+  await confirm
+    .getByRole("button", { name: "Remove connection", exact: true })
+    .click();
+  await connection.waitFor({ state: "hidden" });
+  await settled();
+  assert.equal(removals.connection, 1);
+  await key.getByRole("button", { name: "Remove", exact: true }).click();
+  await confirm.getByRole("button", { name: "Cancel", exact: true }).click();
+  assert.equal(removals.key, 0);
+  await key.getByRole("button", { name: "Remove", exact: true }).click();
+  await confirm
+    .getByRole("button", { name: "Remove key", exact: true })
+    .click();
+  await key.waitFor({ state: "hidden" });
+  await settled();
+  assert.equal(removals.key, 1);
   const heading = await page
     .locator("#settings-dialog .settings-heading")
     .boundingBox();
@@ -125,7 +230,16 @@ try {
   });
   await cover.waitFor();
   await page.locator("#assets-loading").waitFor({ state: "hidden" });
-  await cover.click();
+  const originalProject = fs.readFileSync(
+    path.join(workspace, "project.json"),
+    "utf8",
+  );
+  await cover.dblclick();
+  assert.equal(await page.locator("#asset-attachments .asset-chip").count(), 0);
+  assert.equal(
+    fs.readFileSync(path.join(workspace, "project.json"), "utf8"),
+    originalProject,
+  );
   assert.equal(await cover.getAttribute("aria-pressed"), "true");
   await page.waitForFunction(
     () => document.querySelector("#asset-detail img")?.naturalWidth === 480,
@@ -183,6 +297,29 @@ try {
       .getByRole("button", { name: "Close assets", exact: true })
       .isVisible(),
   );
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page
+    .locator("#asset-detail")
+    .getByRole("button", { name: "Move to trash", exact: true })
+    .click();
+  await page.locator(".confirm-dialog").waitFor();
+  await page.screenshot({ path: path.join(root, "confirm-asset.png") });
+  await page
+    .locator(".confirm-dialog")
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  assert.equal(removals.asset, 0);
+  assert(fs.existsSync(path.join(app.assets.library, "Cover.png")));
+  await page
+    .locator("#asset-detail")
+    .getByRole("button", { name: "Move to trash", exact: true })
+    .click();
+  await page
+    .locator(".confirm-dialog")
+    .getByRole("button", { name: "Move to trash", exact: true })
+    .click();
+  await cover.waitFor({ state: "hidden" });
+  assert.equal(removals.asset, 1);
   assert.deepEqual(errors, []);
   console.log(
     "PASS: fixed settings navigation, guarded save/progress/success, asset selection, loading/failure/retry, empty-state recovery and narrow layout. " +
