@@ -173,3 +173,140 @@ test("service owns timeline during agent turn and render; stop releases it", asy
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("review comments and revision-only updates keep previews fresh; content changes invalidate them", async () => {
+  const root = folder();
+  try {
+    const project = {
+      revision: 0,
+      width: 1080,
+      height: 1920,
+      clips: [],
+      comments: [],
+    };
+    const write = () =>
+      fs.writeFileSync(
+        path.join(root, "project.json"),
+        JSON.stringify(project, null, 2),
+      );
+    write();
+    const playground = new Playground({ workspace: root });
+    playground.write("lib/graphics.dart", "// authored graphics");
+    const fingerprint = playground.fingerprint();
+    playground.jobs.push({
+      id: "reviewed",
+      kind: "export",
+      status: "complete",
+      overlay: true,
+      fingerprint,
+    });
+    project.revision++;
+    project.comments.push({
+      id: "note",
+      body: "Make title larger",
+      status: "open",
+    });
+    write();
+    assert.equal(playground.state().overlay.stale, false);
+    project.comments[0].status = "resolved";
+    project.revision++;
+    write();
+    assert.equal(playground.state().preview.stale, false);
+    project.width = 2160;
+    project.height = 3840;
+    write();
+    assert.notEqual(playground.fingerprint(), fingerprint);
+    project.width = 1080;
+    project.height = 1920;
+    project.clips.push({ duration: 4.8 });
+    write();
+    assert.notEqual(playground.fingerprint(), fingerprint);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("legacy render receipts migrate only when snapshot content and authored source match", () => {
+  const root = folder();
+  try {
+    const file = path.join(root, "project.json");
+    const project = { revision: 0, width: 1080, height: 1920, clips: [] };
+    fs.writeFileSync(file, JSON.stringify(project, null, 2));
+    const p = new Playground({ workspace: root });
+    const legacyProject = fs.readFileSync(file);
+    const fingerprint = p.fingerprint({ legacyProject });
+    const snapshot = path.join(root, ".editor/playground/legacy");
+    fs.mkdirSync(snapshot);
+    fs.writeFileSync(path.join(snapshot, "project.json"), legacyProject);
+    p.jobs.push({
+      id: "legacy",
+      kind: "export",
+      status: "complete",
+      fingerprint,
+    });
+    p.persist();
+    project.revision = 1;
+    project.comments = [{ status: "resolved" }];
+    fs.writeFileSync(file, JSON.stringify(project, null, 2));
+    assert.equal(
+      new Playground({ workspace: root }).state().preview.stale,
+      false,
+    );
+    p.jobs[0].fingerprint = fingerprint;
+    p.persist();
+    p.write("lib/graphics.dart", "// different authored source");
+    assert.equal(
+      new Playground({ workspace: root }).state().preview.stale,
+      true,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("stock compositions upgrade clip gain support without rewriting custom authoring", () => {
+  const root = folder();
+  try {
+    fs.writeFileSync(path.join(root, "project.json"), '{"revision":0}');
+    new Playground({ workspace: root });
+    const file = path.join(root, "lib/composition.dart");
+    const stock = fs.readFileSync(file, "utf8");
+    const old = stock.replace(
+      "ClipAudio.included(volume: (c['volume'] as num? ?? 1).toDouble())",
+      "const ClipAudio.included()",
+    );
+    assert.notEqual(old, stock);
+    fs.writeFileSync(file, old);
+    new Playground({ workspace: root });
+    assert.equal(fs.readFileSync(file, "utf8"), stock);
+    fs.writeFileSync(file, old + "\n// custom authoring");
+    new Playground({ workspace: root });
+    assert.equal(fs.readFileSync(file, "utf8"), old + "\n// custom authoring");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("inactive desktop projects defer automatic preview work until activated", async () => {
+  const root = folder();
+  let app;
+  let active = false;
+  let renders = 0;
+  try {
+    app = await startApp({ workspace: root, autoPreview: () => active });
+    app.playground.hasGraphics = () => true;
+    app.playground.render = async () => {
+      renders++;
+      return {};
+    };
+    await new Promise((resolve) => setTimeout(resolve, 1150));
+    assert.equal(renders, 0);
+    active = true;
+    for (let i = 0; i < 50 && !renders; i++)
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(renders, 1);
+  } finally {
+    await app?.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

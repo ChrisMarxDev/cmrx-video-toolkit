@@ -34,7 +34,7 @@ workspace/
     AGENTS.md              # project-specific instructions
     memory.md              # durable decisions
     script.md              # script collaboration, before footage exists
-    media/                 # originals imported by the app
+    media/                 # playback media; originals/ retains unconverted sources
     assets/                # project resources and independent library copies
     lib/                   # editable Flutter graphics and composition
     shaders/
@@ -83,6 +83,17 @@ Use `split` with timeline `time`, `clip` patches with source `in` and `duration`
 and `delete`/`undo`/`redo` through `editor_edit`. Source and output time diverge after
 cuts. Flutter layers follow the same clip trim/split timing; do not reset animation
 at every cut. Reread selected clip/playhead and verify nearby frames after edits.
+
+Clip `volume` is linear audio gain, 0–16, default 1 (+20 dB is 10). Use it
+for voice level changes through `editor_edit` clip patches. The player and standard
+composition honor the same value. For custom compositions, ensure `ClipAudio` uses
+the clip’s volume before exporting; never apply an export-only audio correction.
+Measure levels and leave headroom to avoid clipping.
+
+Review comments and the project revision counter are editorial metadata, not
+graphics inputs. Materialize requested visual changes into clips or authored
+source; do not derive graphics from comment status or revision numbers. Resolving
+notes keeps the reviewed render fresh.
 
 Attached timed comments contain real anchors. Inspect them against the live project,
 apply the requested change, render/inspect custom graphics, then resolve through

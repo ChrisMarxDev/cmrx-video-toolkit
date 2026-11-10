@@ -31,6 +31,7 @@ agent-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/runtime-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/timeline-import-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-controls-browser.mjs
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/audio-gain-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/image-paste-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/markdown-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" EDITOR_RESULTS="$(EDITOR_RESULTS)" node tests/project-agent-browser.mjs
@@ -88,3 +89,8 @@ verify-macos-package:
 # Test packaged native onboarding, import and custom skills with a fixture account: make macos-ui-check MAC_APP=/path/App.app EDITOR_PLAYWRIGHT=/path/to/playwright
 macos-ui-check:
 	EDITOR_PACKAGED_APP="$(MAC_APP)" EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" node tests/stepper-browser.mjs
+
+.PHONY: audio-browser-check
+# Verify live audio gain, mute and unmute: make audio-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
+audio-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/audio-gain-browser.mjs

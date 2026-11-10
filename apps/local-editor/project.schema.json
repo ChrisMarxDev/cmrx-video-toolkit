@@ -268,6 +268,12 @@
         },
         "props": {
           "type": "object"
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16,
+          "default": 1
         }
       },
       "required": [

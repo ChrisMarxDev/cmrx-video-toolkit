@@ -235,6 +235,33 @@ try {
   const sha = () =>
     createHash("sha256").update(fs.readFileSync(exportFile)).digest("hex");
   const beforeExport = sha();
+  let renderRequests = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/chat/render"
+    )
+      renderRequests++;
+  });
+  const downloadPromise = page.waitForEvent("download");
+  await editor
+    .getByRole("button", { name: "More timeline actions", exact: true })
+    .click();
+  await editor
+    .getByRole("menuitem", { name: "Export video", exact: true })
+    .click();
+  const download = await downloadPromise;
+  const downloaded = await download.path();
+  assert.equal(
+    createHash("sha256").update(fs.readFileSync(downloaded)).digest("hex"),
+    beforeExport,
+  );
+  assert.equal(
+    renderRequests,
+    0,
+    "Fresh exports download without rendering again",
+  );
+
   await editor.locator(".stage video").first().waitFor();
   const seek = async () => {
     const ruler = editor.getByRole("slider", {

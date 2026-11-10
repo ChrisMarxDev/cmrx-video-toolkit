@@ -27,6 +27,7 @@ export type Clip = {
   width: number;
   height: number;
   muted: boolean;
+  volume?: number;
   props?: Record<string, unknown>;
   [key: string]: unknown;
 };
@@ -343,6 +344,10 @@ export function validate(p: Project): Project {
       "Clip rectangle must intersect canvas and stay within 4× canvas size",
     );
     check(typeof c.muted === "boolean", "muted must be boolean");
+    check(
+      c.volume === undefined || num(c.volume, 0, 16),
+      "Clip volume must be 0–16 (linear gain)",
+    );
     if (c.kind === "graphics") {
       const source = c.props?.source;
       check(

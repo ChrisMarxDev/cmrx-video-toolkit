@@ -30,7 +30,9 @@ source. Asset bytes are assumed immutable; content hashes are not yet enforced.
 
 `clips[]` describes timeline instances: stable `id`, `kind`, display `name`, optional
 `assetId`, timeline `start`, source `in`, `duration`, numeric `track`, rectangle
-`x/y/width/height`, `muted`, and extension-owned `props`. Multiple clips can use the
+`x/y/width/height`, `muted`, optional linear audio `volume` (0–16, default 1),
+and extension-owned `props`. Gain applies to both browser playback and exports;
+muting still silences the clip regardless of gain. Multiple clips can use the
 same asset. Ordering is track, start, then ID; overlapping audio mixes.
 The timeline may pack overlapping cards into multiple display rows within one
 track. Those rows are derived, zoom-dependent UI geometry and are never persisted

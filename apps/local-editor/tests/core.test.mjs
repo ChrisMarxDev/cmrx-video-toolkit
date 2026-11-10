@@ -736,3 +736,85 @@ test("ripple API is revision checked and one undo restores all tracks", async ()
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("linear clip gain is validated, retained by cuts and applied to encoded audio", async () => {
+  const root = fs.mkdtempSync(
+    path.join(os.homedir(), ".cache/cmrx-gain-service-"),
+  );
+  let server;
+  try {
+    fs.cpSync(path.join(fixture, "media"), path.join(root, "media"), {
+      recursive: true,
+    });
+    const project = clean();
+    project.clips = project.clips.filter((c) => c.kind === "video").slice(0, 1);
+    const clip = project.clips[0];
+    clip.start = 0;
+    clip.duration = 1;
+    clip.in = 0;
+    for (const volume of [-1, 17, Infinity, "4"])
+      assert.throws(
+        () => validate({ ...project, clips: [{ ...clip, volume }] }),
+        /volume/,
+      );
+    assert.equal(
+      splitClip({ ...project, clips: [{ ...clip, volume: 4 }] }, clip.id, 0.5)
+        .clips[1].volume,
+      4,
+    );
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(project));
+    server = await start(root);
+    const call = async (route, body) => {
+      const response = await fetch(server.connection.url + "/api/" + route, {
+        method: body ? "POST" : "GET",
+        headers: {
+          Authorization: "Bearer " + server.connection.token,
+          "Content-Type": "application/json",
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+      assert.equal(response.status, 200, await response.clone().text());
+      return response.json();
+    };
+    const render = async () => {
+      const state = await call("state");
+      const job = await call("render", { revision: state.project.revision });
+      const done = await until(async () =>
+        (await call("state")).jobs.find(
+          (j) => j.id === job.id && j.status !== "running",
+        ),
+      );
+      assert.equal(done.status, "complete", done.log);
+      return path.join(root, done.artifact);
+    };
+    const rms = (file) => {
+      const pcm = execFileSync("ffmpeg", [
+        "-v",
+        "error",
+        "-i",
+        file,
+        "-vn",
+        "-f",
+        "f32le",
+        "-ac",
+        "1",
+        "pipe:1",
+      ]);
+      let sum = 0;
+      for (let n = 0; n < pcm.length; n += 4) sum += pcm.readFloatLE(n) ** 2;
+      return Math.sqrt(sum / (pcm.length / 4));
+    };
+    const baseline = rms(await render());
+    await call("clip", { revision: 0, id: clip.id, patch: { volume: 4 } });
+    const amplified = rms(await render());
+    assert(
+      Math.abs(amplified / baseline - 4) < 0.15,
+      `Expected 4× gain, got ${amplified / baseline}`,
+    );
+    await call("undo", { revision: 1 });
+    assert.equal((await call("state")).project.clips[0].volume, undefined);
+  } finally {
+    await server?.stop();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

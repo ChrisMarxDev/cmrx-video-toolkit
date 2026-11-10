@@ -53,6 +53,18 @@ export class Playground {
           path.join(templates, f),
           path.join(workspace, "lib", f),
         );
+    // Upgrade only the byte-identical stock bridge; custom compositions stay authored.
+    const compositionFile = path.join(workspace, "lib/composition.dart");
+    const stockComposition = fs.readFileSync(
+      path.join(templates, "composition.dart"),
+      "utf8",
+    );
+    const oldStock = stockComposition.replace(
+      "ClipAudio.included(volume: (c['volume'] as num? ?? 1).toDouble())",
+      "const ClipAudio.included()",
+    );
+    if (fs.readFileSync(compositionFile, "utf8") === oldStock)
+      fs.writeFileSync(compositionFile, stockComposition);
     const fluvie = "/runtime/fluvie/packages/";
     const spec = {
       name: "video_playground",
@@ -75,6 +87,7 @@ export class Playground {
         path.join(workspace, "pubspec.yaml"),
         JSON.stringify(spec, null, 2),
       );
+    this.migrateRenderFingerprints();
     this.persist();
   }
   files() {
@@ -153,8 +166,56 @@ export class Playground {
     this.onChange();
     return { path: name, saved: true };
   }
-  fingerprint() {
-    const h = createHash("sha256").update("graphics-preview-tracks-v3");
+  migrateRenderFingerprints() {
+    // Preserve verified v3 receipts across the metadata-only cache upgrade.
+    // Never bless changed source or changed timeline content as a fresh render.
+    try {
+      const current = JSON.parse(
+        fs.readFileSync(path.join(this.workspace, "project.json")),
+      );
+      const content = ({ revision, comments, ...video }) =>
+        JSON.stringify(video);
+      const fingerprint = this.fingerprint();
+      for (const job of this.jobs) {
+        if (job.fingerprintVersion === 4) continue;
+        if (job.fingerprint === fingerprint) {
+          job.fingerprintVersion = 4;
+          continue;
+        }
+        if (
+          job.status !== "complete" ||
+          typeof job.id !== "string" ||
+          !/^[a-zA-Z0-9-]+$/.test(job.id)
+        )
+          continue;
+        const dir = path.join(this.jobsDir, job.id);
+        const file = path.join(dir, "project.json");
+        if (
+          !fs.existsSync(file) ||
+          fs.lstatSync(dir).isSymbolicLink() ||
+          !fs.lstatSync(file).isFile() ||
+          fs.lstatSync(file).isSymbolicLink()
+        )
+          continue;
+        const legacyProject = fs.readFileSync(file);
+        if (
+          content(JSON.parse(legacyProject)) === content(current) &&
+          job.fingerprint === this.fingerprint({ legacyProject })
+        ) {
+          job.fingerprint = fingerprint;
+          job.fingerprintVersion = 4;
+        }
+      }
+    } catch {
+      /* Old/unverifiable receipts remain stale; normal rendering repairs them. */
+    }
+  }
+  fingerprint({ legacyProject } = {}) {
+    const h = createHash("sha256").update(
+      legacyProject
+        ? "graphics-preview-tracks-v3"
+        : "graphics-preview-tracks-v4",
+    );
     for (const f of [
       "project.json",
       ...this.files()
@@ -164,7 +225,16 @@ export class Playground {
         .sort(),
     ]) {
       h.update(f);
-      h.update(fs.readFileSync(path.join(this.workspace, f)));
+      if (f === "project.json" && legacyProject) h.update(legacyProject);
+      else if (f === "project.json") {
+        // Review notes and revision counters do not change the video. In
+        // particular resolving feedback after a successful render must not
+        // invalidate the cache that was just reviewed.
+        const { revision, comments, ...content } = JSON.parse(
+          fs.readFileSync(path.join(this.workspace, f), "utf8"),
+        );
+        h.update(JSON.stringify(content));
+      } else h.update(fs.readFileSync(path.join(this.workspace, f)));
     }
     return h.digest("hex");
   }
@@ -514,6 +584,7 @@ export class Playground {
       status: "running",
       phase: "preparing",
       fingerprint: this.fingerprint(),
+      fingerprintVersion: 4,
       createdAt: new Date().toISOString(),
     };
     const previewTracks = [

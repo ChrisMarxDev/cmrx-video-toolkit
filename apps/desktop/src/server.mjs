@@ -1343,7 +1343,7 @@ export async function startApp({
         return;
       }
       if (
-        autoPreview &&
+        (typeof autoPreview === "function" ? autoPreview() : autoPreview) &&
         !locked() &&
         !playground.running &&
         playground.hasGraphics()

@@ -216,6 +216,7 @@ else {
             : project.workspaceRoot || workspaces.ensure().folder,
           projectInfo: { ...project, selected: !isUtility },
           desktopTabs: true,
+          autoPreview: () => !isUtility && active === project.id,
           renderQueue,
           sharedEnabled: enabled,
           home: path.join(app.getPath("userData"), "accounts/codex"),
@@ -319,12 +320,18 @@ else {
         if (current()?.project.workspaceRoot)
           workspaces.select(current().project.workspaceRoot);
         settingsOnly = false;
-        if (previous && previous !== current())
+        if (previous && previous !== current()) {
+          if (
+            previous.service.playground.running &&
+            !previous.service.playground.blocking
+          )
+            previous.service.playground.cancel();
           previous.view.webContents
             .executeJavaScript(
               `document.querySelector('#editor')?.contentWindow?.postMessage({type:'cmrx-pause'},location.origin)`,
             )
             .catch(() => {});
+        }
         if (current()) current().done = false;
         show();
         persist();

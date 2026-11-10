@@ -94,8 +94,23 @@ silently imported into the workspace. New projects always use the visible layout
 The chat header shows the project name and a small **Open folder…** action for
 its on-disk project folder. Global Settings stays in the native tab bar.
 
-Video imports preserve supported source dimensions (up to 3840 pixels per side),
+Video imports preserve supported source dimensions (3840×2160 landscape or 2160×3840 portrait),
 keep the selected filename, and retain an untouched project-local original when
 conversion is needed. HDR footage receives a technical SDR playback conversion;
 the original remains available under `media/originals/`. Import progress reports
 encoded duration, and canceled or conflicting imports remove their partial files.
+
+Review notes and revision counters do not invalidate video/graphics render caches.
+Visual content belongs in clips and authored source; graphics must not derive their
+appearance from review status or revision numbers. Existing cache receipts migrate only when their recorded timeline content and
+current authored sources still match; unverifiable receipts refresh normally.
+
+Clip `volume` is a shared linear audio gain (0–16, default 1), applied by the
+player and standard Flutter/FFmpeg exports. Stock composition bridges upgrade
+without changing default playback; custom authored compositions remain untouched
+and must bind ClipAudio volume to the manifest before using gain.
+
+Automatic preview refreshes run only for the active desktop project and yield
+to queued edits. Switching tabs cancels a disposable refresh, while explicit
+exports and agent work continue. Export video downloads an existing fresh export
+directly; changed video content requires a new render.

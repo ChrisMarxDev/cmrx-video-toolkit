@@ -25,7 +25,7 @@ Future<Video> build() async {
             child: Clip.file('/work/${assets[c['assetId']]['path']}',
               trim: Time.seconds((c['in'] as num).toDouble()).to(Time.seconds((c['in'] + c['duration']).toDouble())),
               audio: c['muted'] == true || layers['${c['track']}']?['muted'] == true
-                ? const ClipAudio.muted() : const ClipAudio.included(),
+                ? const ClipAudio.muted() : ClipAudio.included(volume: (c['volume'] as num? ?? 1).toDouble()),
               fit: BoxFit.contain,
             ).show(from: Time.seconds((c['start'] as num).toDouble()), to: Time.seconds((c['start'] + c['duration']).toDouble()))),
       // ignore: experimental_member_use

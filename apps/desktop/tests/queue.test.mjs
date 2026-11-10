@@ -69,7 +69,7 @@ test("messages queue FIFO without parallel turns; comments, cancel, stop, restar
     await post("send", { text: "", comments: [note] });
     assert.deepEqual((await state()).pendingComments, []);
     await emit({ type: "complete" });
-    await waitFor(state, (s) => s.messages.length === 2);
+    await waitFor(state, (s) => s.messages.length === 2 && calls.length === 2);
     assert.equal(calls[1].text, "Second");
     assert.equal((await state()).queue.length, 1);
     await post("stop");
@@ -84,7 +84,7 @@ test("messages queue FIFO without parallel turns; comments, cancel, stop, restar
     await new Promise((r) => setTimeout(r, 1100));
     assert.equal(calls.length, 2);
     await post("queue-resume");
-    await waitFor(state, (s) => s.messages.length === 3);
+    await waitFor(state, (s) => s.messages.length === 3 && calls.length === 3);
     assert.deepEqual(calls[2].context.attachedComments, [note]);
     const queued = await (await post("send", { text: "After failure" })).json();
     await emit({ type: "complete", error: "Fixture failure" });

@@ -149,7 +149,7 @@ export class Renderer {
         ) {
           const name = `a${i}`;
           filters.push(
-            `[${i}:a]atrim=start=${c.in}:duration=${c.duration},asetpts=PTS-STARTPTS,adelay=${Math.round(c.start * 1000)}:all=1[${name}]`,
+            `[${i}:a]atrim=start=${c.in}:duration=${c.duration},asetpts=PTS-STARTPTS,volume=${c.volume ?? 1},adelay=${Math.round(c.start * 1000)}:all=1[${name}]`,
           );
           audio.push(`[${name}]`);
         }

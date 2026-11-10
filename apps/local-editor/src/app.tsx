@@ -1,3 +1,4 @@
+import { setMediaGain, releaseMediaGain } from "./media-gain.js";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -97,6 +98,16 @@ function VideoLayer({
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const active = time >= clip.start && time < clip.start + clip.duration;
+  useEffect(() => {
+    if (ref.current)
+      setMediaGain(ref.current, clip.muted ? 0 : (clip.volume ?? 1));
+  }, [clip.volume, clip.muted]);
+  useEffect(() => {
+    const media = ref.current;
+    return () => {
+      if (media) releaseMediaGain(media);
+    };
+  }, []);
   useEffect(() => {
     const v = ref.current;
     if (!v) return;

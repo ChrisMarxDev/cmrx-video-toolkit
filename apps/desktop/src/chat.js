@@ -632,6 +632,12 @@ if (!token || !editorToken) {
   $("#render").onclick = async () => {
     $("#render").disabled = true;
     try {
+      const ready = latestState?.preview;
+      if (ready?.status === "complete" && ready.artifact && !ready.stale) {
+        requestedExport = ready.id;
+        downloadRequestedExport(latestState);
+        return;
+      }
       const job = await call("render");
       requestedExport = job.id;
       downloadRequestedExport(latestState);
