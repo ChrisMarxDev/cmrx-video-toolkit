@@ -88,15 +88,31 @@ try {
   assert.equal(
     await card
       .locator(".matrix-loader")
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
-    "matrix-cells",
+      .evaluate((el) => getComputedStyle(el.firstElementChild).animationName),
+    "matrix-wave",
+  );
+  const matrix = card.locator(".matrix-loader");
+  assert.equal(await matrix.locator("i").count(), 16);
+  const dimensions = await matrix.evaluate((el) => {
+    const cells = [...el.children];
+    return {
+      width: el.getBoundingClientRect().width,
+      first: getComputedStyle(cells[0]).animationDelay,
+      last: getComputedStyle(cells[15]).animationDelay,
+    };
+  });
+  assert.equal(dimensions.width, 14);
+  assert.notEqual(
+    dimensions.first,
+    dimensions.last,
+    "cells form a staggered wave",
   );
   await page.screenshot({ path: path.join(root, "installation.png") });
   await page.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(
     await card
       .locator(".matrix-loader")
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
+      .evaluate((el) => getComputedStyle(el.firstElementChild).animationName),
     "none",
   );
   assert.equal(
@@ -144,7 +160,7 @@ try {
     await page
       .frameLocator("#editor")
       .locator(".player-spinner")
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
+      .evaluate((el) => getComputedStyle(el.firstElementChild).animationName),
     "none",
   );
   assert(await page.locator("#activity-matrix").isVisible());
@@ -153,8 +169,8 @@ try {
     await page
       .frameLocator("#editor")
       .locator(".player-spinner")
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
-    "matrix-cells",
+      .evaluate((el) => getComputedStyle(el.firstElementChild).animationName),
+    "matrix-wave",
   );
   await emit({ type: "complete" });
   await page.locator("#activity-matrix").waitFor({ state: "hidden" });

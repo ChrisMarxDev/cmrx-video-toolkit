@@ -1,3 +1,4 @@
+import { matrixCells } from "./matrix-loader.mjs";
 const $ = (s) => document.querySelector(s),
   call = (action, data) => window.recording.command(action, data);
 let begun = false,
@@ -327,6 +328,7 @@ $("#source-cancel").onclick = () => {
   call("source", { id: null }).catch(error);
 };
 window.addEventListener("beforeunload", release);
+$("#saving .matrix-loader").innerHTML = matrixCells;
 const info = await call("info").catch((e) => {
   error(e);
   return { project: "Recording", interrupted: 0 };

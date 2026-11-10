@@ -63,3 +63,5 @@ await copyFile(
   "resources/fonts/Fraunces-OFL.txt",
   "dist/public/Fraunces-OFL.txt",
 );
+
+await copyFile("resources/ldrs/LICENSE", "dist/public/LDRS-LICENSE.txt");

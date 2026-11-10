@@ -72,6 +72,16 @@ const seconds = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
     .padStart(2, "0")}:${(s % 60).toFixed(2).padStart(5, "0")}`;
+function MatrixLoader({ className = "matrix-loader" }: { className?: string }) {
+  return (
+    <span className={className} aria-hidden="true">
+      {Array.from({ length: 16 }, (_, i) => (
+        <i key={i} />
+      ))}
+    </span>
+  );
+}
+
 function VideoLayer({
   clip,
   time,
@@ -1082,7 +1092,7 @@ function App() {
   if (!state)
     return (
       <main className="loading">
-        <span className="matrix-loader" aria-hidden="true" />
+        <MatrixLoader />
         <p role="status">{notice || "Opening workspace…"}</p>
       </main>
     );
@@ -1267,7 +1277,7 @@ function App() {
                       role="status"
                       aria-label="Agent editing video"
                     >
-                      <span className="player-spinner" aria-hidden="true" />
+                      <MatrixLoader className="player-spinner" />
                     </div>
                   )}
                   <div

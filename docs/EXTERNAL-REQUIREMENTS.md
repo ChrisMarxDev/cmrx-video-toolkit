@@ -271,6 +271,7 @@ ScreenCast backend matching the desktop. Debian packaging declares the first two
 standard supported desktops provide their backend. macOS requires OS capture
 permissions and camera/microphone usage descriptions in the signed app Info.plist.
 See apps/desktop/RECORDING.md for scope and platform acceptance gaps.
+
 ### Apple Silicon Mac candidate runtime
 
 The Mac candidate bundles Electron 43.0.0, Flutter 3.47.7/Dart 3.13.5, pinned
@@ -284,3 +285,9 @@ make and pkg-config. End users need macOS 15+ on Apple Silicon; provider downloa
 and browser sign-in happen through the app. macOS supplies sandbox-exec, Keychain,
 Gatekeeper and the system frameworks. Apple Developer ID and Apple's notarization
 service are maintainer requirements. See [Mac builds](../apps/desktop/MACOS_BUILD.md).
+
+
+The editor wave matrix loader adapts MIT-licensed UI Ball LDRS Grid source
+(package 1.1.9, revision `f759f65beb8ab4f4a1f010438072180693ca01ec`). Its license
+and provenance are in `apps/local-editor/resources/ldrs/`; no runtime download
+or additional package is needed.

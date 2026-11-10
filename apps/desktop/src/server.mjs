@@ -1249,6 +1249,7 @@ export async function startApp({
           "/onboarding.mjs",
           "/agent-settings.mjs",
           "/confirm-removal.mjs",
+          "/matrix-loader.mjs",
           "/asset-manager.mjs",
           "/app-polish.css",
           "/dither-art.mjs",

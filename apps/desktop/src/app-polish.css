@@ -1172,7 +1172,7 @@ button:active:not(:disabled) {
   gap: 12px;
 }
 .activity-row .matrix-loader {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 #activity {
   color: var(--app-text-muted);

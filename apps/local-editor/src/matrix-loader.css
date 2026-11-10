@@ -1,84 +1,83 @@
-/* Shared square-cell loading language: chat, player, shell and setup. */
+/* LDRS Grid wave adapter (MIT, Griffin Johnston).
+ * Source/revision and license: resources/ldrs/README.md.
+ * Flattened grid, square cells, quieter motion and compact sizes for editor chrome.
+ */
 .matrix-loader,
 .player-spinner,
 .dot.working {
-  display: inline-block;
+  --matrix-size: 14px;
+  --matrix-gap: 2px;
+  display: inline-grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: var(--matrix-gap);
   position: relative;
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: var(--matrix-size);
+  height: var(--matrix-size);
+  vertical-align: middle;
   color: inherit;
   background: none;
   border: 0;
   border-radius: 0;
-  --matrix-dim: color-mix(in srgb, currentColor 20%, transparent);
+  line-height: 0;
+}
+.dot.working {
+  --matrix-size: 11px;
+  --matrix-gap: 1px;
 }
 .matrix-loader[hidden] {
   display: none;
 }
-.matrix-loader::before,
-.player-spinner::before,
-.dot.working::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4px;
-  height: 4px;
+:is(.matrix-loader, .player-spinner, .dot.working) > i {
+  display: block;
+  min-width: 0;
   background: currentColor;
-  box-shadow:
-    7px 0 currentColor,
-    14px 0 var(--matrix-dim),
-    0 7px var(--matrix-dim),
-    7px 7px currentColor,
-    14px 7px var(--matrix-dim),
-    0 14px var(--matrix-dim),
-    7px 14px var(--matrix-dim),
-    14px 14px currentColor;
-  animation: matrix-cells 1.2s steps(1, end) infinite;
+  opacity: 0.35;
+  animation: matrix-wave 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--matrix-phase, 0) * -0.128s);
 }
-@keyframes matrix-cells {
-  25% {
-    background: var(--matrix-dim);
-    box-shadow:
-      7px 0 var(--matrix-dim),
-      14px 0 currentColor,
-      0 7px currentColor,
-      7px 7px var(--matrix-dim),
-      14px 7px currentColor,
-      0 14px var(--matrix-dim),
-      7px 14px currentColor,
-      14px 14px var(--matrix-dim);
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(2),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(5) {
+  --matrix-phase: 1;
+}
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(3),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(6),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(9) {
+  --matrix-phase: 2;
+}
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(4),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(7),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(10),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(13) {
+  --matrix-phase: 3;
+}
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(8),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(11),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(14) {
+  --matrix-phase: 4;
+}
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(12),
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(15) {
+  --matrix-phase: 5;
+}
+:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(16) {
+  --matrix-phase: 6;
+}
+@keyframes matrix-wave {
+  0%,
+  100% {
+    transform: translateY(35%);
+    opacity: 0.3;
   }
   50% {
-    background: currentColor;
-    box-shadow:
-      7px 0 var(--matrix-dim),
-      14px 0 var(--matrix-dim),
-      0 7px var(--matrix-dim),
-      7px 7px currentColor,
-      14px 7px currentColor,
-      0 14px currentColor,
-      7px 14px var(--matrix-dim),
-      14px 14px var(--matrix-dim);
-  }
-  75% {
-    background: var(--matrix-dim);
-    box-shadow:
-      7px 0 currentColor,
-      14px 0 var(--matrix-dim),
-      0 7px currentColor,
-      7px 7px currentColor,
-      14px 7px var(--matrix-dim),
-      0 14px var(--matrix-dim),
-      7px 14px currentColor,
-      14px 14px currentColor;
+    transform: translateY(-35%);
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .matrix-loader::before,
-  .player-spinner::before,
-  .dot.working::before {
+  :is(.matrix-loader, .player-spinner, .dot.working) > i {
     animation: none;
+    opacity: 0.7;
   }
 }

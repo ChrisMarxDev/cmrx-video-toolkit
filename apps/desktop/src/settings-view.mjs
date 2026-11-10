@@ -1,3 +1,4 @@
+import { matrixCells } from "/matrix-loader.mjs";
 import { providerLogo, setBrandedText } from "/brand-ui.mjs";
 const $ = (s) => document.querySelector(s);
 export function setupProviderUI({ call, onError }) {
@@ -114,7 +115,7 @@ export function setupProviderUI({ call, onError }) {
     };
     const progress = elem("div", "setup-install");
     progress.hidden = true;
-    progress.innerHTML = `<div class="install-heading"><span class="matrix-loader" aria-hidden="true"></span><span class="install-label"></span><span class="install-percent"></span></div><div class="dither-progress" role="progressbar" aria-label="Connection setup"><span class="dither-progress-fill"></span></div>`;
+    progress.innerHTML = `<div class="install-heading"><span class="matrix-loader" aria-hidden="true">${matrixCells}</span><span class="install-label"></span><span class="install-percent"></span></div><div class="dither-progress" role="progressbar" aria-label="Connection setup"><span class="dither-progress-fill"></span></div>`;
     actions.append(login, use, refresh, logout, cancel);
     card.prepend(heading, copy, detail, error);
     card.append(progress, actions, link);

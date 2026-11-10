@@ -1,3 +1,4 @@
+import { matrixCells } from "/matrix-loader.mjs";
 import { confirmRemoval } from "/confirm-removal.mjs";
 import { setBrandedText } from "/brand-ui.mjs";
 const $ = (s) => document.querySelector(s);
@@ -27,8 +28,7 @@ export function setupAgentUI({ call, onError, openTool }) {
     workspaceBaseline = "",
     settingsPending = false;
   const feedback = element("div", null, "settings-feedback");
-  feedback.innerHTML =
-    '<span class="matrix-loader" aria-hidden="true" hidden></span><span role="status"></span>';
+  feedback.innerHTML = `<span class="matrix-loader" aria-hidden="true" hidden>${matrixCells}</span><span role="status"></span>`;
   dialog.append(feedback);
   dialog.addEventListener("close", () => {
     notesLoaded = false;

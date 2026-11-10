@@ -31,7 +31,7 @@ generated videos follow their own project style. Use the app development skill a
    and a short heading. Offer Upload or Open empty project. Use subtle dither edge
    light in editing chrome, never over media, text fields or dense timeline content.
    Keep the Bayer cell grid fixed; animate light/opacity rather than scaling cells.
-10. **One loading language.** Animated square-cell matrices replace round spinners
+10. **One loading language.** Compact wave-animated square-cell matrices (14px, 11px in tabs) replace round spinners
     and working dots across setup, chat, player and tabs. Installation uses a dithered
     bar: real percentages when reported, indeterminate motion otherwise. Never fake
     overall completion. Respect reduced motion; keep errors and cancellation visible.

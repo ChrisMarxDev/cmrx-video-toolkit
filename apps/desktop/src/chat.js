@@ -1,3 +1,4 @@
+import { matrixCells } from "/matrix-loader.mjs";
 import { setupAssetManager } from "/asset-manager.mjs";
 import { setupAgentUI } from "/agent-settings.mjs";
 import { setupOnboarding } from "/onboarding.mjs";
@@ -5,6 +6,7 @@ import { setupProviderUI } from "/settings-view.mjs";
 import { decorateBrandMentions, setBrandedText } from "/brand-ui.mjs";
 import { renderComments } from "/comment-payload.mjs";
 import { renderMessage } from "/message-view.mjs";
+document.querySelector("#activity-matrix").innerHTML = matrixCells;
 const $ = (s) => document.querySelector(s),
   params = new URLSearchParams(location.hash.slice(1));
 let stored = {};
