@@ -29,8 +29,23 @@
     var(--app-color-lavender) 22%,
     var(--app-surface)
   );
+  --app-surface-overlay: var(--app-surface-raised);
+  --app-divider: color-mix(
+    in srgb,
+    var(--app-color-lavender) 12%,
+    var(--app-page)
+  );
+  --resize-handle: var(--app-border);
+  --resize-handle-active: var(--app-focus);
   --app-action: var(--app-color-lavender);
   --app-action-hover: color-mix(in srgb, var(--app-action) 85%, white);
+  --app-action-pressed: color-mix(
+    in srgb,
+    var(--app-action) 85%,
+    var(--app-color-ink)
+  );
+  --app-surface-input: var(--app-surface-raised);
+  --app-surface-message: var(--app-surface);
   --app-action-text: var(--app-color-ink);
   --app-focus: var(--app-color-lime);
   --app-playhead: var(--app-color-lime);

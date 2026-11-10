@@ -366,10 +366,18 @@ if (!token || !editorToken) {
       ? "Describe your idea, or work on your script…"
       : "Ask for an edit, or refer to a comment…";
     $("#send").disabled = !connected || !!s.switching || sending || dropping;
-    $("#send").textContent =
-      s.locked || s.running || s.queue?.length || s.queuePaused
-        ? "Queue"
-        : "Send";
+    const queueing = !!(
+      s.locked ||
+      s.running ||
+      s.queue?.length ||
+      s.queuePaused
+    );
+    $("#send").dataset.mode = queueing ? "queue" : "send";
+    $("#send").setAttribute(
+      "aria-label",
+      queueing ? "Queue message" : "Send message",
+    );
+    $("#send").title = queueing ? "Queue message" : "Send message";
     const queue = $("#message-queue");
     const queueSignature = JSON.stringify([
       s.queue || [],
@@ -466,7 +474,11 @@ if (!token || !editorToken) {
       }
     }
     $("#stop").hidden = !(s.busy || s.running || s.importing);
-    $("#stop").textContent = s.importing ? "Cancel" : "Stop";
+    $("#stop").setAttribute(
+      "aria-label",
+      s.importing ? "Cancel import" : "Stop",
+    );
+    $("#stop").title = s.importing ? "Cancel import" : "Stop";
     setBrandedText($("#activity"), s.activity);
     setBrandedText(
       $("#error"),

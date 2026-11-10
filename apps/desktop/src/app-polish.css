@@ -20,8 +20,8 @@ button {
   border-radius: 10px;
 }
 button:hover:not(:disabled) {
-  background: #302c35;
-  border-color: #514a5b;
+  background: var(--app-hover);
+  border-color: var(--app-border);
 }
 #chat {
   padding: 0 24px;
@@ -715,23 +715,23 @@ form {
   background: white;
 }
 
-/* Compact conversation gutters. Keyboard behavior remains available without a hint. */
+/* Comfortable conversation gutters; no permanent keyboard instruction strip. */
 #chat {
-  padding: 0 12px;
+  padding: 0 20px;
 }
 #messages {
   padding-top: 6px;
   padding-bottom: 8px;
 }
 .message {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 .message.user {
   margin-left: 16px;
-  padding: 10px 12px;
+  padding: 12px 16px;
 }
 #chat form {
-  padding: 10px 12px;
+  padding: 16px;
 }
 
 /* Compact setup: account, then two direct ways into the editor. */
@@ -930,4 +930,122 @@ textarea:focus-visible,
 .provider-actions button.primary:hover:not(:disabled) {
   background: var(--app-action-hover);
   color: var(--app-action-text);
+}
+
+/* Chat: one canvas, content surfaces only, one primary composer action. */
+#chat {
+  padding-bottom: 12px;
+}
+#chat form {
+  background: var(--app-surface-input);
+  border: 1px solid var(--app-border);
+}
+#chat form:focus-within {
+  border-color: var(--app-text-muted);
+}
+#chat .user {
+  background: var(--app-surface-message);
+  border: 0;
+  border-radius: var(--app-radius-control);
+}
+#chat .assistant {
+  background: transparent;
+  border: 0;
+}
+#chat .composer {
+  gap: var(--app-space-2);
+}
+#chat .composer > button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--app-radius-control);
+}
+#chat .composer > button[hidden] {
+  display: none;
+}
+#chat .composer > button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#chat #send {
+  background: var(--app-action);
+  color: var(--app-action-text);
+}
+#chat #send:hover:not(:disabled) {
+  background: var(--app-action-hover);
+}
+#chat #send:active:not(:disabled) {
+  background: var(--app-action-pressed);
+}
+#send .queue-arrow,
+#send[data-mode="queue"] .send-arrow {
+  display: none;
+}
+#send[data-mode="queue"] .queue-arrow {
+  display: block;
+}
+#chat #add-note,
+#chat #stop {
+  background: transparent;
+  color: var(--app-text-muted);
+}
+#chat #add-note:hover:not(:disabled),
+#chat #stop:hover:not(:disabled) {
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+#chat #add-note:active:not(:disabled),
+#chat #stop:active:not(:disabled) {
+  background: var(--app-selected);
+}
+#chat .queued-message {
+  background: var(--app-surface-message);
+  border-color: transparent;
+}
+#chat .queued-message-actions button {
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--app-radius-compact);
+}
+
+/* App-wide hierarchy: quiet tools, outlined alternatives, filled primary actions. */
+button:active:not(:disabled) {
+  background: var(--app-selected);
+}
+.primary:active:not(:disabled),
+.provider-actions button.primary:active:not(:disabled) {
+  background: var(--app-action-pressed);
+  color: var(--app-action-text);
+}
+#settings-dialog,
+#assets-dialog,
+#tool-dialog {
+  background: var(--app-surface-overlay);
+  border: 1px solid var(--app-border);
+}
+#visual {
+  border-color: var(--app-divider);
+  box-shadow: none;
+}
+#settings-open,
+#settings-close,
+#tool-close,
+#setup-dismiss {
+  min-width: 32px;
+  min-height: 32px;
+}
+.provider-card,
+.engine-details,
+.model-preferences {
+  border-color: var(--app-divider);
 }

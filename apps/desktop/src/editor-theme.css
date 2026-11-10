@@ -34,7 +34,7 @@
   background-clip: padding-box;
 }
 .editor {
-  grid-template-rows: 44px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
+  grid-template-rows: 48px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
 }
 .editor > header {
   background: var(--app-surface);
@@ -60,8 +60,8 @@ button:hover:not(:disabled) {
   gap: 4px;
 }
 .header-actions button {
-  width: 30px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 .workspace-grid,
 .dock-pane,
@@ -97,7 +97,7 @@ button:hover:not(:disabled) {
 }
 .transport > button {
   width: 32px;
-  height: 30px;
+  height: 32px;
   border-radius: 50%;
   background: var(--app-surface-raised);
 }
@@ -111,8 +111,8 @@ button:hover:not(:disabled) {
   border-top: 1px solid #ffffff08;
 }
 .timeline-tools {
-  height: 43px;
-  flex-basis: 43px;
+  height: 48px;
+  flex-basis: 48px;
   padding: 0 12px;
   background: var(--app-surface);
 }
@@ -126,7 +126,7 @@ button:hover:not(:disabled) {
 .timeline-tools button {
   height: 29px;
   width: 29px;
-  min-height: 29px;
+  min-height: 32px;
 }
 .timeline-tools button[aria-pressed="true"] {
   background: var(--app-selected);
@@ -157,7 +157,16 @@ button:hover:not(:disabled) {
   color: var(--app-text-muted);
 }
 .track-name .layer-controls {
-  opacity: 0.7;
+  opacity: 1;
+  gap: 8px;
+}
+.layer-controls button:has(> .icon) {
+  min-width: 32px;
+  min-height: 32px;
+}
+.timeline-tools button:has(> .icon) {
+  min-width: 32px;
+  min-height: 32px;
 }
 .track-clips {
   background: transparent;
@@ -239,7 +248,7 @@ button:hover:not(:disabled) {
   white-space: nowrap;
 }
 .timeline-tools > div:first-child > .nav-hint {
-  display: block;
+  display: none;
   line-height: 1.4;
 }
 .timeline-tools > div:first-child {
@@ -382,4 +391,48 @@ textarea:focus-visible,
 .workspace-export:hover:not(:disabled) {
   background: var(--app-action-hover);
   color: var(--app-action-text);
+}
+
+/* Discover shortcuts in hover labels and the shortcuts panel, not persistent prose. */
+.nav-hint {
+  display: none;
+}
+
+/* Toolbar controls are quiet tools; selected tools have a distinct persistent state. */
+.header-actions button:not(.workspace-export),
+.timeline-tools button,
+.layer-controls button {
+  background: transparent;
+  border-color: transparent;
+}
+.header-actions button:not(.workspace-export):hover:not(:disabled),
+.timeline-tools button:hover:not(:disabled),
+.layer-controls button:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+button:active:not(:disabled) {
+  background: var(--app-selected);
+}
+.header-actions button[aria-expanded="true"],
+.timeline-tools button[aria-pressed="true"],
+.layer-controls button[aria-pressed="true"] {
+  background: var(--app-selected);
+  color: var(--app-focus);
+}
+.workspace-export:active:not(:disabled) {
+  background: var(--app-action-pressed);
+  color: var(--app-action-text);
+}
+.editor > header,
+.transport,
+.timeline-tools,
+.dock-title {
+  border-color: var(--app-divider);
+}
+.dock-pane,
+.comments {
+  background: var(--app-page);
+}
+.stage {
+  box-shadow: none;
 }

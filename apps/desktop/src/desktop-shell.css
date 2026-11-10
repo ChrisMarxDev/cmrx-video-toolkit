@@ -39,7 +39,7 @@ header {
   gap: 4px;
   padding: 5px 8px;
   height: 46px;
-  border-bottom: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-divider);
   background: var(--app-surface);
 }
 #tabs {
@@ -132,7 +132,7 @@ button[role="tab"] {
 }
 #empty-add {
   padding: 10px 18px;
-  border: 1px solid #51425f;
+  border: 1px solid var(--app-border);
   color: #e8dff5;
 }
 #empty-add span {
@@ -143,8 +143,8 @@ button[role="tab"] {
   top: 43px;
   left: 12px;
   width: 260px;
-  background: #26202e;
-  border: 1px solid #51425f;
+  background: var(--app-surface-overlay);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 8px;
   box-shadow: 0 15px 45px #0007;
@@ -171,9 +171,9 @@ h2 {
 }
 dialog {
   width: 360px;
-  background: #26202e;
-  color: #eee5f7;
-  border: 1px solid #655075;
+  background: var(--app-surface-overlay);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
   border-radius: 16px;
   padding: 24px;
 }
@@ -186,9 +186,9 @@ label {
 }
 input {
   width: 100%;
-  background: #18141e;
+  background: var(--app-page);
   color: #fff;
-  border: 1px solid #5b496c;
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   padding: 11px;
 }
@@ -252,4 +252,27 @@ button {
 button:focus-visible,
 input:focus-visible {
   outline-color: var(--app-focus);
+}
+
+button:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+button:active:not(:disabled) {
+  background: var(--app-selected);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.primary:hover:not(:disabled) {
+  background: var(--app-action-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--app-action-pressed);
+}
+#menu {
+  border-radius: var(--app-radius-control);
+}
+dialog {
+  border-radius: var(--app-radius-panel);
 }

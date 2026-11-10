@@ -37,7 +37,9 @@ try {
     headless: true,
     args: ["--no-sandbox"],
   });
-  const page = await browser.newPage();
+  const page = await browser.newPage({
+    viewport: { width: 1600, height: 1000 },
+  });
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(
@@ -145,6 +147,14 @@ try {
     body: JSON.stringify({ text: "Make an edit" }),
   });
   await editor.locator(".player-working").waitFor();
+  await page
+    .getByRole("button", { name: "Queue message", exact: true })
+    .waitFor();
+  assert(await page.locator("#send .queue-arrow").isVisible());
+  assert(!(await page.locator("#send .send-arrow").isVisible()));
+  assert(
+    await page.getByRole("button", { name: "Stop", exact: true }).isVisible(),
+  );
   await page.screenshot({ path: path.join(root, "working.png") });
   assert(
     await editor
@@ -153,6 +163,18 @@ try {
   );
   await emit({ type: "complete" });
   await editor.locator(".player-working").waitFor({ state: "hidden" });
+  await page
+    .getByRole("button", { name: "Send message", exact: true })
+    .waitFor();
+  assert(await page.locator("#send .send-arrow").isVisible());
+  assert(!(await page.locator("#send .queue-arrow").isVisible()));
+  assert(!(await page.locator("#stop").isVisible()));
+  assert(
+    await page
+      .getByRole("button", { name: "Add a timed note", exact: true })
+      .isVisible(),
+  );
+  assert(!(await editor.locator(".nav-hint").first().isVisible()));
   let exports = 0;
   await page.route("**/chat/render", (route) => {
     exports++;

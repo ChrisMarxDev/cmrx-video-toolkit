@@ -13,3 +13,7 @@ For app design-system work, read `.agents/skills/design-system/SKILL.md` and
 `DESIGN.md`. Keep implemented behavior, approved rules and interview proposals
 separate. This skill is app-development guidance, not an installed video-project
 skill; do not change generated-video styles while restyling the app.
+
+For app buttons, chat and surface hierarchy, follow the concise rules in DESIGN.md.
+Prefer imagery, visual affordances and familiar shortcuts to persistent instruction
+copy. Preserve accessible names, hover labels and explicit recovery/decision text.

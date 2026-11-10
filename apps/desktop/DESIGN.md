@@ -101,3 +101,46 @@ Next: review representative screens and component states against these foundatio
 record justified exceptions, and extract blocks only when repeated behavior warrants
 it. Token consumption is implemented; this is not a claim that every legacy style,
 contrast pair or screen has received visual approval.
+
+## App design rules — approved 2026-11-10
+
+1. **One workspace.** Tabs above; chat on the left; one video, its timeline and
+   optional inspection panels on the right. Keep related controls beside their content.
+2. **Four surface roles.** Page is the continuous canvas. Panels group a work area.
+   Raised surfaces hold inputs. Floating surfaces hold menus and dialogs. Use shared
+   tokens; do not invent another purple or wrap every element in a card.
+3. **Divide by purpose.** Use spacing first, a fine line for adjacent sections, and
+   the shared transparent handle where resizing is possible. Never stack borders,
+   shadows and cards to describe the same boundary.
+4. **Three button roles.** Filled lavender for the main action in a work area;
+   outlined for alternatives; quiet icons for repeatable tools. Selected tools keep
+   a tinted background. Destructive actions stay distinct from primary actions.
+5. **Consistent states.** Hover brightens, press deepens, lime outlines keyboard
+   focus. Disabled controls stay recognizable. Loading reflects actual work and
+   leaves available actions usable. Errors show a short explanation and recovery.
+6. **Show, then explain.** Prefer thumbnails, familiar icons, cursor changes and
+   direct manipulation. Keep accessible names and hover labels. Put Shift shortcuts
+   in tooltips and the shortcuts panel, not persistent instruction strips. Keep
+   unfamiliar decisions such as Steer, connection and recovery actions named.
+7. **Readable chat.** Assistant text sits on the canvas; user and queued messages
+   get a subtle surface. One raised composer holds attachments, model and actions.
+   Send/Queue use an arrow, Stop a square, and timed notes a comment-plus icon.
+8. **Room to breathe.** Use 16–24px between blocks, 12–16px inside content surfaces,
+   8px between controls, and 32–36px tool targets. Setup actions are at least 44px.
+   Preserve dense timeline geometry where it improves precision; avoid tiny targets.
+9. **Quiet decoration.** Dither imagery belongs to welcome/empty states. Actual
+   assets use real previews. Keep working surfaces clear and video pixels untouched.
+
+Implementation: `src/app-tokens.css` owns roles; `src/app-polish.css` applies chat,
+setup and settings; `src/editor-theme.css` applies the embedded editor;
+`src/desktop-shell.css` applies tabs, project menus and native dialogs. Existing
+resize handles remain shared with the standalone editor.
+
+Composer behavior stays in `src/chat.js`: runtime selects Send or Queue; Enter
+submits and Shift+Enter inserts a line. Stop cancels work; timed note opens the
+editor's comment action. Image previews keep their remove control. Good: an icon
+with a state-correct accessible name. Bad: an unexplained symbol, permanent shortcut
+paragraph, or decoration that competes with the user's content.
+
+These rules apply to the app, not generated videos. Legacy component exceptions
+still need review; this pass establishes and applies the shared hierarchy.
