@@ -23,19 +23,20 @@ jobs:
           export PATH="$RUNNER_TEMP/flutter/bin:$PATH"
           export PUB_CACHE="$RUNNER_TEMP/pub-cache"
           mkdir -p "$PUB_CACHE/git"
-          git clone https://github.com/SimonErich/fluvie.git "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6"
-          git -C "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6" checkout 10e442c1bb469118516df3335547f85ec92155e6
+          git clone https://github.com/SimonErich/fluvie.git "$RUNNER_TEMP/fluvie-input"
+          git -C "$RUNNER_TEMP/fluvie-input" checkout 10e442c1bb469118516df3335547f85ec92155e6
           flutter precache --linux
-          cd "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6"
+          cd "$RUNNER_TEMP/fluvie-input"
           flutter pub get
           git restore -- pubspec.lock
+          cp -a "$RUNNER_TEMP/fluvie-input" "$PUB_CACHE/git/fluvie-10e442c1bb469118516df3335547f85ec92155e6"
       - name: Build native installer with bundled video engine
         run: |
           make desktop-install
           make desktop-package-linux PACKAGE_DIR="$RUNNER_TEMP/candidate" FLUTTER_SDK="$RUNNER_TEMP/flutter" PUB_CACHE_DIR="$RUNNER_TEMP/pub-cache"
       - name: Remove builder toolchains and install candidate with automatic dependencies
         run: |
-          rm -rf "$RUNNER_TEMP/flutter" "$RUNNER_TEMP/pub-cache" "$RUNNER_TEMP/candidate/payload"
+          rm -rf "$RUNNER_TEMP/flutter" "$RUNNER_TEMP/pub-cache" "$RUNNER_TEMP/fluvie-input" "$RUNNER_TEMP/candidate/payload"
           sudo apt-get update
           sudo apt-get install -y "$RUNNER_TEMP"/candidate/*.deb
       - name: Verify installed arbitrary Flutter rendering with fresh HOME

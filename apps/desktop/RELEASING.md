@@ -12,8 +12,8 @@ Desktop tags use
 `apps/desktop/package.json` and its lockfile must match the tag.
 
 The first stage is deliberately a source preview. Linux development and rendering
-are tested locally; there is no bundled Flutter/media sandbox runtime, signed macOS
-app, notarization or unattended updater yet. Do not label these archives as
+are tested locally. The Linux installer candidate below adds a bundled SDK, but
+there is no signed macOS app, notarization or unattended updater yet. Do not label these archives as
 clean-machine installers. The existing app name/profile path stays stable so moving
 source does not discard projects or connections.
 
