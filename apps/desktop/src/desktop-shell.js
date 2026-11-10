@@ -1,4 +1,3 @@
-import { matrixCells } from "./matrix-loader.mjs";
 const $ = (s) => document.querySelector(s);
 let state = { tabs: [] },
   menuOpen = false,
@@ -64,7 +63,6 @@ function update(next) {
     b.title = tab.folder + (tab.activity ? " · " + tab.activity : "");
     const dot = document.createElement("span");
     dot.className = "dot " + tab.status;
-    if (tab.status === "working") dot.innerHTML = matrixCells;
     dot.setAttribute("aria-hidden", "true");
     b.append(dot, document.createTextNode(tab.name));
     b.onclick = () => act("select", { id: tab.id });

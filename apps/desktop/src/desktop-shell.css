@@ -82,11 +82,11 @@ button[role="tab"] {
   height: 6px;
   border-radius: 50%;
   margin-right: 7px;
-  background: #7d728a;
+  background: var(--app-text-muted);
+  flex: 0 0 6px;
 }
 .dot.working {
-  background: none;
-  animation: none;
+  background: var(--app-status-working);
 }
 .dot.attention {
   background: #f3ad74;

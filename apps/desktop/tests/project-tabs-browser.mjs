@@ -117,7 +117,34 @@ try {
   await a
     .getByRole("textbox", { name: "Message", exact: true })
     .fill("alpha-only");
+  const alphaTab = shell.getByRole("tab", { name: "Alpha", exact: true });
+  const tabBeforeWorking = await alphaTab.boundingBox();
   await a.getByRole("button", { name: "Send message", exact: true }).click();
+  await alphaTab.locator(".dot.working").waitFor();
+  const workingDot = await alphaTab.locator(".dot").evaluate((el) => ({
+    width: el.getBoundingClientRect().width,
+    height: el.getBoundingClientRect().height,
+    color: getComputedStyle(el).backgroundColor,
+    children: el.childElementCount,
+  }));
+  assert.deepEqual(workingDot, {
+    width: 6,
+    height: 6,
+    color: "rgb(226, 197, 111)",
+    children: 0,
+  });
+  const tabWhileWorking = await alphaTab.boundingBox();
+  assert.equal(
+    tabBeforeWorking.width,
+    tabWhileWorking.width,
+    "working status must not widen the tab",
+  );
+  assert.equal(
+    tabBeforeWorking.height,
+    tabWhileWorking.height,
+    "working status must not change tab height",
+  );
+
   await shell.getByRole("tab", { name: "Beta", exact: true }).click();
   await a
     .getByText("Saved this project script.", { exact: true })

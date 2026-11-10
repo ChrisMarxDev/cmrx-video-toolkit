@@ -1157,6 +1157,7 @@ function App() {
               role="status"
               aria-label={previewBridge.activity.label}
               data-phase={previewBridge.activity.phase}
+              data-working={previewBridge.activity.working}
               aria-description={previewBridge.activity.details}
             >
               <span aria-hidden="true" />

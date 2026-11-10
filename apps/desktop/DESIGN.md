@@ -31,10 +31,15 @@ generated videos follow their own project style. Use the app development skill a
    and a short heading. Offer Upload or Open empty project. Use subtle dither edge
    light in editing chrome, never over media, text fields or dense timeline content.
    Keep the Bayer cell grid fixed; animate light/opacity rather than scaling cells.
-10. **One loading language.** Compact wave-animated square-cell matrices (14px, 11px in tabs) replace round spinners
-    and working dots across setup, chat, player and tabs. Installation uses a dithered
-    bar: real percentages when reported, indeterminate motion otherwise. Never fake
-    overall completion. Respect reduced motion; keep errors and cancellation visible.
+10. **One loading language.** Compact wave-animated square-cell matrices (14px)
+    belong in loading areas. Installation uses a dithered bar: real percentages
+    when reported, indeterminate motion otherwise. Respect reduced motion; keep
+    errors and cancellation visible. Never fake overall completion.
+11. **Swaps keep their footprint.** An icon or component state swap must fit the
+    previous instance's box. Keep its space, alignment and surrounding layout
+    fixed; scale the replacement down when needed.
+12. **Status dots stay dots.** Change color, never shape or size. Working is yellow.
+    Keep the same 6px dot in tabs and editor status, with state text on hover/focus.
 
 ## Foundations and implementation
 

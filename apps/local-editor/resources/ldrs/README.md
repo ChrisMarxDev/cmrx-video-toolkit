@@ -10,7 +10,8 @@ Reviewed 2026-11-10. Updates are manual; retain local adaptations and license.
 
 Local changes flatten the perspective grid to 4×4 square cells, reduce motion to
 35% of a cell with an opacity wave, use currentColor, size indicators at 14px
-(11px in tabs), and stop animation for reduced motion. Shared CSS supports React
+and stop animation for reduced motion. Status dots are separate and do not use
+this loader. Shared CSS supports React
 and plain JavaScript; only cell markup differs. No runtime package, remote fetch,
 framework adapter or registration is required. The desktop markup helper is
 `apps/desktop/src/matrix-loader.mjs`.

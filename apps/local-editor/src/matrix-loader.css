@@ -3,8 +3,7 @@
  * Flattened grid, square cells, quieter motion and compact sizes for editor chrome.
  */
 .matrix-loader,
-.player-spinner,
-.dot.working {
+.player-spinner {
   --matrix-size: 14px;
   --matrix-gap: 2px;
   display: inline-grid;
@@ -22,14 +21,10 @@
   border-radius: 0;
   line-height: 0;
 }
-.dot.working {
-  --matrix-size: 11px;
-  --matrix-gap: 1px;
-}
 .matrix-loader[hidden] {
   display: none;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > i {
+:is(.matrix-loader, .player-spinner) > i {
   display: block;
   min-width: 0;
   background: currentColor;
@@ -37,31 +32,31 @@
   animation: matrix-wave 1.6s ease-in-out infinite;
   animation-delay: calc(var(--matrix-phase, 0) * -0.128s);
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(2),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(5) {
+:is(.matrix-loader, .player-spinner) > :nth-child(2),
+:is(.matrix-loader, .player-spinner) > :nth-child(5) {
   --matrix-phase: 1;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(3),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(6),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(9) {
+:is(.matrix-loader, .player-spinner) > :nth-child(3),
+:is(.matrix-loader, .player-spinner) > :nth-child(6),
+:is(.matrix-loader, .player-spinner) > :nth-child(9) {
   --matrix-phase: 2;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(4),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(7),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(10),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(13) {
+:is(.matrix-loader, .player-spinner) > :nth-child(4),
+:is(.matrix-loader, .player-spinner) > :nth-child(7),
+:is(.matrix-loader, .player-spinner) > :nth-child(10),
+:is(.matrix-loader, .player-spinner) > :nth-child(13) {
   --matrix-phase: 3;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(8),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(11),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(14) {
+:is(.matrix-loader, .player-spinner) > :nth-child(8),
+:is(.matrix-loader, .player-spinner) > :nth-child(11),
+:is(.matrix-loader, .player-spinner) > :nth-child(14) {
   --matrix-phase: 4;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(12),
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(15) {
+:is(.matrix-loader, .player-spinner) > :nth-child(12),
+:is(.matrix-loader, .player-spinner) > :nth-child(15) {
   --matrix-phase: 5;
 }
-:is(.matrix-loader, .player-spinner, .dot.working) > :nth-child(16) {
+:is(.matrix-loader, .player-spinner) > :nth-child(16) {
   --matrix-phase: 6;
 }
 @keyframes matrix-wave {
@@ -76,7 +71,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :is(.matrix-loader, .player-spinner, .dot.working) > i {
+  :is(.matrix-loader, .player-spinner) > i {
     animation: none;
     opacity: 0.7;
   }
