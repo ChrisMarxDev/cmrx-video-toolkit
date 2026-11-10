@@ -10,6 +10,9 @@ dependencies; clean-machine installation acceptance is a separate release gate.
 Checkout-based launch still uses developer-installed tools. macOS packaging and the native
 render worker still need implementation and acceptance testing.
 
+For the Mac port and installed-app acceptance, use the [Mac agent handover](MAC_HANDOVER.md)
+and the app-owned desktop deployment skill.
+
 ## Run from a checkout
 
 Use Node.js 22.12+, npm, Electron 43, FFmpeg/ffprobe, Flutter and the pinned Fluvie
