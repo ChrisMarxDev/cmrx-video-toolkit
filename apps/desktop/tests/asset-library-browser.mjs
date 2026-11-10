@@ -157,6 +157,40 @@ try {
   };
   await call("login", { provider: "chatgpt" });
   await page.locator("#assets-open").click();
+  const breadcrumb = page.locator("#assets-breadcrumb");
+  await breadcrumb
+    .locator('[aria-current="location"]')
+    .getByText(library + "/", { exact: true })
+    .waitFor();
+  assert.equal(
+    await breadcrumb
+      .getByRole("button", { name: "Go to parent asset folder", exact: true })
+      .count(),
+    0,
+  );
+  const rootBreadcrumbHeight = (await breadcrumb.boundingBox()).height;
+  await page
+    .getByRole("button", { name: "Open folder effects", exact: true })
+    .click();
+  await breadcrumb
+    .locator('[aria-current="location"]')
+    .getByText("effects/", { exact: true })
+    .waitFor();
+  assert.equal((await breadcrumb.boundingBox()).height, rootBreadcrumbHeight);
+  await breadcrumb
+    .getByRole("button", { name: "Go to parent asset folder", exact: true })
+    .click();
+  await breadcrumb
+    .locator('[aria-current="location"]')
+    .getByText(library + "/", { exact: true })
+    .waitFor();
+  assert.equal(
+    await breadcrumb
+      .getByRole("button", { name: "Go to parent asset folder", exact: true })
+      .count(),
+    0,
+  );
+
   await page
     .getByRole("button", { name: "Preview asset reference.png", exact: true })
     .click();
@@ -209,6 +243,9 @@ try {
     received.context.attachedAssets[0].instructions,
     /Keep the presenter/,
   );
+  await page
+    .locator("#asset-attachments .asset-chip")
+    .waitFor({ state: "hidden" });
   assert.equal(await page.locator("#asset-attachments .asset-chip").count(), 0);
   assert.equal(await page.locator(".message.user .asset-chip").count(), 1);
   await page.locator("#assets-open").click();

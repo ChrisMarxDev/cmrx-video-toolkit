@@ -1503,3 +1503,42 @@ button:active:not(:disabled) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Filesystem breadcrumbs are a text path, never another row of scope buttons. */
+#assets-breadcrumb {
+  min-height: 32px;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow-x: auto;
+  padding: 2px 0;
+  color: var(--app-text-muted);
+  font: 12px var(--app-font-technical);
+  white-space: nowrap;
+  user-select: text;
+}
+#assets-breadcrumb > * {
+  flex: 0 0 auto;
+}
+#assets-breadcrumb .asset-parent {
+  margin-right: 12px;
+}
+#assets-breadcrumb button {
+  border: 0;
+  border-radius: 0;
+  padding: 4px 0;
+  min-height: 28px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+#assets-breadcrumb button:hover {
+  background: transparent;
+  color: var(--app-text);
+  text-decoration: underline;
+}
+#assets-breadcrumb [aria-current="location"] {
+  color: var(--app-text);
+}
+#assets-breadcrumb [aria-disabled="true"] {
+  opacity: 0.45;
+}

@@ -318,37 +318,53 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
         String(scope === "project"),
       );
       const crumbs = $("#assets-breadcrumb");
-      crumbs.replaceChildren();
-      const root = el(
-        "button",
-        scope === "library"
-          ? workspaceOwned
-            ? "Workspace assets"
-            : "Library"
-          : projectName,
-      );
-      root.type = "button";
-      root.title =
+      const rootPath = (
         scope === "library"
           ? result.settings.folder
-          : result.settings.projectFolder;
-      root.onclick = () => {
-        folder = "";
+          : result.settings.projectFolder
+      ).replace(/\/+$/, "");
+      const parts = folder.split("/").filter(Boolean);
+      crumbs.replaceChildren();
+      crumbs.title = [rootPath, ...parts].join("/") + "/";
+      const navigate = (destination) => {
+        folder = destination;
         refresh().catch(error);
       };
-      crumbs.append(root);
-      let current = "";
-      for (const part of folder.split("/").filter(Boolean)) {
-        current = [current, part].filter(Boolean).join("/");
-        const dest = current;
-        const b = el("button", part);
-        b.type = "button";
-        b.onclick = () => {
-          folder = dest;
-          refresh().catch(error);
-        };
-        crumbs.append(b);
+      const parent = document.createElement(parts.length ? "button" : "span");
+      parent.className = "asset-parent";
+      parent.textContent = "../";
+      if (parts.length) {
+        parent.type = "button";
+        parent.setAttribute("aria-label", "Go to parent asset folder");
+        parent.title = [rootPath, ...parts.slice(0, -1)].join("/") + "/";
+        parent.onclick = () => navigate(parts.slice(0, -1).join("/"));
+      } else {
+        parent.setAttribute("aria-disabled", "true");
+        parent.title = "Asset root";
       }
+      crumbs.append(parent);
+      const segment = (label, destination, current) => {
+        const node = document.createElement(current ? "span" : "button");
+        node.textContent = label + "/";
+        node.title = destination
+          ? rootPath + "/" + destination + "/"
+          : rootPath + "/";
+        if (current) node.setAttribute("aria-current", "location");
+        else {
+          node.type = "button";
+          node.setAttribute("aria-label", "Go to " + node.title);
+          node.onclick = () => navigate(destination);
+        }
+        crumbs.append(node);
+      };
+      segment(rootPath, "", !parts.length);
+      parts.forEach((part, index) =>
+        segment(
+          part,
+          parts.slice(0, index + 1).join("/"),
+          index === parts.length - 1,
+        ),
+      );
       render();
     } catch (e) {
       if (seq === sequence) throw e;

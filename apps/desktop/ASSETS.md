@@ -120,3 +120,7 @@ than a destructive delete button.
 
 Run `make desktop-check` from the toolkit root. Optional browser acceptance is
 `make -C apps/desktop agent-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright`.
+
+The breadcrumb shows the actual asset-folder path as text. **../** goes up one
+folder within the selected asset location; ancestor paths are clickable. At the
+asset root, ../ is inactive. Workspace/project selection stays in the scope row.
