@@ -218,6 +218,24 @@ const apps = await packager({
     },
   },
 });
+// The packager may absolutize source symlinks even with dereferencing disabled.
+// Relocate those links into the shipped bundle and keep framework links relative.
+const bundle = path.join(apps[0], "CMRX Chat Editor.app");
+function relocateLinks(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) relocateLinks(file);
+    else if (entry.isSymbolicLink()) {
+      const target = fs.readlinkSync(file);
+      if (target.startsWith(staging + path.sep)) {
+        const shipped = path.join(bundle, "Contents/Resources/app", path.relative(staging, target));
+        fs.unlinkSync(file);
+        fs.symlinkSync(path.relative(path.dirname(file), shipped), file);
+      }
+    }
+  }
+}
+relocateLinks(bundle);
 fs.writeFileSync(
   path.join(out, "candidate.json"),
   JSON.stringify(
