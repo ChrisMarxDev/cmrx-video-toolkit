@@ -574,12 +574,12 @@ form {
 .settings-tabs button {
   background: transparent;
   border: 0;
-  color: #aaa1b5;
+  color: var(--app-text-muted);
   padding: 7px 10px;
 }
 .settings-tabs button[aria-pressed="true"] {
-  color: #eee4ff;
-  background: #b6a0df18;
+  color: var(--app-text);
+  background: var(--app-selected);
 }
 .agent-settings-panel h3 {
   font-size: 14px;
@@ -596,7 +596,7 @@ form {
   gap: 6px;
   font-size: 12px;
   margin: 12px 0;
-  color: #bdb2ca;
+  color: var(--app-text-muted);
 }
 .agent-settings-panel input,
 .agent-settings-panel select,
@@ -604,10 +604,10 @@ form {
   box-sizing: border-box;
   width: 100%;
   padding: 10px;
-  border: 1px solid #b6a0df33;
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  background: #161419;
-  color: #eee4ff;
+  background: var(--app-page);
+  color: var(--app-text);
   font: inherit;
 }
 .agent-settings-panel textarea {
@@ -629,7 +629,7 @@ form {
   margin: 0;
 }
 .connection-card {
-  border-bottom: 1px solid #b6a0df20;
+  border-bottom: 1px solid var(--app-divider);
   padding: 12px 0;
   flex-wrap: wrap;
 }
@@ -651,10 +651,10 @@ form {
 }
 .skill-card {
   padding: 12px 0;
-  border-bottom: 1px solid #b6a0df20;
+  border-bottom: 1px solid var(--app-divider);
 }
 .skill-card p {
-  color: #bdb2ca;
+  color: var(--app-text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -688,7 +688,7 @@ form {
   display: inline-flex;
   padding: 5px 8px;
   margin: 3px 4px 3px 0;
-  border: 1px solid #b6a0df33;
+  border: 1px solid var(--app-border);
   border-radius: 6px;
   font-size: 11px;
   text-decoration: none;
@@ -701,7 +701,7 @@ form {
   border: 1px solid #b6a0df44;
   border-radius: 16px;
   background: #17151c;
-  color: #eee4ff;
+  color: var(--app-text);
 }
 #tool-dialog::backdrop {
   background: #0009;
@@ -1208,4 +1208,185 @@ button:active:not(:disabled) {
     animation: none !important;
     transition: none;
   }
+}
+
+/* Secondary surfaces share the same quiet hierarchy and stable navigation. */
+#settings-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  height: min(760px, 88dvh);
+  overflow: hidden;
+}
+#settings-dialog .settings-heading,
+#settings-dialog .settings-tabs {
+  flex-shrink: 0;
+}
+#settings-dialog .settings-heading {
+  margin-bottom: 8px;
+}
+#settings-dialog [data-settings-panel] {
+  overflow: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 0 4px 16px 0;
+}
+#settings-dialog .settings-tabs {
+  margin: 8px 0 24px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#settings-dialog .settings-tabs button {
+  min-height: 36px;
+}
+#settings-dialog .agent-settings-panel form {
+  box-shadow: none;
+  border-radius: 0;
+}
+#settings-dialog :is(input, textarea, select) {
+  background: var(--app-page);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+#settings-dialog .connection-card,
+#settings-dialog .skill-card {
+  padding: 16px 0;
+}
+#settings-dialog .connection-card button,
+#settings-dialog .skill-card button {
+  min-height: 32px;
+  padding: 8px 12px;
+}
+#settings-dialog #replay-setup {
+  margin-top: 16px;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+#assets-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  overflow: hidden;
+}
+#assets-dialog::backdrop {
+  background: #0009;
+  backdrop-filter: none;
+}
+#assets-dialog header {
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+#assets-close,
+#assets-refresh {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+}
+.asset-toolbar {
+  flex-shrink: 0;
+  gap: 8px;
+}
+#assets-breadcrumb {
+  flex-shrink: 0;
+}
+.asset-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 24px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+#assets-status {
+  margin: 0;
+}
+.asset-browser {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+.asset-card {
+  border-color: transparent;
+}
+.asset-card:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+.asset-card[aria-pressed="true"] {
+  background: var(--app-selected);
+  border-color: var(--app-focus);
+}
+.asset-unavailable {
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+#asset-detail h3 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+#asset-detail > :is(img, video, audio) {
+  margin: 8px 0 16px;
+}
+#asset-detail button {
+  min-height: 36px;
+}
+@media (max-width: 760px) {
+  .asset-toolbar {
+    flex-wrap: wrap;
+  }
+  #assets-search {
+    order: 2;
+    flex-basis: calc(100% - 140px);
+  }
+  .asset-browser {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+  #assets-grid {
+    overflow: visible;
+  }
+  #asset-detail {
+    border-left: 0;
+    border-top: 1px solid var(--app-divider);
+    padding: 20px 0 0;
+    overflow: visible;
+  }
+}
+
+.settings-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  order: 90;
+}
+.settings-feedback:has([role="status"]:empty) {
+  display: none;
+}
+#settings-dialog #replay-setup {
+  order: 100;
+}
+
+.assets-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 16px;
+  min-height: 240px;
+  color: var(--app-text-muted);
+}
+.assets-empty svg {
+  width: 48px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  opacity: 0.6;
+}
+.assets-empty p {
+  margin: 0;
 }

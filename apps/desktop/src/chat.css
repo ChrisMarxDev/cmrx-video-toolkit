@@ -486,9 +486,7 @@ a {
   margin-bottom: 22px;
 }
 .settings-heading h2 {
-  font:
-    500 29px Fraunces,
-    serif;
+  font: 500 26px var(--app-font-ui);
   margin: 0;
   letter-spacing: -0.5px;
 }
@@ -745,8 +743,8 @@ a {
   max-width: 94vw;
   height: min(780px, 90vh);
   color: inherit;
-  background: #1b1821;
-  border: 1px solid #4c435d;
+  background: var(--app-surface-overlay);
+  border: 1px solid var(--app-border);
   border-radius: 22px;
   padding: 22px;
 }
@@ -797,7 +795,7 @@ a {
   padding: 12px;
   min-width: 0;
   border-radius: 14px;
-  background: #27222f;
+  background: var(--app-surface);
 }
 .asset-card > img,
 .asset-placeholder {
@@ -805,13 +803,13 @@ a {
   height: 100px;
   object-fit: contain;
   border-radius: 8px;
-  background: #16131c;
+  background: var(--app-page);
 }
 .asset-placeholder {
   display: grid;
   place-items: center;
   font-size: 30px;
-  color: #cdb6ef;
+  color: var(--app-text-muted);
 }
 .asset-card strong {
   overflow-wrap: anywhere;
@@ -819,12 +817,12 @@ a {
 }
 .asset-card small,
 #assets-status {
-  color: #bfb4cd;
+  color: var(--app-text-muted);
   font-size: 12px;
 }
 #asset-detail {
   overflow: auto;
-  border-left: 1px solid #403749;
+  border-left: 1px solid var(--app-divider);
   padding-left: 22px;
 }
 #asset-detail > img,
@@ -838,7 +836,7 @@ a {
 #asset-detail p {
   overflow-wrap: anywhere;
   font-size: 13px;
-  color: #c4bacd;
+  color: var(--app-text-muted);
 }
 #asset-detail button {
   display: block;
@@ -848,8 +846,8 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #362947;
-  border: 1px solid #67517f;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 9px;
   padding: 4px 8px;
   margin: 3px;
@@ -860,7 +858,7 @@ a {
 }
 .asset-library-settings {
   margin-top: 24px;
-  border-top: 1px solid #403749;
+  border-top: 1px solid var(--app-divider);
   padding-top: 12px;
 }
 @media (max-width: 900px) {
@@ -878,8 +876,8 @@ a {
   padding: 9px 12px;
 }
 #assets-dialog .asset-toolbar button[aria-pressed="true"] {
-  background: #3a2c4d;
-  border-color: #9981ba;
+  background: var(--app-selected);
+  border-color: var(--app-border);
 }
 #assets-dialog input:focus-visible,
 #assets-dialog select:focus-visible {

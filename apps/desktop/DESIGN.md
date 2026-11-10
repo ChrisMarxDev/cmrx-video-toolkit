@@ -78,3 +78,21 @@ matrix on the player indicates active editing without blocking inspection.
 Good: Queue remains usable during an agent turn while its icon/name reflect its
 purpose. Bad: replacing it with a blocking spinner, persistent shortcut prose, or
 an unexplained symbol. Loading and errors must reflect real state, not decoration.
+
+## Secondary surfaces
+
+Settings keeps its heading/categories visible while panel content scrolls. Use UI
+headings, neutral fields and 32px minimum action targets. Save operations show the
+shared matrix, reject duplicate submissions and report completion/errors. Hidden
+state must win over component layout, so unavailable fields stay unavailable.
+
+The asset browser uses neutral preview cards with an explicit selected state.
+Keep the current collection visible while refreshing; show the matrix and a busy
+state, then restore retry controls on failure. Empty collections offer Open folder;
+empty searches offer Clear filters. Preserve real media previews and source files.
+Implementation: `src/agent-settings.mjs`, `src/asset-manager.mjs`, app styles.
+
+Awaiting owner decisions (policy proposals; current behavior retained):
+- Lists first in Connections, with Add forms opened on demand.
+- Single click previews; explicit Attach to chat, without double-click attaching.
+- Confirm shared asset/key/connection removal; cuts remain immediate and undoable.

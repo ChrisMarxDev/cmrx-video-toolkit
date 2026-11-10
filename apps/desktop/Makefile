@@ -55,3 +55,8 @@ range-browser-check: build
 # Check setup progress, matrix loaders and first chat: make design-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
 design-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/design-browser.mjs
+
+.PHONY: secondary-browser-check
+# Review settings and asset loading/recovery: make secondary-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
+secondary-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/secondary-browser.mjs

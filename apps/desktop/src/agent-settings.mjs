@@ -23,7 +23,12 @@ export function setupAgentUI({ call, onError, openTool }) {
   let state = {},
     signature = "",
     notesLoaded = false,
-    workspaceBaseline = "";
+    workspaceBaseline = "",
+    settingsPending = false;
+  const feedback = element("div", null, "settings-feedback");
+  feedback.innerHTML =
+    '<span class="matrix-loader" aria-hidden="true" hidden></span><span role="status"></span>';
+  dialog.append(feedback);
   dialog.addEventListener("close", () => {
     notesLoaded = false;
   });
@@ -37,6 +42,8 @@ export function setupAgentUI({ call, onError, openTool }) {
     button.type = "button";
     button.dataset.tab = id;
     button.onclick = () => {
+      if (!settingsPending)
+        feedback.querySelector('[role="status"]').textContent = "";
       for (const [key, p] of Object.entries(panels)) p.hidden = key !== id;
       nav
         .querySelectorAll("button")
@@ -62,13 +69,27 @@ export function setupAgentUI({ call, onError, openTool }) {
   const keyForm = $("#secret-form"),
     connectionForm = $("#connection-form");
   const run = async (fn) => {
+    if (settingsPending) return;
+    settingsPending = true;
+    const submits = Array.from(
+      dialog.querySelectorAll('form button[type="submit"]'),
+    ).map((b) => [b, b.disabled]);
+    for (const [button] of submits) button.disabled = true;
+    feedback.querySelector(".matrix-loader").hidden = false;
+    feedback.querySelector('[role="status"]').textContent = "Working…";
     try {
       await fn();
       $("#settings-error").textContent = "";
       await load();
+      feedback.querySelector('[role="status"]').textContent = "Done";
     } catch (e) {
+      feedback.querySelector('[role="status"]').textContent = "";
       onError(e);
       $("#settings-error").textContent = e.message;
+    } finally {
+      settingsPending = false;
+      feedback.querySelector(".matrix-loader").hidden = true;
+      for (const [button, disabled] of submits) button.disabled = disabled;
     }
   };
   keyForm.onsubmit = (e) => {

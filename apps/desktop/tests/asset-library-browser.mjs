@@ -33,6 +33,9 @@ try {
   fs.mkdirSync(alternate);
   app = await startApp({
     workspace,
+    agentRoot: path.join(root, "agent"),
+    home: path.join(root, "codex"),
+    claudeHome: path.join(root, "claude"),
     pickAssetLibrary: async () => alternate,
     openAssetFolder: async (p) => {
       opened = p;

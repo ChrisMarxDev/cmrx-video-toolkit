@@ -41,6 +41,9 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 try {
   app = await startApp({
     workspace,
+    agentRoot: path.join(workspace, ".test-agent"),
+    home: path.join(workspace, ".test-codex"),
+    claudeHome: path.join(workspace, ".test-claude"),
     providerFactory: ({ onEvent, onTool }) => {
       tool = onTool;
       emit = onEvent;

@@ -59,3 +59,8 @@
   --app-radius-control: 12px;
   --app-radius-compact: 8px;
 }
+
+/* Component layout must never override a state-driven hidden attribute. */
+:where([hidden]) {
+  display: none !important;
+}

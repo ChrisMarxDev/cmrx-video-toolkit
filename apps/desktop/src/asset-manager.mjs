@@ -14,7 +14,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   const dialog = el("dialog");
   dialog.id = "assets-dialog";
   dialog.setAttribute("aria-label", "Asset manager");
-  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Workspace</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><p id="assets-status" role="status"></p><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
+  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Workspace</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><div class="asset-feedback"><span id="assets-loading" class="matrix-loader" aria-hidden="true" hidden></span><p id="assets-status" role="status"></p></div><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
   document.body.append(dialog);
   const settings = el("section");
   settings.className = "asset-library-settings";
@@ -31,6 +31,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     scope = "library",
     folder = "",
     items = [],
+    selectedAsset = null,
     query = "",
     type = "",
     sequence = 0,
@@ -96,6 +97,13 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
     }
   }
   function detail(item) {
+    selectedAsset = item.scope + ":" + item.path;
+    for (const card of dialog.querySelectorAll(".asset-card[data-key]"))
+      if (card.hasAttribute("aria-pressed"))
+        card.setAttribute(
+          "aria-pressed",
+          String(card.dataset.key === selectedAsset),
+        );
     const d = $("#asset-detail");
     d.replaceChildren(
       el("h3", item.name),
@@ -176,6 +184,12 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
       card.type = "button";
       card.className = "asset-card";
       card.dataset.path = item.path;
+      card.dataset.key = item.scope + ":" + item.path;
+      if (!item.folder)
+        card.setAttribute(
+          "aria-pressed",
+          String(card.dataset.key === selectedAsset),
+        );
       card.setAttribute(
         "aria-label",
         (item.folder ? "Open folder " : "Preview asset ") + item.name,
@@ -187,7 +201,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
         image.loading = "lazy";
         image.onerror = () => {
           const placeholder = el("span", "Preview unavailable");
-          placeholder.className = "asset-placeholder";
+          placeholder.className = "asset-placeholder asset-unavailable";
           image.replaceWith(placeholder);
         };
         card.append(image);
@@ -225,97 +239,134 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
       };
       grid.append(card);
     }
-    if (!visible.length)
-      grid.append(
-        el(
-          "p",
-          query || type
-            ? "No matching assets."
-            : workspaceOwned
-              ? "No assets yet. Add files to the workspace assets folder, or save a project asset."
-              : "No assets here yet. Choose a library folder in Settings, or save a project asset.",
-        ),
+    if (!visible.length) {
+      const empty = el("div");
+      empty.className = "assets-empty";
+      empty.innerHTML =
+        '<svg viewBox="0 0 48 40" aria-hidden="true"><path d="M4 10h15l5 5h20v21H4Z"/><path d="M4 10V4h15l5 6h20v5"/></svg>';
+      empty.append(
+        el("p", query || type ? "No matching assets." : "No assets yet."),
       );
+      const action = el(
+        "button",
+        query || type ? "Clear filters" : "Open folder",
+      );
+      action.type = "button";
+      action.onclick = () => {
+        if (query || type) {
+          query = "";
+          type = "";
+          $("#assets-search").value = "";
+          refresh().catch(error);
+        } else call("assets-open", { scope }).catch(error);
+      };
+      empty.append(action);
+      grid.append(empty);
+    }
   }
+
   async function refresh() {
     const seq = ++sequence;
-    const result = await call("assets-list", { scope, folder, query });
-    if (seq !== sequence) return;
-    items = result.items;
-    workspaceOwned = !!result.settings.workspaceOwned;
-    $("#asset-library-folder").value = result.settings.folder;
-    $("#asset-library-choose").hidden = !!result.settings.workspaceOwned;
-    $("#assets-library").textContent = result.settings.workspaceOwned
-      ? "Workspace"
-      : "Library";
-    settings.querySelector("h3").textContent = result.settings.workspaceOwned
-      ? "Workspace assets"
-      : "Asset library";
-    $("#asset-library-state").textContent = result.settings.offline
-      ? "Library folder is offline. Project copies remain available."
-      : "";
-    $("#assets-status").textContent = result.offline
-      ? "Library folder is offline."
-      : result.truncated
-        ? "Showing the first matching assets. Narrow your search."
+    $("#assets-loading").hidden = false;
+    $("#assets-refresh").disabled = true;
+    dialog.querySelector(".asset-browser").setAttribute("aria-busy", "true");
+    try {
+      const result = await call("assets-list", { scope, folder, query });
+      if (seq !== sequence) return;
+      items = result.items;
+      workspaceOwned = !!result.settings.workspaceOwned;
+      $("#asset-library-folder").value = result.settings.folder;
+      $("#asset-library-choose").hidden = !!result.settings.workspaceOwned;
+      $("#assets-library").textContent = result.settings.workspaceOwned
+        ? "Workspace"
+        : "Library";
+      settings.querySelector("h3").textContent = result.settings.workspaceOwned
+        ? "Workspace assets"
+        : "Asset library";
+      $("#asset-library-state").textContent = result.settings.offline
+        ? "Library folder is offline. Project copies remain available."
         : "";
-    const select = $("#assets-type");
-    select.replaceChildren(
-      new Option("All types", ""),
-      ...Array.from(new Set(items.map((i) => i.type)))
-        .sort()
-        .map((t) => new Option(t, t)),
-    );
-    if (Array.from(select.options).some((o) => o.value === type))
-      select.value = type;
-    else {
-      type = "";
-      select.value = "";
-    }
-    $("#assets-library").setAttribute(
-      "aria-pressed",
-      String(scope === "library"),
-    );
-    $("#assets-project").setAttribute(
-      "aria-pressed",
-      String(scope === "project"),
-    );
-    const crumbs = $("#assets-breadcrumb");
-    crumbs.replaceChildren();
-    const root = el(
-      "button",
-      scope === "library" ? "Workspace assets" : "Project assets",
-    );
-    root.type = "button";
-    root.title =
-      scope === "library"
-        ? result.settings.folder
-        : result.settings.projectFolder;
-    root.onclick = () => {
-      folder = "";
-      refresh().catch(error);
-    };
-    crumbs.append(root);
-    let current = "";
-    for (const part of folder.split("/").filter(Boolean)) {
-      current = [current, part].filter(Boolean).join("/");
-      const dest = current;
-      const b = el("button", part);
-      b.type = "button";
-      b.onclick = () => {
-        folder = dest;
+      $("#assets-status").textContent = result.offline
+        ? "Library folder is offline."
+        : result.truncated
+          ? "Showing the first matching assets. Narrow your search."
+          : "";
+      const select = $("#assets-type");
+      select.replaceChildren(
+        new Option("All types", ""),
+        ...Array.from(new Set(items.map((i) => i.type)))
+          .sort()
+          .map((t) => new Option(t, t)),
+      );
+      if (Array.from(select.options).some((o) => o.value === type))
+        select.value = type;
+      else {
+        type = "";
+        select.value = "";
+      }
+      $("#assets-library").setAttribute(
+        "aria-pressed",
+        String(scope === "library"),
+      );
+      $("#assets-project").setAttribute(
+        "aria-pressed",
+        String(scope === "project"),
+      );
+      const crumbs = $("#assets-breadcrumb");
+      crumbs.replaceChildren();
+      const root = el(
+        "button",
+        scope === "library"
+          ? workspaceOwned
+            ? "Workspace assets"
+            : "Library"
+          : "Project assets",
+      );
+      root.type = "button";
+      root.title =
+        scope === "library"
+          ? result.settings.folder
+          : result.settings.projectFolder;
+      root.onclick = () => {
+        folder = "";
         refresh().catch(error);
       };
-      crumbs.append(b);
+      crumbs.append(root);
+      let current = "";
+      for (const part of folder.split("/").filter(Boolean)) {
+        current = [current, part].filter(Boolean).join("/");
+        const dest = current;
+        const b = el("button", part);
+        b.type = "button";
+        b.onclick = () => {
+          folder = dest;
+          refresh().catch(error);
+        };
+        crumbs.append(b);
+      }
+      render();
+    } catch (e) {
+      if (seq === sequence) throw e;
+    } finally {
+      if (seq === sequence) {
+        $("#assets-loading").hidden = true;
+        $("#assets-refresh").disabled = false;
+        dialog
+          .querySelector(".asset-browser")
+          .setAttribute("aria-busy", "false");
+      }
     }
-    render();
   }
+
   open.onclick = () => {
     dialog.showModal();
     refresh().catch(error);
   };
   $("#assets-close").onclick = () => dialog.close();
-  dialog.addEventListener("close", () => $("#asset-detail").replaceChildren());
+  dialog.addEventListener("close", () => {
+    selectedAsset = null;
+    $("#asset-detail").replaceChildren();
+  });
   for (const loc of ["library", "project"])
     $("#assets-" + loc).onclick = () => {
       scope = loc;
