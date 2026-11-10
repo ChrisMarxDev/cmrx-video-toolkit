@@ -12,12 +12,12 @@
 }
 :root {
   color-scheme: dark;
-  --ink: #f5f0ff;
-  --muted: #a69ab6;
-  --base: #17121f;
-  --panel: #211a2d;
-  --line: #393044;
-  --lavender: #dfd6f4;
+  --ink: var(--app-text);
+  --muted: var(--app-text-muted);
+  --base: var(--app-page);
+  --panel: var(--app-surface);
+  --line: var(--app-border);
+  --lavender: var(--app-action);
   --lime: #d5ff45;
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
@@ -60,8 +60,8 @@ button {
     border-color 0.15s;
 }
 button:hover {
-  background: #352a42;
-  border-color: #665375;
+  background: var(--app-hover);
+  border-color: var(--app-border);
 }
 button:disabled {
   opacity: 0.4;
@@ -223,7 +223,7 @@ p {
 }
 form {
   background: var(--panel);
-  border: 1px solid #4e3e5d;
+  border: 1px solid var(--app-border);
   border-radius: 18px;
   padding: 15px 15px 12px;
   box-shadow: 0 5px 25px #00000018;
@@ -245,7 +245,7 @@ textarea {
   line-height: 1.6;
 }
 textarea::placeholder {
-  color: #9586a7;
+  color: var(--app-text-muted);
 }
 .composer {
   display: flex;
@@ -262,7 +262,7 @@ textarea::placeholder {
   padding: 8px 15px;
   border: 0;
   background: var(--lavender);
-  color: #24143d;
+  color: var(--app-action-text);
   font-size: 12px;
   font-weight: 600;
 }
@@ -275,7 +275,7 @@ textarea::placeholder {
 }
 .footnote {
   font-size: 10px;
-  color: #90829f;
+  color: var(--app-text-muted);
   margin: 10px 0 0;
   display: flex;
   justify-content: space-between;
@@ -306,7 +306,7 @@ textarea::placeholder {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #100c16;
+  background: var(--app-page);
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
@@ -323,7 +323,7 @@ textarea::placeholder {
   gap: 12px;
 }
 #preview-status {
-  color: #b7abc7;
+  color: var(--app-text-muted);
   font-size: 11px;
 }
 #preview-status::before {
@@ -339,8 +339,8 @@ textarea::placeholder {
   background: #e9ba71;
 }
 #render {
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
   border: 0;
   font-size: 11px;
   padding: 8px 12px;
@@ -410,8 +410,8 @@ a {
   place-items: center;
 }
 #settings-open:hover {
-  background: #30233f;
-  color: #f5f0ff;
+  background: var(--app-surface-raised);
+  color: var(--app-text);
 }
 .model-controls {
   flex: 1;
@@ -447,8 +447,8 @@ a {
 }
 #model-select option,
 #model-select optgroup {
-  background: #211a2d;
-  color: #f5f0ff;
+  background: var(--app-surface);
+  color: var(--app-text);
 }
 #model-select:focus-visible {
   outline: 1px solid #c9b3e9;
@@ -458,8 +458,8 @@ a {
   font-size: 12px;
   padding: 9px 12px;
   margin-bottom: 10px;
-  background: #30233f;
-  color: #dfd6f4;
+  background: var(--app-surface-raised);
+  color: var(--app-action);
 }
 #connect-provider[hidden] {
   display: none;
@@ -471,7 +471,7 @@ a {
   border: 1px solid #4a3b59;
   border-radius: 22px;
   background: #191320;
-  color: #f5f0ff;
+  color: var(--app-text);
   padding: 26px;
   box-shadow: 0 25px 100px #0009;
 }
@@ -495,7 +495,7 @@ a {
 .settings-heading p {
   font-size: 12px;
   margin: 7px 0 0;
-  color: #a69ab6;
+  color: var(--app-text-muted);
 }
 #settings-close {
   border: 0;
@@ -509,7 +509,7 @@ a {
 }
 .provider-card {
   padding: 18px 0;
-  border-top: 1px solid #393044;
+  border-top: 1px solid var(--app-border);
 }
 .provider-heading {
   display: flex;
@@ -562,8 +562,8 @@ a {
   padding: 8px 11px;
 }
 .provider-actions button.primary {
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
   border: 0;
 }
 .provider-actions button.quiet-button {
@@ -600,12 +600,12 @@ a {
   padding: 7px 10px;
   border: 1px solid #493758;
   border-radius: 8px;
-  color: #dfd6f4;
+  color: var(--app-action);
   background: #251c31;
   max-width: 65%;
 }
 .model-preferences {
-  border-top: 1px solid #393044;
+  border-top: 1px solid var(--app-border);
   padding-top: 20px;
 }
 .model-preferences > p {
@@ -619,7 +619,7 @@ a {
 }
 .model-preferences .settings-note {
   font-size: 11px;
-  color: #a69ab6;
+  color: var(--app-text-muted);
   line-height: 1.6;
   margin-bottom: 0;
 }
@@ -686,8 +686,8 @@ a {
   padding: 7px;
   border: 1px solid #544360;
   border-radius: 14px;
-  background: #211a2d;
-  color: #f5f0ff;
+  background: var(--app-surface);
+  color: var(--app-text);
   box-shadow: 0 16px 48px #0007;
 }
 #model-select option {
@@ -995,7 +995,7 @@ a {
   width: 58px;
   height: 58px;
   padding: 0;
-  background: #151417;
+  background: var(--app-page);
   border-color: #51465f;
 }
 #asset-attachments .asset-chip-image img {
@@ -1014,8 +1014,8 @@ a {
   height: 22px;
   padding: 0;
   border-radius: 50%;
-  background: #302936;
-  color: #f5f0ff;
+  background: var(--app-surface-raised);
+  color: var(--app-text);
   font-size: 16px;
   line-height: 1;
 }

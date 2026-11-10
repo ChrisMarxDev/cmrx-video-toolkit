@@ -1,5 +1,5 @@
 @font-face {
-  font-family: Studio;
+  font-family: "Space Grotesk";
   src: url("../resources/fonts/SpaceGrotesk[wght].ttf");
 }
 * {
@@ -7,10 +7,10 @@
 }
 body {
   margin: 0;
-  background: #151417;
-  color: #e8e3f0;
+  background: var(--app-page);
+  color: var(--app-text);
   font:
-    13px Studio,
+    13px "Space Grotesk",
     system-ui,
     sans-serif;
 }
@@ -26,11 +26,11 @@ button {
   border-radius: 7px;
 }
 button:hover {
-  background: #302a39;
+  background: var(--app-surface-raised);
 }
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid #d6c8ef;
+  outline: 2px solid var(--app-focus);
   outline-offset: 2px;
 }
 header {
@@ -39,8 +39,8 @@ header {
   gap: 4px;
   padding: 5px 8px;
   height: 46px;
-  border-bottom: 1px solid #352d40;
-  background: #19161e;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
 }
 #tabs {
   display: flex;
@@ -57,12 +57,12 @@ header {
   flex-shrink: 0;
   border-radius: 8px;
   max-width: 220px;
-  background: #201c26;
+  background: var(--app-surface);
   border: 1px solid transparent;
 }
 #tabs .tab.active {
-  background: #342b41;
-  border-color: #5c4b70;
+  background: var(--app-selected);
+  border-color: var(--app-border);
 }
 button[role="tab"] {
   padding: 7px 10px;
@@ -74,7 +74,7 @@ button[role="tab"] {
 }
 .close {
   padding: 6px 8px;
-  color: #aaa0b7;
+  color: var(--app-text-muted);
 }
 .dot {
   display: inline-block;
@@ -164,7 +164,7 @@ h2 {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 12px 10px 4px;
-  color: #a99bb9;
+  color: var(--app-text-muted);
 }
 #recents button {
   padding-left: 20px;
@@ -202,11 +202,11 @@ footer button {
   padding: 9px 12px;
 }
 .primary {
-  background: #d6c8ef;
-  color: #241b30;
+  background: var(--app-action);
+  color: var(--app-action-text);
 }
 .primary:hover {
-  background: #e6dbf6;
+  background: var(--app-action-hover);
 }
 #error {
   position: fixed;
@@ -244,4 +244,12 @@ footer button {
 #menu {
   max-height: calc(100vh - 70px);
   overflow-y: auto;
+}
+
+button {
+  border-radius: var(--app-radius-control);
+}
+button:focus-visible,
+input:focus-visible {
+  outline-color: var(--app-focus);
 }

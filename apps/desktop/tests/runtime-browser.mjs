@@ -108,6 +108,21 @@ try {
     "Graphics preview interrupted",
   );
   assert(await page.locator("#render-bar").isHidden());
+  const readFoundation = () => {
+    const style = getComputedStyle(document.documentElement);
+    return ["--app-color-obsidian", "--app-color-lavender", "--app-focus"].map(
+      (name) => style.getPropertyValue(name).trim(),
+    );
+  };
+  const parentTokens = await page.evaluate(readFoundation);
+  const editorTokens = await page
+    .frames()
+    .find((frame) => frame.parentFrame())
+    .evaluate(readFoundation);
+  assert.deepEqual(parentTokens, editorTokens);
+  assert.equal(parentTokens[0], "#100b18");
+  assert.equal(parentTokens[1], "#dfd6f4");
+  assert.equal(parentTokens[2], "#d5ff45");
   const dot = editor.locator(".workspace-status");
   await dot.hover();
   await editor.locator(".workspace-status-tip").waitFor();

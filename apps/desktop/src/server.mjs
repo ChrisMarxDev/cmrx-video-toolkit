@@ -1233,6 +1233,7 @@ export async function startApp({
         [
           "/chat.js",
           "/chat.css",
+          "/app-tokens.css",
           "/editor-theme.css",
           "/message-view.mjs",
           "/comment-payload.mjs",

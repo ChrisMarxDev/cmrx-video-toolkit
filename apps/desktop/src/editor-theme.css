@@ -1,3 +1,4 @@
+@import url("/app-tokens.css");
 /* Only the desktop host loads this theme. The standalone review remains intact. */
 @font-face {
   font-family: Space Grotesk;
@@ -6,15 +7,15 @@
   font-display: swap;
 }
 :root {
-  --ink: #f5f0ff;
-  --surface: #1c1a20;
-  --canvas: #151417;
-  --lav: #39313f;
-  --muted: #a69ab6;
-  --border: #353239;
+  --ink: var(--app-text);
+  --surface: var(--app-surface);
+  --canvas: var(--app-page);
+  --lav: var(--app-hover);
+  --muted: var(--app-text-muted);
+  --border: var(--app-border);
   --accent: #c9b3e9;
   font-family: "Space Grotesk", sans-serif;
-  background: #151417;
+  background: var(--app-page);
   scrollbar-color: #51465f transparent;
   scrollbar-width: thin;
 }
@@ -36,7 +37,7 @@
   grid-template-rows: 44px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
 }
 .editor > header {
-  background: #19171c;
+  background: var(--app-surface);
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -53,7 +54,7 @@ button {
     color 0.12s;
 }
 button:hover:not(:disabled) {
-  background: #39313f;
+  background: var(--app-hover);
 }
 .header-actions {
   gap: 4px;
@@ -66,7 +67,7 @@ button:hover:not(:disabled) {
 .dock-pane,
 .viewer,
 .preview-area {
-  background: #151417;
+  background: var(--app-page);
 }
 .preview-area {
   padding: 16px 18px;
@@ -76,9 +77,9 @@ button:hover:not(:disabled) {
   box-shadow: 0 8px 28px #0004;
 }
 .dock-title {
-  background: #1c1a20;
+  background: var(--app-surface);
   border-bottom: 1px solid #ffffff06;
-  color: #b7abc7;
+  color: var(--app-text-muted);
   font-size: 11px;
 }
 .dock-grip {
@@ -90,36 +91,36 @@ button:hover:not(:disabled) {
 .transport {
   height: 42px;
   flex-basis: 42px;
-  background: #19171c;
+  background: var(--app-surface);
   padding: 0 14px;
-  color: #c6b8d5;
+  color: var(--app-text-muted);
 }
 .transport > button {
   width: 32px;
   height: 30px;
   border-radius: 50%;
-  background: #30233f;
+  background: var(--app-surface-raised);
 }
 .time {
   font-variant-numeric: tabular-nums;
   font-size: 11px;
-  color: #baaccb;
+  color: var(--app-text-muted);
 }
 .timeline-panel {
-  background: #1c1a20;
+  background: var(--app-surface);
   border-top: 1px solid #ffffff08;
 }
 .timeline-tools {
   height: 43px;
   flex-basis: 43px;
   padding: 0 12px;
-  background: #211a2d;
+  background: var(--app-surface);
 }
 .timeline-tools h2 {
   font-family: "Space Grotesk", sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: #d2c5e1;
+  color: var(--app-text-muted);
   margin-right: 8px;
 }
 .timeline-tools button {
@@ -128,32 +129,32 @@ button:hover:not(:disabled) {
   min-height: 29px;
 }
 .timeline-tools button[aria-pressed="true"] {
-  background: #4b365f;
+  background: var(--app-selected);
   color: #f1e4ff;
 }
 .timeline,
 .ruler {
-  background: #1c1a20;
+  background: var(--app-surface);
 }
 .ruler {
   border-bottom: 1px solid #ffffff08;
   font-size: 10px;
-  color: #a99bb9;
+  color: var(--app-text-muted);
 }
 .track {
-  background: #252129;
+  background: var(--app-surface-raised);
   border-bottom: 1px solid #ffffff06;
 }
 .track:nth-child(even) {
-  background: #252129;
+  background: var(--app-surface-raised);
 }
 .track-name {
-  background: #1c1a20;
-  color: #c7b7d8;
+  background: var(--app-surface);
+  color: var(--app-text-muted);
   font-size: 10px;
 }
 .track-name small {
-  color: #90819f;
+  color: var(--app-text-muted);
 }
 .track-name .layer-controls {
   opacity: 0.7;
@@ -167,9 +168,9 @@ button:hover:not(:disabled) {
   background: #84739b;
 }
 .clip.selected {
-  outline: 1px solid #dfd6f4;
+  outline: 1px solid var(--app-focus);
   outline-offset: 1px;
-  border-color: #dfd6f4;
+  border-color: var(--app-focus);
 }
 .clip b {
   font-family: "Space Grotesk", sans-serif;
@@ -178,13 +179,13 @@ button:hover:not(:disabled) {
 }
 .clip.video .clip-text {
   background: #e4dcf2dd;
-  color: #24143d;
+  color: var(--app-action-text);
 }
 .playhead {
-  background: #d5ff45;
+  background: var(--app-playhead);
 }
 .playhead::before {
-  background: #d5ff45;
+  background: var(--app-playhead);
 }
 .comment-marker {
   color: #d3baf2;
@@ -193,13 +194,13 @@ button:hover:not(:disabled) {
   accent-color: #c9b3e9;
 }
 .comments {
-  background: #1c1a20;
+  background: var(--app-surface);
   padding: 12px;
 }
 .comments textarea {
   border-radius: 12px;
-  background: #151417;
-  border: 1px solid #49404f;
+  background: var(--app-page);
+  border: 1px solid var(--app-border);
   padding: 12px;
   font-family: "Space Grotesk", sans-serif;
   font-size: 12px;
@@ -207,11 +208,11 @@ button:hover:not(:disabled) {
 }
 .comments select {
   border-radius: 8px;
-  background: #26222b;
-  border-color: #49404f;
+  background: var(--app-surface-raised);
+  border-color: var(--app-border);
 }
 .comment-list article {
-  background: #27232d;
+  background: var(--app-surface-raised);
   border: 1px solid #49404f55;
   border-radius: 12px;
   padding: 12px;
@@ -226,7 +227,7 @@ button:hover:not(:disabled) {
   color: #d6beef;
 }
 .comment-list small {
-  color: #a89ab9;
+  color: var(--app-text-muted);
   font-size: 10px;
 }
 .comment-list .resolved {
@@ -234,7 +235,7 @@ button:hover:not(:disabled) {
 }
 .nav-hint {
   font-size: 9px;
-  color: #8f819e;
+  color: var(--app-text-muted);
   white-space: nowrap;
 }
 .timeline-tools > div:first-child > .nav-hint {
@@ -275,7 +276,7 @@ button:hover:not(:disabled) {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #d5ff45;
+  background: var(--app-playhead);
 }
 .workspace-status[data-phase="failed"] > span:first-child,
 .workspace-status[data-phase="interrupted"] > span:first-child,
@@ -291,23 +292,27 @@ button:hover:not(:disabled) {
   width: max-content;
   max-width: 260px;
   padding: 7px 10px;
-  border: 1px solid #49404f;
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  color: #f5f0ff;
-  background: #26222b;
+  color: var(--app-text);
+  background: var(--app-surface-raised);
   box-shadow: 0 6px 20px #0004;
   font-size: 11px;
 }
 .workspace-status:hover .workspace-status-tip,
-.workspace-status:focus-visible .workspace-status-tip { display: block; }
+.workspace-status:focus-visible .workspace-status-tip {
+  display: block;
+}
 .workspace-export {
   padding: 7px 12px;
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
   font-size: 11px;
   border: 0;
 }
-.preview-area { position: relative; }
+.preview-area {
+  position: relative;
+}
 .player-working {
   position: absolute;
   top: 24px;
@@ -326,11 +331,55 @@ button:hover:not(:disabled) {
   width: 16px;
   height: 16px;
   border: 2px solid #dfd6f433;
-  border-top-color: #dfd6f4;
+  border-top-color: var(--app-action);
   border-radius: 50%;
   animation: player-working-spin 0.8s linear infinite;
 }
-@keyframes player-working-spin { to { transform: rotate(360deg); } }
+@keyframes player-working-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .player-spinner { animation: none; border-style: dotted; }
+  .player-spinner {
+    animation: none;
+    border-style: dotted;
+  }
+}
+
+.editor {
+  font-family: var(--app-font-ui);
+}
+.editor h1,
+.editor h2,
+.editor h3 {
+  font-family: var(--app-font-ui);
+}
+.time,
+.revision,
+.ruler {
+  font-family: var(--app-font-technical);
+}
+.stage {
+  border-radius: var(--app-radius-panel);
+}
+button {
+  border-radius: var(--app-radius-control);
+}
+.timeline-tools button,
+.header-actions button {
+  border-radius: var(--app-radius-compact);
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--app-focus);
+  outline-offset: 2px;
+}
+
+.workspace-export:hover:not(:disabled) {
+  background: var(--app-action-hover);
+  color: var(--app-action-text);
 }

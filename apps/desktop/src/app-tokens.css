@@ -1,0 +1,47 @@
+/* App-only CMRX foundations. See ../DESIGN.md; generated-video styles are separate. */
+:root {
+  color-scheme: dark;
+  --app-color-obsidian: #100b18;
+  --app-color-ink: #24143d;
+  --app-color-lavender: #dfd6f4;
+  --app-color-lime: #d5ff45;
+  --app-text: #f5f1fc;
+  --app-text-muted: #c1b8d0;
+  --app-page: var(--app-color-obsidian);
+  --app-surface: color-mix(in srgb, var(--app-color-ink) 45%, var(--app-page));
+  --app-surface-raised: color-mix(
+    in srgb,
+    var(--app-color-ink) 80%,
+    var(--app-page)
+  );
+  --app-hover: color-mix(
+    in srgb,
+    var(--app-color-lavender) 12%,
+    var(--app-surface)
+  );
+  --app-selected: color-mix(
+    in srgb,
+    var(--app-color-lavender) 18%,
+    var(--app-surface)
+  );
+  --app-border: color-mix(
+    in srgb,
+    var(--app-color-lavender) 22%,
+    var(--app-surface)
+  );
+  --app-action: var(--app-color-lavender);
+  --app-action-hover: color-mix(in srgb, var(--app-action) 85%, white);
+  --app-action-text: var(--app-color-ink);
+  --app-focus: var(--app-color-lime);
+  --app-playhead: var(--app-color-lime);
+  --app-font-ui: "Space Grotesk", system-ui, sans-serif;
+  --app-font-headline: "Fraunces", Georgia, serif;
+  --app-font-technical: "IBM Plex Mono", ui-monospace, monospace;
+  --app-space-1: 4px;
+  --app-space-2: 8px;
+  --app-space-3: 16px;
+  --app-space-4: 24px;
+  --app-radius-panel: 20px;
+  --app-radius-control: 12px;
+  --app-radius-compact: 8px;
+}

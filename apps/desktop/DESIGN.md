@@ -1,14 +1,14 @@
 # Desktop app design system
 
-Status: foundation inventory and interview, not an approved restyling specification.
+Status: theme, density, type roles and accent allocation approved by the owner on
+2026-11-10. Shared foundations are implemented; component/state review continues.
 Use `.agents/skills/design-system/SKILL.md` for system work. It is development
 guidance, separate from the video-editing agent's creative skill catalog.
 
 ## Sources and scope
 
 The owner requested the CMRX Studio design system as the starting point. The
-palette below is a foundation seed for the app; it does not change production
-styles. Existing app source remains the implementation evidence. Generated videos
+palette below seeds the app-only semantic tokens in `src/app-tokens.css`. Existing app source remains the implementation evidence. Generated videos
 continue to follow their own workspace/project style instructions. This interview
 must not silently change other products, brand rules or video styles.
 
@@ -17,24 +17,24 @@ The app's local design system must be independently usable from this repository.
 
 | Foundation seed | Value / role | Status |
 | --- | --- | --- |
-| Obsidian | `#100B18`, dark page foundation | Requested starting point |
-| Purple ink | `#24143D`, brand ink / purple surface | Requested starting point |
-| White | `#FFFFFF`, light paper | Requested starting point; no light theme implied |
-| Lavender | `#DFD6F4`, secondary/action field | Already used in app; semantics to settle |
-| Lime | `#D5FF45`, small purposeful signal | Already used in app; semantics to settle |
-| Dark text / muted | `#F5F1FC` / `#C1B8D0` | Requested starting point; actual contrast unreviewed |
-| UI / headline / technical | Space Grotesk / Fraunces / IBM Plex Mono | Role mapping to settle; not all fonts shipped in every surface |
-| Spacing | 4, 8, 16, 24, 32, 48, 80 px | Starting scale, not a mandate for dense timeline geometry |
-| Radius | 20px panels/media, 12px controls | Brand starting point; app exceptions need explicit decisions |
+| Obsidian | `#100B18`, dark page foundation | Approved seed |
+| Purple ink | `#24143D`, brand ink / purple surface | Approved seed |
+| White | `#FFFFFF`, light paper | Approved seed; light theme deferred |
+| Lavender | `#DFD6F4`, secondary/action field | Approved action field |
+| Lime | `#D5FF45`, playhead/focus/selection signal | Approved active signal |
+| Dark text / muted | `#F5F1FC` / `#C1B8D0` | Approved seed; combination-level contrast review remains |
+| UI / headline / technical | Space Grotesk / Fraunces / IBM Plex Mono | Approved roles below; technical font has a system-monospace fallback |
+| Spacing | 4, 8, 16, 24, 32, 48, 80 px | Approved starting scale; dense timeline geometry retains measured exceptions |
+| Radius | 20px panels/media, 12px controls | 20px panels, 12px controls; compact toolbar controls retain 8px |
 | Texture | Fine ordered dithering | Owner requested dithered images, gradients and balls for this app |
 
 ## Implementation inventory
 
 | Layer | Existing source | Evidence / gap |
 | --- | --- | --- |
-| Chat primitives/theme | `src/chat.css`, `src/app-polish.css` | Separate raw values and overrides; not yet a shared semantic token source |
-| Native tabs/dialogs | `src/desktop-shell.css`, `src/desktop-shell.js` | Another independent palette/type/radius implementation |
-| Embedded editor theme | `src/editor-theme.css` | Separate semantic variables over the base editor |
+| Chat primitives/theme | `src/chat.css`, `src/app-polish.css` | Consumes shared app tokens; legacy optical/state values remain to audit |
+| Native tabs/dialogs | `src/desktop-shell.css`, `src/desktop-shell.js` | Consumes the same app tokens via a file stylesheet |
+| Embedded editor theme | `src/editor-theme.css` | Imports shared app tokens over standalone editor defaults |
 | Editor and timeline | `../local-editor/src/{app.tsx,style.css}` | Standalone editor must retain independently usable defaults |
 | Shared resize handle | `../local-editor/src/resize-handles.css` | One implementation across desktop/editor, with hover/focus/keyboard behavior |
 | Branding and decoration | `src/brand-ui.mjs`, `src/dither-art.mjs`, `resources/brands/` | Existing identity sources; do not fetch/copy replacement logos silently |
@@ -42,10 +42,21 @@ The app's local design system must be independently usable from this repository.
 | Composer/queue block | `src/chat.js`, `src/asset-manager.mjs` | Draft images with remove, queue-first submission and explicit queued steering |
 | First-run/settings blocks | `src/onboarding.mjs`, `src/settings-view.mjs`, `src/agent-settings.mjs` | Native setup and async states need design-system review after rules settle |
 
-Current palettes/type roles differ across those surfaces. Record them as drift to
-review, not as approved new tokens. Do not migrate raw values blindly before the
-interview resolves theme, density and type-role decisions. A future app token
-source should feed all desktop surfaces, while preserving standalone editor defaults.
+`src/app-tokens.css` is the app's canonical token source, loaded by chat, native
+shell and the embedded editor theme. It owns brand primitives, derived quiet-purple
+surfaces, text/border/action/focus roles, spacing and radius roles. Components use
+semantic roles; avoid adding another raw near-purple in a consumer stylesheet.
+Standalone editor defaults and generated-video styles remain independent.
+
+Examples grounded in current code: `src/editor-theme.css` imports the shared
+foundation rather than redefining the palette; `src/desktop-shell.css` consumes
+surface and focus roles. Counterexample for future work: a new button with an
+inline literal purple would bypass those roles; extend the semantic source instead.
+
+Space Grotesk and Fraunces use existing packaged fonts. Technical text requests
+IBM Plex Mono with a system-monospace fallback; a new IBM Plex Mono font asset was
+not added in this pass. Remaining state-specific colors/optical sizes are not
+silently promoted to new canonical tokens. No light theme is implemented.
 
 ## Established product rules from the owner's decisions
 
@@ -64,29 +75,29 @@ source should feed all desktop surfaces, while preserving standalone editor defa
 - Company/product mentions in UI use the appropriate approved logo. Do not recolor
   or distort third-party identities.
 
-## Proposals awaiting the owner's answers
+## Approved app rules — 2026-11-10
 
-These are app-only proposals, not production defaults or changes to video styles.
+1. Dark-first for this release; light theme later. The OS light preference does not
+   imply a light theme exists.
+2. Compact editing controls and chat, with more breathing room in setup/settings.
+   Keep readable text and interaction targets rather than shrink everything alike.
+3. Fraunces for welcome, empty-state and onboarding editorial headlines; Space
+   Grotesk for the working UI, including dense panel labels; mono for technical
+   values/timecodes. This is an app-only refinement of the broader headline rule.
+4. Quiet obsidian/purple surfaces, lavender actions, lime for playhead/focus/selection.
+   Avoid large lime decoration or accidental light text on lavender actions.
+5. Restrained dither flourishes around onboarding and empty states. Do not texture
+   the user's video, text fields or busy editing controls by default.
 
-1. Dark-first workbench; decide whether a matching light theme is required now.
-2. Compact timeline/toolbars, comfortable chat/settings/forms; preserve readable
-   text and generous interaction targets rather than shrink every element alike.
-3. Fraunces for welcome/empty/editorial headings; Space Grotesk for workbench labels
-   and dense panel headings; mono for timecodes/technical values. This needs an
-   app-specific typography decision against the broader headline convention.
-4. Quiet dark/purple surfaces, lavender primary actions, lime reserved for playhead,
-   selection/focus or a small active signal. Dedicated error/warning semantics must
-   be legible and accompanied by text/icon, not confused with brand decoration.
-5. Keep dither flourishes in onboarding, empty states and small peripheral moments.
-   Never texture the user's video, text fields or busy editing controls by default.
-6. Tooltips supplement icons; critical errors, required actions and destructive
-   choices must not be discoverable only through hover. Keep familiar toolbar
-   icons compact; keep explicit labels for consequential/infrequent actions.
-7. Use restrained, interruptible transitions and reduced-motion alternatives.
-   Adapt motion values deliberately for UI roles rather than reuse video timing
-   or scatter arbitrary durations.
+## Further proposals, not yet adopted as new product-wide rules
 
-Next: interview the owner, mark approved/rejected decisions, define semantic tokens
-and actual component state records, then exercise representative screens before
-promoting new reusable blocks. No rendered-screen/contrast review has been performed
-as part of installing the skill and recording this inventory.
+- Tooltips supplement icons; critical errors/actions should not be hover-only.
+  Review actual failure/recovery states before formalizing a component contract.
+- Define a UI motion scale deliberately, with interruptible transitions and reduced
+  motion, rather than borrow video timing. Existing motion/reduced-motion behavior
+  remains; no new timing scale has been approved in this round.
+
+Next: review representative screens and component states against these foundations,
+record justified exceptions, and extract blocks only when repeated behavior warrants
+it. Token consumption is implemented; this is not a claim that every legacy style,
+contrast pair or screen has received visual approval.

@@ -1,11 +1,11 @@
 /* Design passes informed by unslop, Damir Sokolovsky, CC BY 4.0.
    https://github.com/heydamir/unslop — retain the established CMRX typography. */
 :root {
-  --ink: #f0edf3;
-  --muted: #a29da9;
-  --base: #151417;
-  --panel: #1d1c20;
-  --line: #353239;
+  --ink: var(--app-text);
+  --muted: var(--app-text-muted);
+  --base: var(--app-page);
+  --panel: var(--app-surface);
+  --line: var(--app-border);
 }
 body,
 main {
@@ -15,7 +15,7 @@ main {
   padding: 12px 16px 16px 0;
 }
 button {
-  background: #252329;
+  background: var(--app-surface-raised);
   border-color: var(--line);
   border-radius: 10px;
 }
@@ -57,11 +57,11 @@ button:hover:not(:disabled) {
 #visual {
   border-color: var(--line);
   border-radius: 16px;
-  background: #17161a;
+  background: var(--app-surface);
 }
 #render-bar {
   height: 52px;
-  background: #1b191e;
+  background: var(--app-surface);
   border-color: var(--line);
   padding: 8px 16px;
 }
@@ -73,8 +73,8 @@ button:hover:not(:disabled) {
   gap: 8px;
 }
 #render {
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
   border: 0;
 }
 #welcome {
@@ -113,9 +113,9 @@ button:hover:not(:disabled) {
   letter-spacing: 0;
 }
 form {
-  border-color: #4a414f;
+  border-color: var(--app-border);
   border-radius: 16px;
-  background: #1e1c22;
+  background: var(--app-surface);
   padding: 12px;
 }
 #prompt {
@@ -134,8 +134,8 @@ form {
   font-size: 12px;
 }
 #send {
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
 }
 #add-note {
   padding: 0;
@@ -153,7 +153,7 @@ form {
   letter-spacing: 0;
 }
 #settings-dialog {
-  background: #1c1a20;
+  background: var(--app-surface);
   border-color: var(--line);
   border-radius: 20px;
   max-width: 620px;
@@ -194,8 +194,8 @@ form {
 }
 .provider-actions button.primary,
 .primary {
-  background: #dfd6f4;
-  color: #24143d;
+  background: var(--app-action);
+  color: var(--app-action-text);
   border: 0;
 }
 .provider-actions button {
@@ -222,7 +222,7 @@ form {
   z-index: 20;
   display: grid;
   grid-template-columns: minmax(280px, 0.85fr) minmax(480px, 1.15fr);
-  background: #151417;
+  background: var(--app-page);
   color: var(--ink);
   overflow: auto;
 }
@@ -237,7 +237,7 @@ form {
   gap: 32px;
   padding: 64px clamp(32px, 5vw, 80px);
   border-right: 1px solid var(--line);
-  background: #19161e;
+  background: var(--app-surface);
   position: relative;
 }
 .start-rail::after {
@@ -251,7 +251,7 @@ form {
 }
 .start-kicker {
   font-size: 14px;
-  color: #dfd6f4;
+  color: var(--app-action);
 }
 .start-rail h1 {
   font-family: Fraunces, serif;
@@ -284,7 +284,7 @@ form {
   color: inherit;
 }
 .start-rail li.active {
-  color: #f0edf3;
+  color: var(--app-text);
 }
 .start-rail li.active span {
   color: #d5ff45;
@@ -535,7 +535,7 @@ form {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #a89ab9;
+  color: var(--app-text-muted);
   font-size: 11px;
   padding: 4px 0;
 }
@@ -562,7 +562,7 @@ form {
   font-size: 11px;
   border: 0;
   background: transparent;
-  color: #a89ab9;
+  color: var(--app-text-muted);
   padding: 2px 5px;
 }
 
@@ -614,7 +614,7 @@ form {
   resize: vertical;
 }
 .settings-caption {
-  color: #a89ab9;
+  color: var(--app-text-muted);
   font-size: 11px;
   line-height: 1.6;
 }
@@ -640,7 +640,7 @@ form {
 .connection-card small,
 .skill-card small {
   display: block;
-  color: #a89ab9;
+  color: var(--app-text-muted);
   font-size: 10px;
   margin-top: 4px;
 }
@@ -740,7 +740,7 @@ form {
   align-items: flex-start;
   justify-content: center;
   padding: clamp(48px, 10vh, 120px) 24px 32px;
-  background: #151417;
+  background: var(--app-page);
   grid-template-columns: none;
 }
 .setup-page {
@@ -881,4 +881,53 @@ form {
 }
 
 /* The embedded editor owns the unified workspace toolbar. */
-#render-bar { display: none; }
+#render-bar {
+  display: none;
+}
+
+/* Approved app role mapping; panel labels are UI, welcome/setup headlines editorial. */
+body,
+button,
+input,
+textarea,
+select,
+h1,
+h2,
+h3 {
+  font-family: var(--app-font-ui);
+}
+#welcome h1,
+#start-screen h1 {
+  font-family: var(--app-font-headline);
+}
+code,
+pre,
+kbd {
+  font-family: var(--app-font-technical);
+}
+form,
+#visual,
+dialog {
+  border-radius: var(--app-radius-panel);
+}
+button,
+input,
+textarea,
+select {
+  border-radius: var(--app-radius-control);
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline-color: var(--app-focus);
+}
+
+#send:hover:not(:disabled),
+#render:hover:not(:disabled),
+.primary:hover:not(:disabled),
+.provider-actions button.primary:hover:not(:disabled) {
+  background: var(--app-action-hover);
+  color: var(--app-action-text);
+}
