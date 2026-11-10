@@ -74,6 +74,9 @@ try {
       .getByRole("button", { name: "Undo", exact: true })
       .isVisible()),
   );
+  const redo = editor.getByRole("button", { name: "Redo", exact: true });
+  assert(await redo.isVisible());
+  assert(await redo.isDisabled());
   const box = await ruler.boundingBox();
   const zoom = await editor
     .getByRole("slider", { name: "Timeline zoom", exact: true })
@@ -122,6 +125,31 @@ try {
     { url: app.url + "/api/state?token=" + app.editorToken, r: cut.revision },
   );
   assert.deepEqual(project().clips, before.clips);
+  await page.waitForFunction(
+    () =>
+      !document
+        .querySelector("#editor")
+        .contentDocument.querySelector('[aria-label="Redo"]').disabled,
+  );
+  await redo.click();
+  await page.waitForFunction(
+    ({ url, r }) =>
+      fetch(url)
+        .then((x) => x.json())
+        .then((s) => s.project.revision >= r + 2),
+    { url: app.url + "/api/state?token=" + app.editorToken, r: cut.revision },
+  );
+  assert.deepEqual(project().clips, cut.clips);
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction(
+    ({ url, r }) =>
+      fetch(url)
+        .then((x) => x.json())
+        .then((s) => s.project.revision >= r + 3),
+    { url: app.url + "/api/state?token=" + app.editorToken, r: cut.revision },
+  );
+  assert.deepEqual(project().clips, before.clips);
+
   // I/O and context menu share the selection and the same revision-checked edit.
   await page.mouse.click(x(1), y);
   await page.keyboard.press("i");

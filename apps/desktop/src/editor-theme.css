@@ -425,8 +425,7 @@ button:active:not(:disabled) {
 .workspace-export,
 .header-actions button[aria-label="Toggle transcript"],
 .header-actions button[aria-label="Keyboard shortcuts"],
-.timeline-tools button[aria-label="Undo"],
-.timeline-tools button[aria-label="Redo"] {
+.timeline-tools button[aria-label="Undo"] {
   display: none;
 }
 .timeline-context-menu {
