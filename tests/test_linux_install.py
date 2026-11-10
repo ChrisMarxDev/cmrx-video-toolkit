@@ -71,7 +71,7 @@ class LinuxInstallTests(unittest.TestCase):
             r = self.shell('STATE='+shlex.quote(str(root / 'managed'))+'; '
                 'PATH='+shlex.quote(str(selected))+':/usr/bin:/bin; CHECK_ONLY=1; '
                 'uname() { if [[ "$1" == -m ]]; then echo x86_64; else echo Linux; fi; }; ldd() { echo glibc; }; '
-                'select_manager() { :; }; base_packages() { :; }; native_packages() { :; }; '
+                'select_manager() { :; }; base_packages() { :; }; native_packages() { :; }; ffmpeg_ok() { return 0; }; '
                 'install_python() { PYTHON=/usr/bin/true; }; install_node() { :; }; '
                 'node() { :; }; npm() { :; }; flutter_ok() { return 0; }; '
                 'install_whisper() { :; }; finish_install() { command -v flutter; }; main')
