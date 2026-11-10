@@ -156,7 +156,7 @@ are valid authored data; they derive a visible orphan label rather than breaking
 project loading. Invalid files retain the last accepted state and block mutations.
 
 Limits: 100 assets/clips each, 1000 comments, 10000 characters per comment, 10-minute
-timeline, 8 tracks, 1920×1080 canvas and integer 1–60 fps. There is no silent data
+timeline, 8 tracks, 3840×2160 canvas and integer 1–60 fps. There is no silent data
 migration on startup. Adding optional comments is backward compatible with prior
 v1 projects. Consumers without this extension must retain unknown comments; they
 cannot be assumed to implement comment-aware split behavior.
@@ -244,8 +244,8 @@ Flattened review videos can carry ranges on the rendered asset; those ranges are
 not interchangeable with original recording timestamps.
 
 Canvas dimensions must be even, at least 64 pixels per side, with a maximum
-long edge of 1920 and short edge of 1080. Both landscape 1920×1080 and portrait
-1080×1920 are accepted; a 1920×1920 square is not. Source media is not resized
+long edge of 3840 and short edge of 2160. Both landscape 3840×2160 and portrait
+2160×3840 are accepted; a 3840×3840 square is not. Source media is not resized
 by validation.
 
 Review position is UI state: `.editor/view.json` retains the last accepted

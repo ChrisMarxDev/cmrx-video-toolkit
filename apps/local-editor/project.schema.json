@@ -18,13 +18,13 @@
     "width": {
       "type": "number",
       "minimum": 64,
-      "maximum": 1920,
+      "maximum": 3840,
       "multipleOf": 2
     },
     "height": {
       "type": "number",
       "minimum": 64,
-      "maximum": 1920,
+      "maximum": 3840,
       "multipleOf": 2
     },
     "fps": {
@@ -245,23 +245,23 @@
         },
         "x": {
           "type": "number",
-          "minimum": -7680,
-          "maximum": 1920
+          "minimum": -15360,
+          "maximum": 3840
         },
         "y": {
           "type": "number",
-          "minimum": -7680,
-          "maximum": 1920
+          "minimum": -15360,
+          "maximum": 3840
         },
         "width": {
           "type": "number",
           "minimum": 2,
-          "maximum": 7680
+          "maximum": 15360
         },
         "height": {
           "type": "number",
           "minimum": 2,
-          "maximum": 7680
+          "maximum": 15360
         },
         "muted": {
           "type": "boolean"
@@ -413,14 +413,14 @@
     {
       "properties": {
         "width": {
-          "maximum": 1080
+          "maximum": 2160
         }
       }
     },
     {
       "properties": {
         "height": {
-          "maximum": 1080
+          "maximum": 2160
         }
       }
     }

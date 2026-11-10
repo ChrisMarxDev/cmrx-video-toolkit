@@ -4,18 +4,29 @@ import { pipeline } from "node:stream/promises";
 import { spawn } from "node:child_process";
 import { randomUUID, createHash } from "node:crypto";
 
-function run(command, args, signal) {
+function run(command, args, signal, progress) {
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
     const p = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
     let out = "",
+      progressBuffer = "",
       killTimer;
     const abort = () => {
       p.kill("SIGTERM");
       killTimer = setTimeout(() => p.kill("SIGKILL"), 2000);
     };
     signal?.addEventListener("abort", abort, { once: true });
-    p.stdout.on("data", (d) => (out = (out + d).slice(-1000000)));
+    p.stdout.on("data", (d) => {
+      out = (out + d).slice(-1000000);
+      if (!progress) return;
+      progressBuffer += String(d);
+      const lines = progressBuffer.split("\n");
+      progressBuffer = lines.pop();
+      for (const line of lines) {
+        const match = /^out_time_us=(\d+)$/.exec(line.trim());
+        if (match) progress?.(Number(match[1]) / 1000000);
+      }
+    });
     p.stderr.resume();
     p.on("error", () => {
       signal?.removeEventListener("abort", abort);
@@ -38,6 +49,7 @@ export async function importVideo({
   onProgress = () => {},
   signal,
 }) {
+  const selectedName = path.basename(path.resolve(source));
   const absolute = fs.realpathSync(source);
   if (!fs.statSync(absolute).isFile()) throw Error("Choose a video file");
   onProgress("Reading your video…");
@@ -75,13 +87,15 @@ export async function importVideo({
   const rotated = Math.abs(rotation) % 180 === 90;
   const originalWidth = rotated ? video.height : video.width,
     originalHeight = rotated ? video.width : video.height;
-  const scale = Math.min(
-    1,
-    1920 / Math.max(originalWidth, originalHeight),
-    1080 / Math.min(originalWidth, originalHeight),
-  );
-  const width = Math.max(64, Math.floor((originalWidth * scale) / 2) * 2),
-    height = Math.max(64, Math.floor((originalHeight * scale) / 2) * 2);
+  if (
+    Math.max(originalWidth, originalHeight) > 3840 ||
+    Math.min(originalWidth, originalHeight) > 2160
+  )
+    throw Error(
+      "Videos up to 3840×2160 landscape or 2160×3840 portrait are supported. Your original was not changed.",
+    );
+  const width = Math.max(64, Math.floor(originalWidth / 2) * 2),
+    height = Math.max(64, Math.floor(originalHeight / 2) * 2);
   const fps = Number.isInteger(rate) && rate >= 1 && rate <= 60 ? rate : 30;
   const hdr = ["smpte2084", "arib-std-b67"].includes(video.color_transfer);
   const compatible =
@@ -90,7 +104,8 @@ export async function importVideo({
     video.pix_fmt === "yuv420p" &&
     !rotated &&
     !hdr &&
-    scale === 1 &&
+    width === originalWidth &&
+    height === originalHeight &&
     fps === rate &&
     probe.streams
       .filter((s) => s.codec_type === "audio")
@@ -98,6 +113,11 @@ export async function importVideo({
   const id = "asset-" + randomUUID(),
     relative = "media/" + id + ".mp4",
     dest = path.join(workspace, relative);
+  const originalFile = compatible
+    ? relative
+    : `media/originals/${id}${path.extname(selectedName)}`;
+  const originalDest = path.join(workspace, originalFile);
+  fs.mkdirSync(path.dirname(originalDest), { recursive: true });
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   try {
     if (compatible) {
@@ -108,7 +128,13 @@ export async function importVideo({
         { signal },
       );
     } else {
-      onProgress("Preparing playback…");
+      onProgress("Keeping your original…");
+      await pipeline(
+        fs.createReadStream(absolute),
+        fs.createWriteStream(originalDest),
+        { signal },
+      );
+      onProgress("Preparing playback… 0%");
       const filters = [
         ...(hdr
           ? [
@@ -129,7 +155,10 @@ export async function importVideo({
           "error",
           "-nostdin",
           "-i",
-          absolute,
+          originalDest,
+          "-progress",
+          "pipe:1",
+          "-nostats",
           "-map",
           "0:v:0",
           "-map",
@@ -155,6 +184,10 @@ export async function importVideo({
           dest,
         ],
         signal,
+        (seconds) =>
+          onProgress(
+            `Preparing playback… ${Math.min(99, Math.floor((seconds / duration) * 100))}%`,
+          ),
       );
     }
     const sha = createHash("sha256");
@@ -170,12 +203,13 @@ export async function importVideo({
     if (!project.clips.length) Object.assign(project, { width, height, fps });
     project.assets.push({
       id,
-      name: path.basename(absolute),
+      name: selectedName,
       path: relative,
       duration,
       audio: probe.streams.some((s) => s.codec_type === "audio"),
       provenance: {
         original: absolute,
+        originalFile,
         sha256: sha.digest("hex"),
         playback: compatible
           ? "Exact source copy"
@@ -189,7 +223,7 @@ export async function importVideo({
     project.clips.push({
       id: "clip-" + randomUUID(),
       kind: "video",
-      name: path.basename(absolute),
+      name: selectedName,
       assetId: id,
       start,
       in: 0,
@@ -206,6 +240,7 @@ export async function importVideo({
     return { assetId: id, width, height, duration, exactCopy: compatible };
   } catch (error) {
     fs.rmSync(dest, { force: true });
+    if (originalDest !== dest) fs.rmSync(originalDest, { force: true });
     throw error;
   }
 }

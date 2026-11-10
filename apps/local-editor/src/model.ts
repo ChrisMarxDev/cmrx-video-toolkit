@@ -176,12 +176,12 @@ export function validate(p: Project): Project {
     "Invalid project name",
   );
   check(
-    num(p.width, 64, 1920) &&
+    num(p.width, 64, 3840) &&
       p.width % 2 === 0 &&
-      num(p.height, 64, 1920) &&
-      Math.min(p.width, p.height) <= 1080 &&
+      num(p.height, 64, 3840) &&
+      Math.min(p.width, p.height) <= 2160 &&
       p.height % 2 === 0,
-    "Even canvas dimensions required (max 1920×1080 landscape or 1080×1920 portrait)",
+    "Even canvas dimensions required (max 3840×2160 landscape or 2160×3840 portrait)",
   );
   check(Number.isInteger(p.fps) && num(p.fps, 1, 60), "fps must be 1–60");
   check(

@@ -536,7 +536,7 @@ test("section take preferences preserve unequal ranges and independent choices",
   assert.throws(() => validate(p));
 });
 
-test("portrait HD canvases work and oversized squares remain rejected", () => {
+test("portrait HD and 4K canvases work and oversized squares remain rejected", () => {
   const p = clean();
   p.width = 720;
   p.height = 1280;
@@ -545,7 +545,10 @@ test("portrait HD canvases work and oversized squares remain rejected", () => {
   p.width = 1080;
   p.height = 1920;
   assert.equal(validate(p).height, 1920);
-  p.width = 1280;
+  p.width = 2160;
+  p.height = 3840;
+  assert.equal(validate(p).height, 3840);
+  p.width = 3840;
   assert.throws(() => validate(p), /canvas dimensions/);
 });
 

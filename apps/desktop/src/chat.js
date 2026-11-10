@@ -216,7 +216,7 @@ if (!token || !editorToken) {
             ? `Agent: ${s.runtime.agent.phase} · Preview: ${s.runtime.preview.phase} · Queue: ${s.runtime.queue.phase}`
             : "",
           phase: s.runtime?.preview.phase || "ready",
-          working: !!s.busy,
+          working: !!(s.busy || s.importing || s.running || s.switching),
           exportDisabled: !!s.locked || !!s.running,
         },
       },
@@ -354,15 +354,20 @@ if (!token || !editorToken) {
     const blank = !(s.clipCount ?? s.mediaCount);
     const welcome = $("#welcome");
     if (welcome) {
-      welcome.querySelector("h1").textContent = blank
-        ? "What are we making?"
-        : "Describe the edit";
-      welcome.querySelector("p").textContent = blank
-        ? "Start with an idea. Add recordings later."
-        : "Or mark a moment in the timeline.";
+      welcome.querySelector("h1").textContent = s.importing
+        ? "Bringing your video in"
+        : blank
+          ? "What are we making?"
+          : "Describe the edit";
+      welcome.querySelector("p").textContent = s.importing
+        ? "Your original stays intact."
+        : blank
+          ? "Start with an idea. Add recordings later."
+          : "Or mark a moment in the timeline.";
     }
     const suggestion = $("#suggestion");
     if (suggestion) {
+      suggestion.hidden = !!s.importing;
       suggestion.textContent = blank
         ? "Develop a script"
         : "Tighten the opening";

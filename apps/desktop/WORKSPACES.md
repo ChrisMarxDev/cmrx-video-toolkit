@@ -23,7 +23,7 @@ My Studio/
       lib/                   # authored Flutter graphics
       shaders/
       assets/                # project-specific resources and copied shared assets
-      media/                 # original imported recordings
+      media/                 # full-resolution playback copies; originals/ keeps unconverted sources
       skills/                # optional project-specific skills
       chats/history.json     # portable conversation
       exports/               # generated output; ignored
@@ -93,3 +93,9 @@ silently imported into the workspace. New projects always use the visible layout
 
 The chat header shows the project name and a small **Open folder…** action for
 its on-disk project folder. Global Settings stays in the native tab bar.
+
+Video imports preserve supported source dimensions (up to 3840 pixels per side),
+keep the selected filename, and retain an untouched project-local original when
+conversion is needed. HDR footage receives a technical SDR playback conversion;
+the original remains available under `media/originals/`. Import progress reports
+encoded duration, and canceled or conflicting imports remove their partial files.

@@ -1276,7 +1276,7 @@ function App() {
                     <div
                       className="player-working"
                       role="status"
-                      aria-label="Agent editing video"
+                      aria-label={previewBridge.activity.label}
                     >
                       <MatrixLoader className="player-spinner" />
                     </div>
