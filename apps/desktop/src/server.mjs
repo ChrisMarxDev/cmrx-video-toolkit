@@ -402,8 +402,10 @@ export async function startApp({
   state.canRecord =
     typeof record === "function" && projectInfo?.selected !== false;
   state.provider = manager.id;
-  // Every window starts disconnected, including when its private profile has credentials.
-  ready = Promise.resolve();
+  // Restore app-owned account choices without starting an interactive login.
+  ready = Promise.allSettled(
+    [...manager.enabled].map((id) => manager.ensure(id)),
+  );
   publish();
   async function startMessage(item) {
     if (closing) return { ok: true, canceled: true };
@@ -819,8 +821,12 @@ export async function startApp({
         } else if (url.pathname === "/chat/assets-open") {
           if (!openAssetFolder)
             throw Error("Open the desktop app to open folders");
-          const folder = assets.file(body.scope || "library", body.folder || "");
-          if (!fs.statSync(folder).isDirectory()) throw Error("Choose an asset folder");
+          const folder = assets.file(
+            body.scope || "library",
+            body.folder || "",
+          );
+          if (!fs.statSync(folder).isDirectory())
+            throw Error("Choose an asset folder");
           await openAssetFolder(folder);
           result = { ok: true };
         } else if (

@@ -16,8 +16,8 @@ const path = require("node:path");
 let win,
   quitting = false,
   timer;
-const entries = [],
-  enabled = new Set();
+const entries = [];
+let enabled;
 let active = null,
   utility = null,
   overlay = false,
@@ -86,6 +86,8 @@ else {
       const { WorkspaceLibrary } = await import("./workspace-library.mjs");
       const { DesktopSession, RenderQueue } =
         await import("./desktop-session.mjs");
+      const { SavedConnections } = await import("./saved-connections.mjs");
+      enabled = new SavedConnections(app.getPath("userData"));
       const library = new ProjectLibrary(app.getPath("userData")),
         session = new DesktopSession(app.getPath("userData")),
         renderQueue = new RenderQueue();
@@ -655,8 +657,7 @@ else {
       show();
       persist();
       publish();
-      // Accounts are enabled only by an explicit Connect during this app launch.
-      // Once enabled, sibling services reuse credentials with independent sessions.
+      // Device-owned connection intent survives restarts; projects retain independent sessions.
       timer = setInterval(() => {
         for (const e of all()) {
           const working = status(e) === "working";
@@ -672,13 +673,6 @@ else {
             if (!enabled.has(id))
               e.service.manager.entries.get(id).connected = false;
           for (const id of enabled) {
-            if (
-              !all().some(
-                (p) => p.service.manager.entries.get(id)?.connected,
-              ) &&
-              !e.service.manager.clients.has(id)
-            )
-              continue;
             if (e.syncing.has(id) || e.service.state.busy) continue;
             if (e.lastRefresh?.[id] && Date.now() - e.lastRefresh[id] < 10000)
               continue;

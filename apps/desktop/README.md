@@ -33,7 +33,8 @@ make desktop
 make desktop WORKSPACE=/absolute/path/to/project
 ```
 
-The app starts disconnected. Settings → Providers prepares the selected official
+A fresh installation starts disconnected. Saved app connections restore automatically
+on subsequent launches until explicitly signed out. Settings → Providers prepares the selected official
 provider CLI and guides account sign-in; users do not need a globally installed
 Codex or Claude CLI. Subscription eligibility and provider limits apply. This
 manages the provider runtime only, not Flutter or the media/compiler toolchain.
