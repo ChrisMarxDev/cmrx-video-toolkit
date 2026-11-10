@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg bubblewrap
-      - run: make desktop-install desktop-check desktop-deploy-check
+      - run: mkdir -p "$HOME/.cache" && make desktop-install desktop-check desktop-deploy-check
   release:
     if: startsWith(github.ref, 'refs/tags/desktop-v')
     needs: check

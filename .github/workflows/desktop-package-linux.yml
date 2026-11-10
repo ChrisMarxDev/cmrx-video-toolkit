@@ -48,3 +48,13 @@ jobs:
           ls -lh "$RUNNER_TEMP"/candidate/*.deb || true
           cat "$RUNNER_TEMP"/candidate/*.sha256 || true
           cat "$RUNNER_TEMP"/installed-test/profile/result.json || true
+      - name: Retain verified installer candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cmrx-linux-amd64-candidate
+          path: |
+            ${{ runner.temp }}/candidate/*.deb
+            ${{ runner.temp }}/candidate/*.sha256
+            ${{ runner.temp }}/installed-test/profile/result.json
+          compression-level: 0
+          retention-days: 7
