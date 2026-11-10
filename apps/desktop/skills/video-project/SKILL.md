@@ -157,3 +157,13 @@ Do not replace that import/hook with an unrelated renderer or hardcode duration.
 Use operation add with assetId to add existing footage. Verify the real timeline
 and completed render duration before reporting completion, including empty-project
 requests. A script-only conversation does not need any clips or render.
+
+
+### Recorded showcases
+
+Project `assets/recordings/` bundles contain separate screen, camera and optional
+microphone sources. Read the bundle's manifest.json and INSTRUCTIONS.md. Align by
+approximate offsetMs and verify lip/audio sync; preserve source files and author
+separate timeline layers. Recording itself creates no clips. Abandoned partial
+captures may be retained under `.editor/recordings/`; only attempt recovery when
+asked, using a new output file rather than overwriting partial sources.

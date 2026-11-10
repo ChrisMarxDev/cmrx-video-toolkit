@@ -260,3 +260,14 @@ The desktop's `.agents/skills/design-system` copy comes from
 ChrisMarxDev/chris-skills at 505d06349752a0c4575265ab6e1d03c8bc3d99d4, retaining its
 references and conceptual-source attribution. It requires no runtime library and
 is separate from the user-facing video-creation skill catalog.
+
+
+## Desktop recording — 2026-11-10
+
+Screen/camera/microphone recording uses bundled Electron/Chromium capture APIs,
+MediaRecorder and the existing FFmpeg/ffprobe dependency; no paid SDK or separate
+recorder is introduced. Linux Wayland needs PipeWire plus xdg-desktop-portal and a
+ScreenCast backend matching the desktop. Debian packaging declares the first two;
+standard supported desktops provide their backend. macOS requires OS capture
+permissions and camera/microphone usage descriptions in the signed app Info.plist.
+See apps/desktop/RECORDING.md for scope and platform acceptance gaps.

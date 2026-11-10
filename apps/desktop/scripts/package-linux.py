@@ -82,7 +82,7 @@ def main():
     (runtime/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     # The native installer resolves these system dependencies through its graphical package manager.
     control=out/'control';control.mkdir()
-    depends='libgtk-3-0, libnss3, libasound2t64 | libasound2, libgbm1, libxss1, libxtst6, libatspi2.0-0, libcups2t64 | libcups2, libxdamage1, libxfixes3, libxcomposite1, libxrandr2, libxkbcommon0, libdrm2, libgl1, libegl1, libvulkan1, libgl1-mesa-dri, ca-certificates, xdg-utils, ffmpeg, bubblewrap, clang, cmake, ninja-build, pkg-config, g++, make, git, unzip, xz-utils, python3, fontconfig, libgtk-3-dev'
+    depends='libgtk-3-0, libnss3, libasound2t64 | libasound2, libgbm1, libxss1, libxtst6, libatspi2.0-0, libcups2t64 | libcups2, libxdamage1, libxfixes3, libxcomposite1, libxrandr2, libxkbcommon0, libdrm2, libgl1, libegl1, libvulkan1, libgl1-mesa-dri, ca-certificates, xdg-utils, pipewire, xdg-desktop-portal, ffmpeg, bubblewrap, clang, cmake, ninja-build, pkg-config, g++, make, git, unzip, xz-utils, python3, fontconfig, libgtk-3-dev'
     installed_kib=(sum(f.stat().st_size for f in staging.rglob('*') if f.is_file())+1023)//1024
     (control/'control').write_text(f'Installed-Size: {installed_kib}\nPackage: cmrx-video-toolkit\nVersion: {version}\nArchitecture: amd64\nMaintainer: CMRX Video Toolkit\nDepends: {depends}\nDescription: Local chat-driven video editing with a bundled Flutter video engine\n')
     (control/'postinst').write_text('#!/bin/sh\nset -e\nchown root:root /opt/cmrx-video-toolkit/chrome-sandbox\nchmod 4755 /opt/cmrx-video-toolkit/chrome-sandbox\n')

@@ -60,3 +60,8 @@ design-browser-check: build
 # Review settings and asset loading/recovery: make secondary-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
 secondary-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/secondary-browser.mjs
+
+.PHONY: recording-browser-check
+# Verify native recorder with synthetic media (no desktop/camera capture): make recording-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
+recording-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/recording-browser.mjs

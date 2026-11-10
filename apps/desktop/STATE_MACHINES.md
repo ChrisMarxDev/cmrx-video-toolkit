@@ -120,3 +120,19 @@ transport; this audit did not rerun a full Flutter composition capture or macOS
 native acceptance. The inventoried local machines are not all migrated or formally
 verified. Native Linux onboarding and existing editing/connection/browser suites
 passed; new pure/runtime-service tests check the shared state contract.
+
+
+## Recorder ownership and persistence
+
+The recorder is independent of timeline/agent ownership. One trusted native window
+owns a fixed project. Renderer phases are setup → capture → saving → complete, with
+interrupted/save-retry exits. Device preflight is versioned; stale device enumeration
+or permission results cannot replace a newer selection. Screen, camera and microphone
+encode independently with bounded queued chunk IPC and approximate shared-clock offsets.
+
+Main/store phases are setup → recording → saving → complete, or interrupted. Completed
+bundles publish to assets only after all tracks remux/probe successfully; failures keep
+staged partial sources. Close while recording requests stop/save. Quit waits for capture
+save before closing services, with a timeout retaining partials. Reopening reconciles
+abandoned PID-owned manifests and exposes their folder. No recorder phase edits or locks
+project.json. Native OS/device acceptance is separate from synthetic encoder testing.

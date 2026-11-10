@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { parse } from "yaml";
 const image = /\.(png|jpe?g|webp|gif|bmp|svg)$/i,
   video = /\.(mp4|mov|webm|m4v)$/i,
-  audio = /\.(wav|mp3|ogg|m4a|flac|aac)$/i;
+  audio = /\.(wav|mp3|ogg|m4a|flac|aac|weba)$/i;
 const kind = (name) =>
   image.test(name)
     ? "image"

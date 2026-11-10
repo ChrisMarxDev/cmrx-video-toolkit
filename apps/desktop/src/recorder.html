@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'"
+    />
+    <title>Record</title>
+    <link rel="stylesheet" href="app-tokens.css" />
+    <link
+      rel="stylesheet"
+      href="../../local-editor/dist/public/matrix-loader.css"
+    />
+    <link rel="stylesheet" href="recorder.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Record</h1>
+        <p id="project"></p>
+      </header>
+      <section id="setup">
+        <label class="screen-choice"
+          ><input id="screen" type="checkbox" checked /> Screen or window</label
+        ><label
+          >Camera<select id="camera" aria-label="Camera">
+            <option value="">Off</option>
+            <option value="default">Default camera</option>
+          </select></label
+        ><label
+          >Microphone<select id="microphone" aria-label="Microphone">
+            <option value="">Off</option>
+            <option value="default">Default microphone</option>
+          </select></label
+        ><video id="camera-preview" autoplay muted playsinline hidden></video
+        ><button id="start" class="primary">Start recording</button>
+      </section>
+      <section id="capture" hidden>
+        <div class="capture-clock">
+          <span class="record-mark" aria-hidden="true"></span
+          ><output id="clock">00:00</output>
+        </div>
+        <p id="capture-label">Recording separate sources</p>
+        <p id="shortcut"></p>
+        <button id="stop" class="primary">Stop & save</button>
+      </section>
+      <section id="saving" hidden>
+        <span class="matrix-loader" aria-hidden="true"></span>
+        <p>Saving recording…</p>
+      </section>
+      <section id="complete" hidden>
+        <h2>Ready to edit.</h2>
+        <p>Separate sources saved to project assets.</p>
+        <button id="folder">Open recording folder</button
+        ><button id="done" class="primary">Done</button>
+      </section>
+      <p id="status" role="status"></p>
+      <button id="recovery" hidden>Open interrupted recording files</button>
+      <p id="error" role="alert"></p>
+      <button id="retry" hidden>Retry saving</button>
+      <section id="sources" aria-label="Choose a screen or window" hidden>
+        <h2>Choose what to record</h2>
+        <div id="source-list"></div>
+        <button id="source-cancel">Cancel</button>
+      </section>
+    </main>
+    <script src="recorder.js" type="module"></script>
+  </body>
+</html>

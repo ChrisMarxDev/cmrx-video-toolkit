@@ -7,6 +7,10 @@ const {
   safeStorage,
   ipcMain,
   Menu,
+  session: electronSession,
+  desktopCapturer,
+  systemPreferences,
+  globalShortcut,
 } = require("electron");
 const path = require("node:path");
 let win,
@@ -36,7 +40,10 @@ else {
   app.whenReady().then(async () => {
     try {
       const { configureBundledEngine } = await import("./bundled-engine.mjs");
-      configureBundledEngine({ root: path.resolve(__dirname, "../../.."), data: app.getPath("userData") });
+      configureBundledEngine({
+        root: path.resolve(__dirname, "../../.."),
+        data: app.getPath("userData"),
+      });
       const { startApp } = await import("./server.mjs");
       const { ProjectLibrary } = await import("./project-library.mjs");
       const { WorkspaceLibrary } = await import("./workspace-library.mjs");
@@ -181,6 +188,17 @@ else {
         });
       }
       secure(win.webContents, "file://");
+      const { createRecorder } = await import("./recorder-main.mjs");
+      const recorder = createRecorder({
+        BrowserWindow,
+        ipcMain,
+        session: electronSession,
+        desktopCapturer,
+        systemPreferences,
+        globalShortcut,
+        shell,
+        parent: win,
+      });
       async function createEntry(project, isUtility = false) {
         const view = new WebContentsView({
           webPreferences: {
@@ -192,6 +210,7 @@ else {
         });
         const service = await startApp({
           workspace: project.workspace,
+          record: isUtility ? undefined : () => recorder.open(project),
           workspaceRoot: isUtility
             ? undefined
             : project.workspaceRoot || workspaces.ensure().folder,
@@ -636,9 +655,11 @@ else {
         quitting = true;
         clearInterval(timer);
         persist();
-        Promise.allSettled(all().map((e) => e.service.close())).finally(() =>
-          app.exit(),
-        );
+        recorder
+          .shutdown()
+          .catch(console.error)
+          .then(() => Promise.allSettled(all().map((e) => e.service.close())))
+          .finally(() => app.exit());
       });
     } catch (error) {
       dialog.showErrorBox(

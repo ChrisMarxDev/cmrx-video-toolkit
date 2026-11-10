@@ -165,3 +165,13 @@ profiles/media and test outputs in a named task cache, not Git or release assets
 Report artifact paths/hashes, exact app/runtime versions, macOS/CPU coverage,
 auth/render/isolation/signing outcomes and remaining blockers. Prepare/build/test
 is authorized; this handover does not authorize creating tags or publishing a release.
+
+## Recording acceptance added 2026-11-10
+
+Read RECORDING.md. Package `NSCameraUsageDescription` and
+`NSMicrophoneUsageDescription` in the main app Info.plist before signing. Test OS
+Screen Recording permission, camera device selection, microphone permission,
+cancel/deny/retry, source-ended stopping and quit/save with the installed signed app.
+Verify independent WebM/WEBA sources in project assets and approximate clock offsets.
+The synthetic native recorder test does not validate Apple's permissions, actual
+capture or global shortcuts. No system audio is requested by this feature.

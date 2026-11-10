@@ -102,3 +102,7 @@ Older combined caches refresh automatically; per-layer inspection may briefly sh
 an updating indicator during that first rebuild. Multiple graphics tracks require
 additional cache render passes. The stored timeline and full export are unchanged
 by preview visibility/mute controls.
+
+Screen/camera/microphone sources can be recorded separately into project assets
+without editing the timeline. See [recording](RECORDING.md) for use, file layout,
+permissions and the remaining native-platform verification requirements.

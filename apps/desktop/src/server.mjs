@@ -29,6 +29,7 @@ export async function startApp({
   claudeHome = path.join(os.homedir(), ".local/share/cmrx-chat-editor/claude"),
   openExternal = () => {},
   pickVideo,
+  record,
   pickProject,
   projectInfo,
   recentProjects = () => [],
@@ -396,6 +397,8 @@ export async function startApp({
     onChange: publish,
     enabled: sharedEnabled,
   });
+  state.canRecord =
+    typeof record === "function" && projectInfo?.selected !== false;
   state.provider = manager.id;
   // Every window starts disconnected, including when its private profile has credentials.
   ready = Promise.resolve();
@@ -774,7 +777,11 @@ export async function startApp({
           publish();
           result = state;
         } else if (req.method !== "POST") throw Error("POST required");
-        else if (url.pathname === "/chat/draft") {
+        else if (url.pathname === "/chat/record") {
+          if (!record || projectInfo?.selected === false)
+            throw Error("Open a project in the desktop app to record");
+          await record();
+        } else if (url.pathname === "/chat/draft") {
           if (typeof body.text !== "string" || body.text.length > 20000)
             throw Error("Draft is too long");
           state.draft = body.text;

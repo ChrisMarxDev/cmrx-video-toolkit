@@ -131,6 +131,7 @@ function VideoLayer({
 type PreviewBridge = {
   locked: boolean;
   canImportVideo: boolean;
+  canRecord?: boolean;
   activity?: {
     label: string;
     details: string;
@@ -378,6 +379,7 @@ function App() {
           : undefined,
         locked: !!e.data.locked,
         canImportVideo: e.data.canImportVideo === true,
+        canRecord: e.data.canRecord === true,
       };
       setPreviewBridge((previous) =>
         JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
@@ -2478,6 +2480,20 @@ function App() {
           >
             Keyboard shortcuts
           </button>
+          {previewBridge?.canRecord && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "cmrx:record" },
+                  location.origin,
+                );
+                setContextMenu(null);
+              }}
+            >
+              Record screen or camera…
+            </button>
+          )}
           {previewBridge && (
             <button
               role="menuitem"

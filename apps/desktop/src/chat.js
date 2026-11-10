@@ -167,6 +167,10 @@ if (!token || !editorToken) {
       if (!$("#render").disabled) $("#render").click();
       return;
     }
+    if (e.data?.type === "cmrx:record") {
+      void call("record").catch(showError);
+      return;
+    }
     if (e.data?.type === "cmrx:add-video") {
       void importVideo();
       return;
@@ -203,6 +207,7 @@ if (!token || !editorToken) {
         overlay,
         locked: s.locked || importingVideo,
         canImportVideo: s.projectInfo?.selected !== false,
+        canRecord: s.canRecord === true,
         activity: {
           label: s.runtime?.label || "Ready to edit",
           details: s.runtime
