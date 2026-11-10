@@ -77,7 +77,7 @@ try {
   );
   assert(
     !(await editor
-      .getByRole("button", { name: "Add video", exact: true })
+      .getByRole("button", { name: "Add to timeline", exact: true })
       .isDisabled()),
   );
   job.phase = "verifying";

@@ -63,7 +63,7 @@ try {
   const button = page
     .frameLocator("#editor")
     .locator(".timeline-tools")
-    .getByRole("button", { name: "Add video", exact: true });
+    .getByRole("button", { name: "Add to timeline", exact: true });
   await button.waitFor();
   assert.equal(await page.locator("#import").count(), 0);
   const project = () =>

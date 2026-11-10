@@ -216,7 +216,7 @@ else {
               : undefined,
           pickVideo: async () => {
             const r = await dialog.showOpenDialog(win, {
-              title: "Add a video",
+              title: "Add to timeline",
               properties: ["openFile"],
               filters: [
                 {

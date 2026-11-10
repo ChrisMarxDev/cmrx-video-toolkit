@@ -1822,7 +1822,7 @@ function App() {
                 )
               }
             >
-              <span aria-hidden="true">+</span> Add video
+              <span aria-hidden="true">+</span> Add to timeline
             </button>
           )}
           <ClipControls

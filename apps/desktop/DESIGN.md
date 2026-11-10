@@ -103,3 +103,7 @@ Approved secondary-surface rules — 2026-11-10:
 
 Shared confirmation: `src/confirm-removal.mjs`; uses the app's neutral dialog and
 reserved destructive-action tokens. Project-to-library saving is not a removal.
+
+Add to timeline opens the native video file picker. Editor labels and controls are
+not text-selectable; inputs, comment fields and editable text retain selection.
+Chat content remains selectable.
