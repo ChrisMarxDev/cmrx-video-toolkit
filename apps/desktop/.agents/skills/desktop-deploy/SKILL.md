@@ -32,6 +32,16 @@ resolve only missing release intent/version before external release actions. Do 
 ask for credentials or signing decisions before completing independent code/build
 work. Creating/editing this skill does not execute any deployment.
 
+## Repeat releases quickly
+
+For an implemented Mac app, start with [repeat release](references/repeat-release.md):
+reuse pinned builder inputs and frozen candidates, check Keychain authentication
+before expensive work, and use `make desktop-notarize` for locked, resumable Apple
+submissions. Keep version/source, app and DMG paths, submission IDs, final hashes,
+coverage and GitHub assets in a task-owned release receipt outside the checkout.
+Inspect existing state/processes before doing work; never duplicate a live upload.
+Read the readiness reference only when implementing support or diagnosing a gap.
+
 ## Run the flow
 
 1. Read [Mac readiness](references/mac-readiness.md). Run

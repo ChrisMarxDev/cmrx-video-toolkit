@@ -11,47 +11,22 @@ Desktop tags use
 `desktop-vX.Y.Z`; do not reuse a toolkit tag. The version in
 `apps/desktop/package.json` and its lockfile must match the tag.
 
-The first stage is deliberately a source preview. Linux development and rendering
-are tested locally. The Linux installer candidate below adds a bundled SDK, but
-Apple Silicon packaging and signing now have maintainer commands in
-[MACOS_BUILD.md](MACOS_BUILD.md). Final Mac installer acceptance remains a
-release gate; there is no unattended updater yet. Do not label these archives as
-clean-machine installers. The existing app name/profile path stays stable so moving
-source does not discard projects or connections.
+## Mac release
 
-## Prepare and review
+The Apple Silicon app bundles its rendering dependencies. Maintainers use the
+[repeat-release procedure](.agents/skills/desktop-deploy/references/repeat-release.md)
+for cached inputs, signed packaging, resumable app/DMG notarization, the existing
+source-tag draft workflow, exact downloaded-installer acceptance and publication.
+Friends download the DMG from [desktop releases](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases),
+install through Finder and connect their own account inside the app. They do not
+run maintainer commands or install Flutter/Node/FFmpeg themselves.
 
-1. Update the desktop package and lockfile versions together. Record user-facing
-   changes and known platform limits in `RELEASE_NOTES.md`.
-2. Run `make desktop-install desktop-check` from a clean public checkout. Exercise
-   first-run connection, empty creation, video import, commenting and a Flutter
-   render on a real desktop. Record which platforms were actually tested.
-3. Commit and push to the normal branch. Create and push the matching tag, e.g.:
-
-   ```sh
-   git tag desktop-v0.1.0
-   git push origin desktop-v0.1.0
-   ```
-
-4. The desktop release workflow validates the tag/version, installs locked
-   dependencies, builds and tests, and prepares a draft prerelease with a public
-   source archive and SHA-256 checksum. Review the draft before publishing it.
-   A failed test must not be bypassed by uploading an unverified archive.
-
-Tagging is a separate release action; ordinary source commits do not release.
-Existing tags must never be moved. Release notes must describe requirements, not
-promise bundled runtimes. The archive contains tracked public toolkit source only,
-including the components needed by the desktop worker; it excludes local projects,
-profiles, caches and node_modules. Users still install the documented requirements.
-
-## Installer follow-up
-
-Before friendly-user binary releases, implement independently versioned render
-runtime bundles, Linux/macOS native packaging, platform-specific worker isolation,
-clean-machine acceptance and signing/notarization where applicable. A lightweight
-GitHub release check should filter `desktop-v` releases and offer an explicit
-Download action; it must not confuse toolkit releases with app updates. This check
-is not implemented by this extraction.
+Version package.json and its lockfile together, commit the reviewed source and
+freeze its exact commit. Desktop tags are immutable. The tag workflow creates a
+source-only draft; add the signed/notarized installer and corresponding-source
+archive to that same draft. An ordinary source commit does not release an app.
+Do not publish until downloaded-artifact acceptance passes. State actual OS/CPU
+coverage and remaining untested configurations; there is no unattended updater.
 
 ## Debian/Ubuntu amd64 candidate
 

@@ -277,7 +277,7 @@ desktop-macos-ui-check:
 	$(MAKE) -C apps/desktop macos-ui-check
 
 .PHONY: desktop-macos-icon
-# Rebuild the placeholder ICNS: make desktop-macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
+# Rebuild the approved app ICNS: make desktop-macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
 desktop-macos-icon:
 	$(MAKE) -C apps/desktop macos-icon
 
@@ -294,3 +294,8 @@ component-assets-check:
 # Build a branded Mac installer: make desktop-macos-dmg MAC_APP=/path/App.app MAC_DMG=/new/output.dmg
 desktop-macos-dmg:
 	$(MAKE) -C apps/desktop macos-dmg
+
+.PHONY: desktop-notarize
+# Resume one Apple notarization submission; see desktop-deploy repeat-release.md for variables.
+desktop-notarize:
+	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy notarize
