@@ -1,10 +1,9 @@
 # Apple Silicon candidate builds
 
-Future builds use `resources/macos-placeholder.icns`, generated from the sibling
+Mac builds use `resources/app-icon.icns`, generated from the sibling
 PNG with `make -C apps/desktop macos-icon`. The builder uses macOS `sips` and
 `iconutil` to include standard and Retina sizes. The approved CMRX mark source and provenance
-are recorded in `resources/macos-placeholder-provenance.json`. This asset was
-added after the frozen `desktop-v0.1.0` candidate and does not modify that installer.
+are recorded in `resources/app-icon-provenance.json`. The 0.1.0 installer is immutable; branded artifacts use a new version.
 
 The Mac implementation bundles Electron, Flutter/Dart, Fluvie and offline Pub
 packages, plus static FFmpeg/ffprobe. Friends do not install developer tools.
@@ -70,3 +69,7 @@ Follow [the signing and release procedure](.agents/skills/desktop-deploy/referen
 and [the exact-artifact acceptance matrix](.agents/skills/desktop-deploy/references/acceptance.md).
 Before invoking signing or credential-related tests, explain any expected macOS
 permission prompt to the operator. Never collect passwords in chat.
+
+## Branded installer
+
+After signing and stapling the app, run `make desktop-macos-dmg MAC_APP=/path/App.app MAC_DMG=/new/output.dmg` from the toolkit root. The builder verifies the app icon against the approved ICNS, creates a writable HFS+ image, adds the same `.VolumeIcon.icns`, sets the custom-volume flag with Xcode's `SetFile`, and converts to a compressed DMG. Sign and notarize that container before computing final hashes. The app, Dock and About panel use the bundle icon; runtime windows and Linux launchers use the matching PNG. An unmounted DMG can retain macOS's standard disk-image file-type icon. Mounted-volume branding is stored inside the image and survives downloads.

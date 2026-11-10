@@ -39,6 +39,43 @@ else {
   });
   app.whenReady().then(async () => {
     try {
+      app.setAboutPanelOptions({
+        applicationName: "CMRX Chat Editor",
+        applicationVersion: app.getVersion(),
+        copyright: "CMRX",
+        iconPath: path.resolve(__dirname, "../resources/app-icon.png"),
+      });
+
+      if (process.platform === "darwin") {
+        Menu.setApplicationMenu(
+          Menu.buildFromTemplate([
+            { role: "appMenu", label: "CMRX Chat Editor" },
+            { role: "fileMenu" },
+            { role: "editMenu" },
+            { role: "viewMenu" },
+            { role: "windowMenu" },
+            {
+              label: "Help",
+              submenu: [
+                {
+                  label: "CMRX Chat Editor releases",
+                  click: () =>
+                    shell.openExternal(
+                      "https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases",
+                    ),
+                },
+                {
+                  label: "Report an issue",
+                  click: () =>
+                    shell.openExternal(
+                      "https://github.com/ChrisMarxDev/cmrx-video-toolkit/issues",
+                    ),
+                },
+              ],
+            },
+          ]),
+        );
+      }
       const { configureBundledEngine } = await import("./bundled-engine.mjs");
       configureBundledEngine({
         root: path.resolve(__dirname, "../../.."),
@@ -76,7 +113,7 @@ else {
         minHeight: 640,
         backgroundColor: "#151417",
         title: "Editing room",
-        icon: path.resolve(__dirname, "../resources/icon.png"),
+        icon: path.resolve(__dirname, "../resources/app-icon.png"),
         webPreferences: {
           preload: path.join(__dirname, "desktop-preload.cjs"),
           nodeIntegration: false,

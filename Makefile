@@ -289,3 +289,8 @@ component-assets:
 # Check asset export portability and source boundaries: make component-assets-check
 component-assets-check:
 	python3 -m unittest discover -s tools/component_browser/scripts -p 'test_export_assets.py'
+
+.PHONY: desktop-macos-dmg
+# Build a branded Mac installer: make desktop-macos-dmg MAC_APP=/path/App.app MAC_DMG=/new/output.dmg
+desktop-macos-dmg:
+	$(MAKE) -C apps/desktop macos-dmg

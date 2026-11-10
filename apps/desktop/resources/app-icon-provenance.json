@@ -2,12 +2,12 @@
   "date": "2026-11-10",
   "source": "Approved CMRX lavender/lime split-disc app mark",
   "approval": "Christopher explicitly requested the existing dithered half circles for this Mac app icon.",
-  "purpose": "Application branding for future builds after desktop-v0.1.0",
+  "purpose": "CMRX Chat Editor application and installer volume branding",
   "geometry": "Original code-authored split disc with mirrored ordered dithering; approved 2026-10-24",
   "thresholdSource": "https://dithercn.dev/r/dither-core.json",
   "thresholdSourceSha256": "afdda3969adec85ffcf78b3893f9c51024af81bd6a697fd9461fac76564ae74b",
-  "png": "macos-placeholder.png",
+  "png": "app-icon.png",
   "pngSha256": "6709fe15d2b76bee66f6eacc7c91e53e6fceb161169676903939d9a69064ec2b",
-  "icns": "macos-placeholder.icns",
+  "icns": "app-icon.icns",
   "conversion": "make -C apps/desktop macos-icon (macOS sips and iconutil)"
 }

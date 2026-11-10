@@ -303,3 +303,5 @@ PNG specimens with flutter_test, copies existing package dependencies/licenses a
 uses the app's already-inventoried Space Grotesk font for public preview text. It
 adds no runtime dependency to the desktop app; exported pubspecs retain their source
 packages' Flutter/Fluvie and other pub requirements.
+
+Branded Mac disk images use macOS `hdiutil` and Xcode's `SetFile` to store `.VolumeIcon.icns` and its custom-volume flag inside an HFS+ image. These are maintainer-only system/Xcode tools updated through Apple; end users need none of them.

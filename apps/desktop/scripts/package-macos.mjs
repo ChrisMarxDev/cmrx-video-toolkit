@@ -191,7 +191,7 @@ fs.writeFileSync(
   JSON.stringify(manifest, null, 2) + "\n",
 );
 const apps = await packager({
-  icon: path.join(repo, "apps/desktop/resources/macos-placeholder.icns"),
+  icon: path.join(repo, "apps/desktop/resources/app-icon.icns"),
   dir: staging,
   out: path.join(out, "app"),
   name: "CMRX Chat Editor",

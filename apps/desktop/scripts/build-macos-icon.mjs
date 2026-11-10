@@ -13,11 +13,11 @@ const option = (name, fallback) => {
 if (process.platform !== "darwin") throw Error("Build ICNS assets on macOS.");
 const source = option(
   "--source",
-  path.join(resources, "macos-placeholder.png"),
+  path.join(resources, "app-icon.png"),
 );
 const output = option(
   "--output",
-  path.join(resources, "macos-placeholder.icns"),
+  path.join(resources, "app-icon.icns"),
 );
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "cmrx-icon-"));
 const iconset = path.join(temporary, "AppIcon.iconset");

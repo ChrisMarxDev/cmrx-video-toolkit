@@ -92,7 +92,7 @@ def main():
     launch=target/'cmrx-video-toolkit'
     launch.write_text('#!/bin/sh\nunset ELECTRON_RUN_AS_NODE\nexec "$(dirname "$0")/electron" "$@"\n');launch.chmod(0o755)
     desktop=payload/'usr/share/applications/cmrx-video-toolkit.desktop';desktop.parent.mkdir(parents=True)
-    desktop.write_text('[Desktop Entry]\nType=Application\nName=CMRX Video Toolkit\nExec=/opt/cmrx-video-toolkit/cmrx-video-toolkit %F\nIcon=/opt/cmrx-video-toolkit/resources/app/apps/desktop/resources/icon.png\nTerminal=false\nCategories=AudioVideo;Video;\n')
+    desktop.write_text('[Desktop Entry]\nType=Application\nName=CMRX Video Toolkit\nExec=/opt/cmrx-video-toolkit/cmrx-video-toolkit %F\nIcon=/opt/cmrx-video-toolkit/resources/app/apps/desktop/resources/app-icon.png\nTerminal=false\nCategories=AudioVideo;Video;\n')
     finalize(out,version)
 def finalize(out,version):
     control=out/'control'; payload=out/'payload'

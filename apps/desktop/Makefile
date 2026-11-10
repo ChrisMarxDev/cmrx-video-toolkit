@@ -68,7 +68,7 @@ recording-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/recording-browser.mjs
 .PHONY: macos-media macos-sdk package-macos sign-macos verify-macos-package macos-ui-check
 .PHONY: macos-icon
-# Rebuild the Mac placeholder icon: make macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
+# Rebuild the Mac app icon: make macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
 macos-icon:
 	node scripts/build-macos-icon.mjs $(if $(ICON_SOURCE),--source "$(ICON_SOURCE)",) $(if $(ICON_OUTPUT),--output "$(ICON_OUTPUT)",)
 # Build pinned static media tools and their corresponding source: make macos-media MEDIA_BUILD_DIR=/new/output
@@ -94,3 +94,8 @@ macos-ui-check:
 # Verify live audio gain, mute and unmute: make audio-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright
 audio-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/audio-gain-browser.mjs
+
+.PHONY: macos-dmg
+# Build the branded installer from a signed/stapled app: make macos-dmg MAC_APP=/path/App.app MAC_DMG=/new/output.dmg
+macos-dmg:
+	python3 scripts/package-macos-dmg.py --app "$(MAC_APP)" --output "$(MAC_DMG)"
