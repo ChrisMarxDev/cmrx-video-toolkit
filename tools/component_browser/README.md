@@ -245,3 +245,28 @@ off by default and only responds to explicit selection in web previews, never
 scrubbing or initial load. Native previews remain silent. See
 [the component API](../../components/CATALOG.md#media-carousel) for image/clip slots
 and deterministic audio cue helpers for composition.
+
+## Export the catalog as desktop workspace assets
+
+After resolving this browser's locked Flutter dependencies, run from the toolkit root:
+
+```sh
+make component-assets WORKSPACE=/absolute/path/to/Workspace
+```
+
+The workspace must already contain workspace.yaml. The command renders real 960×540
+Flutter specimen PNGs and creates `assets/Components/Toolkit/<component-id>/` bundles.
+Each includes the catalog entry, resolved variants and constructor examples, SKILL.md,
+source-package snapshots and license notices. Local package dependencies are copied
+beside their dependents and rewritten to sibling paths, so Attach to chat produces
+portable project copies. External pub/Flutter requirements remain in the pubspecs;
+previews use demonstration content and do not approve a style or editorial content.
+
+This is an explicit development/export command, requiring Python 3, the Flutter SDK
+and resolved browser packages. Browsing exported assets runs no Flutter code. The
+command refuses an existing collection; there is no update or overwrite workflow.
+Temporary captures stay in the user cache. `--previews-only` renders without publishing.
+For another compatible browser/package, pass `--browser`, `--package`, `--collection`,
+`--exclude-catalog`, and license/source options to the script. No private catalog or
+brand files ship in the public toolkit. Run `make component-assets-check` for source
+copy, license, path and symlink checks.

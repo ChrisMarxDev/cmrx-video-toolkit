@@ -280,3 +280,12 @@ desktop-macos-ui-check:
 # Rebuild the placeholder ICNS: make desktop-macos-icon [ICON_SOURCE=/path/icon.png ICON_OUTPUT=/path/icon.icns]
 desktop-macos-icon:
 	$(MAKE) -C apps/desktop macos-icon
+
+.PHONY: component-assets component-assets-check
+# Export real preview/source bundles into an existing desktop workspace: make component-assets WORKSPACE=/path/to/Workspace
+component-assets:
+	python3 tools/component_browser/scripts/export_assets.py --workspace "$(WORKSPACE)" --browser tools/component_browser --package components --license MIT --license-file LICENSE
+
+# Check asset export portability and source boundaries: make component-assets-check
+component-assets-check:
+	python3 -m unittest discover -s tools/component_browser/scripts -p 'test_export_assets.py'

@@ -124,3 +124,12 @@ Run `make desktop-check` from the toolkit root. Optional browser acceptance is
 The breadcrumb shows the actual asset-folder path as text. **../** goes up one
 folder within the selected asset location; ancestor paths are clickable. At the
 asset root, ../ is inactive. Workspace/project selection stays in the scope row.
+
+## Component catalog bundles
+
+The toolkit's `make component-assets WORKSPACE=/path/to/Workspace` command exports
+its component catalog into **Workspace → Components → Toolkit**. Bundles include
+static real-widget previews, variants/parameters, constructor examples, instructions
+and portable source packages. Attach a component to chat and describe how it should
+be used. The screenshot is a preview; the agent should author editable graphics from
+its source. See the component browser README for setup and export limits.

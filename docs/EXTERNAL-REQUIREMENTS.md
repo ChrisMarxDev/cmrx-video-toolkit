@@ -296,3 +296,10 @@ Mac icon assets are generated offline from the committed PNG with the macOS
 system tools `sips` and `iconutil` (`make desktop-macos-icon`). The CMRX split-disc mark's
 source provenance, including its ordered-dither threshold attribution, is recorded
 beside it. No image service is called by the installed app.
+
+The optional component-catalog asset exporter uses Python 3 standard library and
+an existing resolved Flutter component-browser development environment. It renders
+PNG specimens with flutter_test, copies existing package dependencies/licenses and
+uses the app's already-inventoried Space Grotesk font for public preview text. It
+adds no runtime dependency to the desktop app; exported pubspecs retain their source
+packages' Flutter/Fluvie and other pub requirements.
