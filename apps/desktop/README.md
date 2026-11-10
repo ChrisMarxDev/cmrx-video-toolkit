@@ -7,8 +7,9 @@ empty project, describe an edit, then seek, trim and leave timed comments.
 **Developer preview.** Linux is the currently tested platform. A Debian/Ubuntu
 AMD64 installer candidate now bundles the video SDK and declares automatic native
 dependencies; clean-machine installation acceptance is a separate release gate.
-Checkout-based launch still uses developer-installed tools. macOS packaging and the native
-render worker still need implementation and acceptance testing.
+Checkout-based launch still uses developer-installed tools. Apple Silicon macOS
+packaging and a Seatbelt render worker are implemented; signed installer and
+real-account acceptance remain release gates. See [Mac candidate builds](MACOS_BUILD.md).
 
 For the Mac port and installed-app acceptance, use the [Mac agent handover](MAC_HANDOVER.md)
 and the app-owned desktop deployment skill.

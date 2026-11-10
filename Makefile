@@ -258,3 +258,20 @@ desktop-deploy-preflight:
 # Build the Linux installer candidate: make desktop-package-linux PACKAGE_DIR=/absolute/output FLUTTER_SDK=/absolute/sdk PUB_CACHE_DIR=/absolute/cache
 desktop-package-linux:
 	$(MAKE) -C apps/desktop package-linux PACKAGE_DIR="$(PACKAGE_DIR)" FLUTTER_SDK="$(FLUTTER_SDK)" PUB_CACHE_DIR="$(PUB_CACHE_DIR)"
+
+.PHONY: desktop-package-macos desktop-verify-macos desktop-macos-media desktop-sign-macos desktop-macos-ui-check
+# Build the Apple Silicon app: make desktop-package-macos PACKAGE_DIR=/new/output FLUTTER_SDK=/sdk PUB_CACHE_DIR=/cache MEDIA_BIN=/media/prefix/bin
+desktop-package-macos:
+	$(MAKE) -C apps/desktop package-macos
+# Test packaged rendering without development tools: make desktop-verify-macos MAC_APP=/path/App.app PACKAGE_TEST_DIR=/new/output
+desktop-verify-macos:
+	$(MAKE) -C apps/desktop verify-macos-package
+# Build pinned media binaries: make desktop-macos-media MEDIA_BUILD_DIR=/new/output
+desktop-macos-media:
+	$(MAKE) -C apps/desktop macos-media
+# Sign nested native code: make desktop-sign-macos MAC_APP=/path/App.app CMRX_SIGN_IDENTITY='Developer ID Application: …'
+desktop-sign-macos:
+	$(MAKE) -C apps/desktop sign-macos
+# Exercise packaged UI: make desktop-macos-ui-check MAC_APP=/path/App.app EDITOR_PLAYWRIGHT=/path/to/playwright
+desktop-macos-ui-check:
+	$(MAKE) -C apps/desktop macos-ui-check

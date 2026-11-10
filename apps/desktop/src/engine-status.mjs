@@ -4,7 +4,11 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 export function engineStatus() {
   const missing = [];
-  for (const name of ["ffmpeg", "ffprobe", "bwrap"])
+  for (const name of [
+    "ffmpeg",
+    "ffprobe",
+    ...(process.platform === "darwin" ? [] : ["bwrap"]),
+  ])
     try {
       execFileSync(name, ["-version"], { stdio: "ignore", timeout: 5000 });
     } catch {
@@ -14,7 +18,22 @@ export function engineStatus() {
         missing.push(name);
       }
     }
-  if (!missing.includes("bwrap"))
+  if (process.platform === "darwin") {
+    try {
+      execFileSync(
+        "/usr/bin/sandbox-exec",
+        [
+          "-p",
+          "(version 1)(deny default)(allow process-exec)(allow file-read*)(allow sysctl-read)",
+          "/usr/bin/true",
+        ],
+        { stdio: "ignore", timeout: 5000 },
+      );
+    } catch {
+      missing.push("sandbox access");
+    }
+  }
+  if (process.platform !== "darwin" && !missing.includes("bwrap"))
     try {
       execFileSync(
         "bwrap",

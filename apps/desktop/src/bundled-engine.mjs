@@ -23,6 +23,20 @@ export function configureBundledEngine({ root, data, env = process.env }) {
         "The installed video engine is incomplete. Reinstall the app.",
       );
   }
+  if (manifest.platform === "darwin") {
+    for (const name of [
+      "bin/ffmpeg",
+      "bin/ffprobe",
+      "sdk/bin/cache/cmrx-test-port-patch",
+    ])
+      if (!fs.existsSync(path.join(root, "runtime", name)))
+        throw Error(
+          "The installed video engine is incomplete. Reinstall the app.",
+        );
+    env.CHAT_RUNTIME_BIN = path.join(root, "runtime/bin");
+    env.PATH = env.CHAT_RUNTIME_BIN + ":/usr/bin:/bin:/usr/sbin:/sbin";
+  }
+  delete env.CHAT_WORKER_ROOT;
   env.CHAT_FLUTTER_SDK = path.join(root, "runtime/sdk");
   env.PUB_CACHE = path.join(root, "runtime/cache");
   env.CHAT_WORKER_BASE = path.join(data, "workers");

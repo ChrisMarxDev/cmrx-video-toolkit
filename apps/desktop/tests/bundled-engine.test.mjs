@@ -32,6 +32,9 @@ test("installed engine replaces developer SDK/cache paths and fails closed on in
       /incomplete/,
     );
     for (const p of [
+      ...(process.platform === "darwin"
+        ? ["bin/ffmpeg", "bin/ffprobe", "sdk/bin/cache/cmrx-test-port-patch"]
+        : []),
       "sdk/bin/flutter",
       "sdk/bin/cache/dart-sdk/bin/dart",
       "cache/git/fluvie-test/packages/fluvie_cli/bin/fluvie.dart",

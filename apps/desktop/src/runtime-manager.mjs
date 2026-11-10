@@ -8,6 +8,18 @@ import { gunzipSync } from "node:zlib";
 export const releases = {
   chatgpt: {
     version: "0.166.0",
+    darwin: {
+      hashes: {
+        arm64:
+          "c48824462fc57681eafb0925d97b11b589010475613904f570b42fea53e240d5",
+        x64: "db0c38713c36199b12e7c8d1629386c35a4ce8f99e1c9ce72f1725a74df67b57",
+      },
+      codeModeHashes: {
+        arm64:
+          "7abd50fe5f033495a7b693c45fb82dc57093a18f1c4ba3e8043577de46c5c7c5",
+        x64: "b35c775d5e5f8d60d05e0de7154e5bbbf320b6d0e28a3237d42cc8a742ccaf65",
+      },
+    },
     codeModeHashes: {
       x64: "7588334fd47bc4003d970b70dfd4d1e4578491b1e9baa72976a4c2d7e97590da",
       arm64: "ac98d1f878e353a16cba711fd47bfef2f6c814109bdd819ee2b6b6d6a19701e7",
@@ -19,6 +31,13 @@ export const releases = {
   },
   claude: {
     version: "2.1.318",
+    darwin: {
+      hashes: {
+        arm64:
+          "677a2ea7bf576cedd20e191d973914ed8a41796f53a63b1923381ddc4d5b5e7d",
+        x64: "ee9c8577a528aa8efa478bf552b17efa40bb58aa4981d2913c13d383a4d409a4",
+      },
+    },
     hashes: {
       x64: "708c77b204db30086ff6f1ed34577bda03e1be74ced80557cbf7b54249ebf0bd",
       arm64: "53a0d7e219d7b0804ecba5dbc002745e89f786cc946d2de85a6470d5b2d1fb06",
@@ -30,12 +49,14 @@ export function releaseFor(
   arch = process.arch,
   platform = process.platform,
 ) {
-  const release = releases[id];
-  if (platform !== "linux" || !release?.hashes[arch])
+  const pinned = releases[id];
+  const release =
+    platform === "darwin" && pinned ? { ...pinned, ...pinned.darwin } : pinned;
+  if (!["linux", "darwin"].includes(platform) || !release?.hashes[arch])
     throw Error(
-      "This preview supports Linux on Intel/AMD or ARM64. Support for your device is coming later.",
+      "This engine supports macOS and Linux on Intel/AMD or ARM64. Download the app for your device.",
     );
-  const file = `codex-${arch === "x64" ? "x86_64" : "aarch64"}-unknown-linux-musl`;
+  const file = `codex-${arch === "x64" ? "x86_64" : "aarch64"}-${platform === "darwin" ? "apple-darwin" : "unknown-linux-musl"}`;
   return {
     version: release.version,
     checksum: release.hashes[arch],
@@ -57,7 +78,7 @@ export function releaseFor(
     url:
       id === "chatgpt"
         ? `https://github.com/openai/codex/releases/download/rust-v${release.version}/${file}.tar.gz`
-        : `https://downloads.claude.ai/claude-code-releases/${release.version}/linux-${arch}/claude`,
+        : `https://downloads.claude.ai/claude-code-releases/${release.version}/${platform}-${arch}/claude`,
   };
 }
 const hash = (data) => createHash("sha256").update(data).digest("hex");

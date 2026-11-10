@@ -222,7 +222,7 @@ export function setupAgentUI({ call, onError, openTool }) {
     update(state);
     $("#key-storage").textContent =
       s.keyStorage === "device"
-        ? "Keys use this device’s encrypted storage."
+        ? "Keys use this device’s encrypted storage. Saving or using a key may open a system permission prompt. On macOS, this is your login Keychain."
         : "Keys are stored in an app-private file on this device.";
   }
   function update(s) {

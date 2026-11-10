@@ -138,6 +138,7 @@ try {
   report.checks.packager = !!(
     pkg.config?.forge ||
     pkg.build?.mac ||
+    fs.existsSync(path.join(app, "scripts/package-macos.mjs")) ||
     [
       "forge.config.js",
       "forge.config.cjs",

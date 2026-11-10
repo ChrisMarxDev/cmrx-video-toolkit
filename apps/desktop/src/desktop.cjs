@@ -223,14 +223,27 @@ else {
           agentRoot: path.join(app.getPath("userData"), "agent"),
           providerFactory: factory,
           secretCodec:
-            safeStorage.isEncryptionAvailable() &&
+            (process.platform === "darwin" ||
+              safeStorage.isEncryptionAvailable()) &&
             (process.platform !== "linux" ||
               safeStorage.getSelectedStorageBackend() !== "basic_text")
               ? {
-                  encrypt: (v) =>
-                    safeStorage.encryptString(v).toString("base64"),
-                  decrypt: (v) =>
-                    safeStorage.decryptString(Buffer.from(v, "base64")),
+                  // On macOS, checking availability can itself open a Keychain
+                  // prompt. Defer access until a key is actually saved or used.
+                  encrypt: (v) => {
+                    if (!safeStorage.isEncryptionAvailable())
+                      throw Error(
+                        "Device key storage is unavailable. Unlock your login Keychain and try again.",
+                      );
+                    return safeStorage.encryptString(v).toString("base64");
+                  },
+                  decrypt: (v) => {
+                    if (!safeStorage.isEncryptionAvailable())
+                      throw Error(
+                        "Device key storage is unavailable. Unlock your login Keychain and try again.",
+                      );
+                    return safeStorage.decryptString(Buffer.from(v, "base64"));
+                  },
                 }
               : undefined,
           pickVideo: async () => {

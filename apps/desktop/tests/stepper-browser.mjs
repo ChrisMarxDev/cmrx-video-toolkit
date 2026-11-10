@@ -30,13 +30,28 @@ if (!process.env.CHAT_TEST_VIDEO)
 let app;
 try {
   app = await electron.launch({
-    executablePath: process.env.EDITOR_ELECTRON || "/usr/bin/electron43",
+    executablePath: process.env.EDITOR_PACKAGED_APP
+      ? path.join(
+          process.env.EDITOR_PACKAGED_APP,
+          "Contents/MacOS/CMRX Chat Editor",
+        )
+      : process.env.EDITOR_ELECTRON || "/usr/bin/electron43",
     args: [
       "--user-data-dir=" + path.join(root, "profile"),
-      fileURLToPath(new URL("../src/desktop.cjs", import.meta.url)),
+      ...(process.env.EDITOR_PACKAGED_APP
+        ? []
+        : [fileURLToPath(new URL("../src/desktop.cjs", import.meta.url))]),
     ],
+    // Keep the OS login Keychain available; userData and provider accounts are isolated.
+    // The render smoke test separately runs with a fresh HOME and no developer tools.
     env: {
-      ...process.env,
+      ...(process.env.EDITOR_PACKAGED_APP
+        ? {
+            HOME: os.homedir(),
+            PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+            DEVELOPER_DIR: "/cmrx-no-developer-tools",
+          }
+        : process.env),
       ELECTRON_RUN_AS_NODE: "",
       CHAT_PROJECTS_DIR: path.join(root, "projects"),
       CHAT_DESKTOP_TEST_PROVIDER: fileURLToPath(
@@ -165,6 +180,64 @@ try {
       ),
     ).clips.length,
     1,
+  );
+  const customSkill = path.join(root, "custom-skill");
+  fs.mkdirSync(customSkill);
+  fs.writeFileSync(
+    path.join(customSkill, "SKILL.md"),
+    "---\nname: beta-custom\ndescription: A custom local beta skill\n---\nUse a lime accent in the video.\n",
+  );
+  await page
+    .getByRole("button", { name: "Open settings", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Skills", exact: true }).click();
+  await app.evaluate(({ dialog }, folder) => {
+    dialog.showOpenDialog = async () => ({
+      canceled: false,
+      filePaths: [folder],
+    });
+  }, customSkill);
+  await page
+    .getByRole("button", { name: "Add skill folder", exact: true })
+    .click();
+  await page
+    .locator(".skill-card")
+    .filter({ hasText: "beta-custom" })
+    .waitFor();
+  assert(
+    fs.existsSync(path.join(root, "projects/skills/beta-custom/SKILL.md")),
+  );
+  await page.screenshot({ path: path.join(root, "custom-skill.png") });
+  await page.locator("#settings-close").click();
+  const customAsset =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><circle cx="40" cy="40" r="35" fill="#d5ff45"/></svg>';
+  await page.evaluate((svg) => {
+    const transfer = new DataTransfer();
+    transfer.items.add(
+      new File([svg], "beta-asset.svg", { type: "image/svg+xml" }),
+    );
+    document.dispatchEvent(
+      new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      }),
+    );
+  }, customAsset);
+  await page
+    .locator("#asset-import-status")
+    .getByText("Added: beta-asset.svg", { exact: true })
+    .waitFor();
+  const importedRoot = path.join(
+    root,
+    "projects/projects/First video/assets/imports",
+  );
+  const importedFile = fs
+    .readdirSync(importedRoot)
+    .find((n) => n.endsWith("-beta-asset.svg"));
+  assert.equal(
+    fs.readFileSync(path.join(importedRoot, importedFile), "utf8"),
+    customAsset,
   );
   await shell.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator("#prompt").fill("Draft a short opening");

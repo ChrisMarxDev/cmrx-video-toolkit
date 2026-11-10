@@ -65,3 +65,22 @@ secondary-browser-check: build
 # Verify native recorder with synthetic media (no desktop/camera capture): make recording-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
 recording-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/recording-browser.mjs
+.PHONY: macos-media macos-sdk package-macos sign-macos verify-macos-package macos-ui-check
+# Build pinned static media tools and their corresponding source: make macos-media MEDIA_BUILD_DIR=/new/output
+macos-media:
+	python3 scripts/build-macos-media.py --output "$(MEDIA_BUILD_DIR)"
+# Prepare the pinned Flutter test runtime: make macos-sdk FLUTTER_SDK=/builder/sdk PUB_CACHE_DIR=/builder/cache
+macos-sdk:
+	python3 scripts/prepare-macos-sdk.py --sdk "$(FLUTTER_SDK)" --pub-cache "$(PUB_CACHE_DIR)"
+# Package a committed Apple Silicon app: make package-macos PACKAGE_DIR=/new/output FLUTTER_SDK=/sdk PUB_CACHE_DIR=/cache MEDIA_BIN=/media/prefix/bin
+package-macos:
+	node scripts/package-macos.mjs --output "$(PACKAGE_DIR)" --sdk "$(FLUTTER_SDK)" --pub-cache "$(PUB_CACHE_DIR)" --media-bin "$(MEDIA_BIN)" $(if $(DEVELOPMENT),--development,)
+# Sign nested native code with Developer ID: make sign-macos MAC_APP=/path/App.app CMRX_SIGN_IDENTITY='Developer ID Application: …'
+sign-macos:
+	CMRX_SIGN_IDENTITY="$(CMRX_SIGN_IDENTITY)" node scripts/sign-macos.mjs "$(MAC_APP)"
+# Render newly authored graphics with a fresh profile, bundled tools and no Xcode: make verify-macos-package MAC_APP=/path/App.app PACKAGE_TEST_DIR=/new/output
+verify-macos-package:
+	node scripts/verify-macos.mjs --app "$(MAC_APP)" --output "$(PACKAGE_TEST_DIR)"
+# Test packaged native onboarding, import and custom skills with a fixture account: make macos-ui-check MAC_APP=/path/App.app EDITOR_PLAYWRIGHT=/path/to/playwright
+macos-ui-check:
+	EDITOR_PACKAGED_APP="$(MAC_APP)" EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" node tests/stepper-browser.mjs

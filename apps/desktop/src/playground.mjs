@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { spawn, execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { parse } from "yaml";
+import { MacOSWorker } from "./macos-worker.mjs";
 import {
   graphicsDispatcher,
   bindGraphicsComposition,
@@ -247,7 +248,7 @@ export class Playground {
       throw Error(
         "Pinned Fluvie runtime is missing. This development MVP requires the toolkit toolchain.",
       );
-    execFileSync("bwrap", ["--version"]);
+    if (process.platform !== "darwin") execFileSync("bwrap", ["--version"]);
     this.worker =
       process.env.CHAT_WORKER_ROOT ||
       path.join(
@@ -266,7 +267,12 @@ export class Playground {
       if (!fs.existsSync(dest)) {
         const tmp = dest + ".copying";
         fs.rmSync(tmp, { recursive: true, force: true });
-        await this.host("cp", ["-a", "--reflink=auto", from, tmp]);
+        await this.host(
+          "cp",
+          process.platform === "darwin"
+            ? ["-cR", from, tmp]
+            : ["-a", "--reflink=auto", from, tmp],
+        );
         fs.renameSync(tmp, dest);
       }
     }
@@ -290,11 +296,12 @@ export class Playground {
     );
     return { ready: true };
   }
-  host(command, args, timeout = 300000) {
+  host(command, args, timeout = 300000, options = {}) {
     return new Promise((resolve, reject) => {
       const p = spawn(command, args, {
         stdio: ["ignore", "pipe", "pipe"],
         detached: true,
+        ...options,
       });
       this.processes.add(p);
       let output = "";
@@ -319,6 +326,14 @@ export class Playground {
     });
   }
   execRaw(argv, work, cwd = "/work", timeout = 120000, readOnlySource = false) {
+    if (process.platform === "darwin") {
+      this.macOSWorker ||= new MacOSWorker({
+        owner: this,
+        toolkit,
+        appSkills: fileURLToPath(new URL("../skills/", import.meta.url)),
+      });
+      return this.macOSWorker.exec(argv, work, cwd, timeout, readOnlySource);
+    }
     const a = [
       "--unshare-all",
       "--die-with-parent",

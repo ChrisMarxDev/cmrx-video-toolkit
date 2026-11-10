@@ -23,23 +23,23 @@ Reduction candidates elsewhere in this inventory are possibilities, not commitme
 
 ## Minimum by workflow
 
-| Workflow | External requirements |
-| --- | --- |
-| Single-word voice flutter | Python 3.10+ standard library; FFmpeg only to decode non-PCM16 input |
-| Manual browser review of prepared media | Python 3.10+, FFmpeg/ffprobe, modern desktop browser |
-| Review with new local transcription | Above + whisper.cpp CLI + compatible Whisper model |
-| Agent launches browser and waits for Done | Same as browser review + the user's existing agent/terminal; no Node/MCP required |
-| Local MCP tools / embedded MCP App | Review requirements + Node.js 22+, npm dependencies, local MCP-capable host; inline display needs MCP Apps support |
-| Component catalog MCP / optional embedded browser | Node 22+ and adapter npm packages for catalog tools; Flutter/Python/FFmpeg for a cold browser build; MCP Apps and local frames for inline display |
-| Static Fluvie validation | Python 3.10+, Flutter/Dart, resolved project dependencies and compatible Fluvie CLI with validate/JSON support; no FFmpeg or browser needed |
-| Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe |
-| Standalone dither studio | Browser only; open the already-built tools/dither/index.html locally |
-| Viewing an already-built component browser | Browser plus a static host; the current MCP static host uses Node. No Flutter SDK for viewing; prebuilt release distribution is not yet implemented. |
-| Flutter composition / building the component browser | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages |
-| Fluvie preview/final render | Composition requirements + `fluvie` CLI on PATH and runtime/capture support for the selected platform |
-| Optional fal media generation | Node 22+, npm packages in tools/fal, network access, fal account/credits and server-side FAL_KEY |
-| Optional person/background cutout | Media tools + Python venv/pip + NumPy + ONNX Runtime + RVM model |
-| Optional native Flutter Scene capture | Flutter/Dart + native macOS build toolchain + Metal/Impeller-capable environment + Scene packages/assets |
+| Workflow                                                | External requirements                                                                                                                                |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single-word voice flutter                               | Python 3.10+ standard library; FFmpeg only to decode non-PCM16 input                                                                                 |
+| Manual browser review of prepared media                 | Python 3.10+, FFmpeg/ffprobe, modern desktop browser                                                                                                 |
+| Review with new local transcription                     | Above + whisper.cpp CLI + compatible Whisper model                                                                                                   |
+| Agent launches browser and waits for Done               | Same as browser review + the user's existing agent/terminal; no Node/MCP required                                                                    |
+| Local MCP tools / embedded MCP App                      | Review requirements + Node.js 22+, npm dependencies, local MCP-capable host; inline display needs MCP Apps support                                   |
+| Component catalog MCP / optional embedded browser       | Node 22+ and adapter npm packages for catalog tools; Flutter/Python/FFmpeg for a cold browser build; MCP Apps and local frames for inline display    |
+| Static Fluvie validation                                | Python 3.10+, Flutter/Dart, resolved project dependencies and compatible Fluvie CLI with validate/JSON support; no FFmpeg or browser needed          |
+| Basic media inspection, cuts, reframing, sound analysis | Python + FFmpeg/ffprobe                                                                                                                              |
+| Standalone dither studio                                | Browser only; open the already-built tools/dither/index.html locally                                                                                 |
+| Viewing an already-built component browser              | Browser plus a static host; the current MCP static host uses Node. No Flutter SDK for viewing; prebuilt release distribution is not yet implemented. |
+| Flutter composition / building the component browser    | Python + FFmpeg where media preparation is needed + Flutter SDK (includes Dart) + project Pub packages                                               |
+| Fluvie preview/final render                             | Composition requirements + `fluvie` CLI on PATH and runtime/capture support for the selected platform                                                |
+| Optional fal media generation                           | Node 22+, npm packages in tools/fal, network access, fal account/credits and server-side FAL_KEY                                                     |
+| Optional person/background cutout                       | Media tools + Python venv/pip + NumPy + ONNX Runtime + RVM model                                                                                     |
+| Optional native Flutter Scene capture                   | Flutter/Dart + native macOS build toolchain + Metal/Impeller-capable environment + Scene packages/assets                                             |
 
 A normal browser does not execute FFmpeg, Whisper or Flutter itself. Those tools
 run on the local engine's computer. Using a chat UI does not eliminate them.
@@ -47,20 +47,20 @@ No model API key or cloud speech subscription is required for local review.
 
 ## User-installed tools and downloaded assets
 
-| Requirement | Needed for / current constraint | Current provisioning | Reduction tracking |
-| --- | --- | --- | --- |
-| Python | Editor and pipeline; editor supports 3.10+ | Installed interpreter (`python3`, Windows `py -3`); not bundled | Candidate for packaged engine |
-| FFmpeg and ffprobe | Probe, audio extraction, browser preview, cuts, exports, rendering/media tools; build needs the used H.264/AAC encoders and filters | System executables on PATH; both typically supplied by FFmpeg | Candidate for managed/bundled binaries; review distribution licensing |
-| whisper.cpp `whisper-cli` | New local speech recognition only; override with `WHISPER_CLI` | Separate system/package installation; optional macOS setup script | Candidate for managed optional recognizer |
-| Whisper model | Recognition only; e.g. compatible `ggml-base.bin`; path via `WHISPER_MODEL`/launcher | Automatically resolved/downloaded by the editor, kept outside Git; verified multilingual base fallback | Implemented first-use download/cache for the model; recognizer installation remains separate |
-| Browser | Ordinary review, browser fallback, web component catalog and dither UI | User's existing modern desktop browser; Chromium has been exercised | Preserve normal browser support; no separate browser required for end users |
-| Node.js | Local MCP adapter, docs development and JavaScript tests; adapter >=22, docs >=22.12 | System runtime; not needed by Python-only browser launch | Candidate for bundled adapter runtime |
-| npm | Restore locked MCP/docs packages | Normally included with Node; `npm ci` in the relevant directory | Candidate for prebuilt distribution so users never invoke it |
-| MCP/agent host | Agent workflow only; local stdio support for current full adapter, MCP Apps support for inline UI | User's Claude/Codex/other agent; browser fallback works without inline UI | Keep host-independent CLI/browser path; do not require one vendor |
-| Flutter SDK, including Dart | Flutter compositions/components/catalog and render paths; current packages require Dart >=3.12,<4 | Separate SDK, `flutter`/`dart` on PATH; no separate Dart install needed | Rendering-only requirement; investigate managed engine distribution later |
-| Fluvie CLI | `scripts/video.py preview` and `render` invoke `fluvie` | Separate CLI activation/installation; must resolve on PATH | Do not confuse CLI presence with a project's `fluvie` package dependency |
-| Native platform build/capture tools | Only when selected Flutter desktop/native capture path requires them | Platform-specific SDK/compiler setup, validated with `flutter doctor`; native Scene path currently documented for macOS/Xcode | Keep separate from browser review baseline; broader native platform validation remains conditional |
-| Git | Source clone, updates, submodules and repository workflow | System executable; archive/prebuilt distribution could avoid it for users | Candidate to remove from end-user installation path |
+| Requirement                         | Needed for / current constraint                                                                                                     | Current provisioning                                                                                                          | Reduction tracking                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Python                              | Editor and pipeline; editor supports 3.10+                                                                                          | Installed interpreter (`python3`, Windows `py -3`); not bundled                                                               | Candidate for packaged engine                                                                      |
+| FFmpeg and ffprobe                  | Probe, audio extraction, browser preview, cuts, exports, rendering/media tools; build needs the used H.264/AAC encoders and filters | System executables on PATH; both typically supplied by FFmpeg                                                                 | Candidate for managed/bundled binaries; review distribution licensing                              |
+| whisper.cpp `whisper-cli`           | New local speech recognition only; override with `WHISPER_CLI`                                                                      | Separate system/package installation; optional macOS setup script                                                             | Candidate for managed optional recognizer                                                          |
+| Whisper model                       | Recognition only; e.g. compatible `ggml-base.bin`; path via `WHISPER_MODEL`/launcher                                                | Automatically resolved/downloaded by the editor, kept outside Git; verified multilingual base fallback                        | Implemented first-use download/cache for the model; recognizer installation remains separate       |
+| Browser                             | Ordinary review, browser fallback, web component catalog and dither UI                                                              | User's existing modern desktop browser; Chromium has been exercised                                                           | Preserve normal browser support; no separate browser required for end users                        |
+| Node.js                             | Local MCP adapter, docs development and JavaScript tests; adapter >=22, docs >=22.12                                                | System runtime; not needed by Python-only browser launch                                                                      | Candidate for bundled adapter runtime                                                              |
+| npm                                 | Restore locked MCP/docs packages                                                                                                    | Normally included with Node; `npm ci` in the relevant directory                                                               | Candidate for prebuilt distribution so users never invoke it                                       |
+| MCP/agent host                      | Agent workflow only; local stdio support for current full adapter, MCP Apps support for inline UI                                   | User's Claude/Codex/other agent; browser fallback works without inline UI                                                     | Keep host-independent CLI/browser path; do not require one vendor                                  |
+| Flutter SDK, including Dart         | Flutter compositions/components/catalog and render paths; current packages require Dart >=3.12,<4                                   | Separate SDK, `flutter`/`dart` on PATH; no separate Dart install needed                                                       | Rendering-only requirement; investigate managed engine distribution later                          |
+| Fluvie CLI                          | `scripts/video.py preview` and `render` invoke `fluvie`                                                                             | Separate CLI activation/installation; must resolve on PATH                                                                    | Do not confuse CLI presence with a project's `fluvie` package dependency                           |
+| Native platform build/capture tools | Only when selected Flutter desktop/native capture path requires them                                                                | Platform-specific SDK/compiler setup, validated with `flutter doctor`; native Scene path currently documented for macOS/Xcode | Keep separate from browser review baseline; broader native platform validation remains conditional |
+| Git                                 | Source clone, updates, submodules and repository workflow                                                                           | System executable; archive/prebuilt distribution could avoid it for users                                                     | Candidate to remove from end-user installation path                                                |
 
 Versions above are repository constraints, not claims that every newer version
 or every platform has passed acceptance. Flutter/Dart test versions are recorded
@@ -73,33 +73,33 @@ it is not a complete feature-aware installer or compatibility verifier.
 These are not separate global installation steps, but remain external software
 and contribute to the footprint. Full transitive dependencies belong in lockfiles.
 
-| Package / asset | Feature and source of truth |
-| --- | --- |
-| `@modelcontextprotocol/sdk`, `zod`, `esbuild` (including its platform binary) | Full MCP adapter and shared-UI bundling; `apps/review-agent/package.json` and package-lock.json |
-| `@modelcontextprotocol/sdk`, `zod` | Component browser MCP adapter; `apps/component-browser-agent/package.json` and package-lock.json; no bundler or transcription dependencies |
-| `@fal-ai/client` | Optional generation connector; `tools/fal/package.json` and package-lock.json. Requires `FAL_KEY` only in the local/server process; generated media remains outside Git. |
-| `express` plus MCP SDK and Zod | Synthetic MCP feasibility sample only; `apps/mcp-review-sample/package.json`; not required by full stdio adapter |
-| Flutter Pub dependencies, including `fluvie: 0.3.1` | Composition/component packages; pubspec.yaml and lockfiles; `flutter pub get` restores them |
-| `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets | Optional native GPU scene path; `.skills/component-3d/references/native-capture.md` |
-| `numpy==2.2.6`, `onnxruntime==1.23.2` | Optional person matting, isolated Python environment; `video_tools/requirements.txt` |
-| RVM MobileNetV3 FP32 ONNX model | Optional matting; setup script downloads and checks SHA-256; `video_tools/setup.sh` and README record provenance/license |
-| Astro, Starlight and their dependencies | Documentation site development/build only; `docs/package.json` and package-lock.json |
-| `esbuild@0.25.12` via npx | Rebuilding the standalone dither studio after editing its JavaScript; `tools/dither/README.md`; not needed to use the committed app bundle |
+| Package / asset                                                               | Feature and source of truth                                                                                                                                              |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@modelcontextprotocol/sdk`, `zod`, `esbuild` (including its platform binary) | Full MCP adapter and shared-UI bundling; `apps/review-agent/package.json` and package-lock.json                                                                          |
+| `@modelcontextprotocol/sdk`, `zod`                                            | Component browser MCP adapter; `apps/component-browser-agent/package.json` and package-lock.json; no bundler or transcription dependencies                               |
+| `@fal-ai/client`                                                              | Optional generation connector; `tools/fal/package.json` and package-lock.json. Requires `FAL_KEY` only in the local/server process; generated media remains outside Git. |
+| `express` plus MCP SDK and Zod                                                | Synthetic MCP feasibility sample only; `apps/mcp-review-sample/package.json`; not required by full stdio adapter                                                         |
+| Flutter Pub dependencies, including `fluvie: 0.3.1`                           | Composition/component packages; pubspec.yaml and lockfiles; `flutter pub get` restores them                                                                              |
+| `flutter_scene: 0.24.3`, `vector_math`, Scene initialization assets           | Optional native GPU scene path; `.skills/component-3d/references/native-capture.md`                                                                                      |
+| `numpy==2.2.6`, `onnxruntime==1.23.2`                                         | Optional person matting, isolated Python environment; `video_tools/requirements.txt`                                                                                     |
+| RVM MobileNetV3 FP32 ONNX model                                               | Optional matting; setup script downloads and checks SHA-256; `video_tools/setup.sh` and README record provenance/license                                                 |
+| Astro, Starlight and their dependencies                                       | Documentation site development/build only; `docs/package.json` and package-lock.json                                                                                     |
+| `esbuild@0.25.12` via npx                                                     | Rebuilding the standalone dither studio after editing its JavaScript; `tools/dither/README.md`; not needed to use the committed app bundle                               |
 
 ## Optional setup, development and experiment tools
 
-| Requirement | When it is needed; not part of normal review |
-| --- | --- |
-| Bash | Existing `.sh` setup/environment helpers; direct Python/Node entrypoints avoid those helpers |
-| curl | Existing model-download setup scripts |
-| Homebrew | Optional macOS editor setup script installs FFmpeg/whisper.cpp through it; not a cross-platform runtime prerequisite |
-| Make | Convenience targets and full source test suite; equivalent underlying commands can run directly |
-| Python venv and pip | Optional matting environment; core editor uses Python standard library |
-| espeak-ng | Narrated synthetic validation fixtures in `apps/editor/tool/full_flow.py` |
-| Playwright and a supported Chromium installation | Optional browser automation tests; not end-user browser requirements; host permission may be required |
-| cloudflared | Only `apps/mcp-review-sample`'s development `share` command; not needed for local MCP or browser mode |
+| Requirement                                         | When it is needed; not part of normal review                                                                                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bash                                                | Existing `.sh` setup/environment helpers; direct Python/Node entrypoints avoid those helpers                                                                |
+| curl                                                | Existing model-download setup scripts                                                                                                                       |
+| Homebrew                                            | Optional macOS editor setup script installs FFmpeg/whisper.cpp through it; not a cross-platform runtime prerequisite                                        |
+| Make                                                | Convenience targets and full source test suite; equivalent underlying commands can run directly                                                             |
+| Python venv and pip                                 | Optional matting environment; core editor uses Python standard library                                                                                      |
+| espeak-ng                                           | Narrated synthetic validation fixtures in `apps/editor/tool/full_flow.py`                                                                                   |
+| Playwright and a supported Chromium installation    | Optional browser automation tests; not end-user browser requirements; host permission may be required                                                       |
+| cloudflared                                         | Only `apps/mcp-review-sample`'s development `share` command; not needed for local MCP or browser mode                                                       |
 | Remote connection/tunnel service and authentication | A future/full cloud-host connection needs this or a hosted engine; the full adapter does not yet implement it, so no production provider is mandatory today |
-| Network access | Initial SDK/package/model downloads and optional cloud agents/tunnels; prepared local media processing does not inherently require cloud services |
+| Network access                                      | Initial SDK/package/model downloads and optional cloud agents/tunnels; prepared local media processing does not inherently require cloud services           |
 
 An embedded host must permit media from the configured engine/relay origin.
 Account/plan availability and host permissions are external service conditions,
@@ -148,7 +148,6 @@ label. See [setup and compatibility](../tools/previewer/README.md). Source proje
 pins remain explicit; this does not upgrade the toolkit component package.
 Flutter build caches and temporary audio preparation remain; no full video is
 encoded just to preview. Browser/native component support must be checked.
-
 
 ## Optional speech evidence and diagnostic media tools
 
@@ -234,8 +233,9 @@ preview, separate from the older Flutter review app in `apps/editor`.
 - GitHub Releases API/CLI are used only by the release workflow to prepare draft
   prereleases. This version contains no application update checker or auto-installer.
 
-Linux is the tested desktop/rendering target. macOS binaries, native worker
-isolation and clean-machine dependency installation remain outstanding.
+Linux is the established desktop/rendering target. The Apple Silicon candidate
+implements bundled macOS binaries and a Seatbelt worker. Final signed installer
+acceptance remains a release gate; see the Mac candidate section below.
 
 The app-owned deployment skill is in
 `apps/desktop/.agents/skills/desktop-deploy/`. Its read-only preflight/tests use
@@ -271,3 +271,16 @@ ScreenCast backend matching the desktop. Debian packaging declares the first two
 standard supported desktops provide their backend. macOS requires OS capture
 permissions and camera/microphone usage descriptions in the signed app Info.plist.
 See apps/desktop/RECORDING.md for scope and platform acceptance gaps.
+### Apple Silicon Mac candidate runtime
+
+The Mac candidate bundles Electron 43.0.0, Flutter 3.47.7/Dart 3.13.5, pinned
+Fluvie and offline Pub dependencies. Static FFmpeg 8.1.2 uses x264
+`b35605ace3ddf7c1a5d67a2eb553f034aef41d55`, libvpx 1.16.0 and Opus 1.6.1.
+The media builder records verified upstream sources and licenses and produces
+the corresponding-source archive for distribution. Packaging/signing use
+`@electron/packager` 20.3.0 and `@electron/osx-sign` 2.7.2; exact transitives
+are locked in apps/desktop/package-lock.json. Builder tools include Xcode tools,
+make and pkg-config. End users need macOS 15+ on Apple Silicon; provider downloads
+and browser sign-in happen through the app. macOS supplies sandbox-exec, Keychain,
+Gatekeeper and the system frameworks. Apple Developer ID and Apple's notarization
+service are maintainer requirements. See [Mac builds](../apps/desktop/MACOS_BUILD.md).

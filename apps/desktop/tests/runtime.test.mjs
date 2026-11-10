@@ -54,7 +54,7 @@ test("managed engine verifies downloads, repairs corruption, reuses cache and re
     );
     assert.throws(
       () => releaseFor("chatgpt", "x64", "win32"),
-      /supports Linux/,
+      /supports macOS and Linux/,
     );
   } finally {
     manager.close();
