@@ -1466,7 +1466,7 @@ button:active:not(:disabled) {
   font-size: 13px;
   color: var(--app-text-muted);
 }
-#project-folder-open {
+#assets-folder-open {
   min-height: 32px;
   flex: 0 0 auto;
   margin-left: auto;
@@ -1476,7 +1476,7 @@ button:active:not(:disabled) {
   color: var(--app-text-muted);
   font-size: 11px;
 }
-#project-folder-open:hover {
+#assets-folder-open:hover {
   color: var(--app-text);
   text-decoration: underline;
 }
@@ -1542,3 +1542,6 @@ button:active:not(:disabled) {
 #assets-breadcrumb [aria-disabled="true"] {
   opacity: 0.45;
 }
+
+.asset-location { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.asset-location #assets-breadcrumb { flex: 1; min-width: 0; }

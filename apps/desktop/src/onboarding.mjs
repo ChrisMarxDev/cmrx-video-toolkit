@@ -165,7 +165,6 @@ export function setupOnboarding({ call, onError }) {
       const result = await call("import");
       if (result.assetId) await finish();
     });
-  $("#project-folder-open").onclick = () => run(() => call("project-folder"));
   function update(next) {
     state = next;
     replay.hidden = !state.projectInfo?.selected;
@@ -177,7 +176,6 @@ export function setupOnboarding({ call, onError }) {
       state.projectName || state.projectInfo?.name || "";
     $("#project-name").title = state.projectInfo?.folder || "";
     $("#project-name").hidden = !state.desktopTabs;
-    $("#project-folder-open").hidden = !state.canOpenProjectFolder;
     $("#browser-settings").hidden = !!state.desktopTabs;
     const show =
       !state.onboarding?.complete &&

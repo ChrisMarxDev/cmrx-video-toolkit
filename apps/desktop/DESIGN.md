@@ -119,7 +119,9 @@ Successful saves close it automatically; errors keep recovery actions visible.
 
 Settings lives in the native tab bar, with no duplicate chat gear. Assets uses
 the composer’s folder icon and is also reachable from Settings. Show project
-names in navigation and asset scopes; keep Open folder… a quiet text action.
+names in navigation and asset scopes. Keep Open folder… a quiet text action
+beside the asset browser breadcrumb, opening the current asset folder. It does
+not belong in the chat header.
 
 Asset breadcrumbs are plain monospace file paths, with ../ to go up inside the
 selected asset root. Ancestors are text links; the current folder is plain text.

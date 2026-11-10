@@ -819,7 +819,9 @@ export async function startApp({
         } else if (url.pathname === "/chat/assets-open") {
           if (!openAssetFolder)
             throw Error("Open the desktop app to open folders");
-          await openAssetFolder(assets.root(body.scope || "library"));
+          const folder = assets.file(body.scope || "library", body.folder || "");
+          if (!fs.statSync(folder).isDirectory()) throw Error("Choose an asset folder");
+          await openAssetFolder(folder);
           result = { ok: true };
         } else if (
           [

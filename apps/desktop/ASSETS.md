@@ -133,3 +133,7 @@ static real-widget previews, variants/parameters, constructor examples, instruct
 and portable source packages. Attach a component to chat and describe how it should
 be used. The screenshot is a preview; the agent should author editable graphics from
 its source. See the component browser README for setup and export limits.
+
+Open folder… beside the asset breadcrumb opens the currently browsed asset folder
+in the system file manager. Workspace/Project scope and nested navigation determine
+which folder opens. This action is in the asset manager, not the chat header.

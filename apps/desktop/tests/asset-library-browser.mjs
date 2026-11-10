@@ -168,6 +168,9 @@ try {
       .count(),
     0,
   );
+  assert.equal(await page.locator("#chat #project-folder-open").count(), 0);
+  await page.locator("#assets-folder-open").click();
+  assert.equal(opened, app.assets.root("library"));
   const rootBreadcrumbHeight = (await breadcrumb.boundingBox()).height;
   await page
     .getByRole("button", { name: "Open folder effects", exact: true })
@@ -177,6 +180,14 @@ try {
     .getByText("effects/", { exact: true })
     .waitFor();
   assert.equal((await breadcrumb.boundingBox()).height, rootBreadcrumbHeight);
+  await page.locator("#assets-folder-open").click();
+  assert.equal(opened, path.join(app.assets.root("library"), "effects"));
+  const escaped = await fetch(app.url + "/chat/assets-open", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + app.token },
+    body: JSON.stringify({ scope: "library", folder: "../" }),
+  });
+  assert.equal(escaped.status, 400);
   await breadcrumb
     .getByRole("button", { name: "Go to parent asset folder", exact: true })
     .click();

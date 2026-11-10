@@ -12,7 +12,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   const dialog = el("dialog");
   dialog.id = "assets-dialog";
   dialog.setAttribute("aria-label", "Asset manager");
-  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Workspace</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><div class="asset-feedback"><span id="assets-loading" class="matrix-loader" aria-hidden="true" hidden>${matrixCells}</span><p id="assets-status" role="status"></p></div><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
+  dialog.innerHTML = `<header><h2>Assets</h2><button type="button" id="assets-close" aria-label="Close assets">×</button></header><div class="asset-toolbar"><button id="assets-library" type="button">Workspace</button><button id="assets-project" type="button">Project</button><input id="assets-search" type="search" aria-label="Search assets" placeholder="Search assets…"><select id="assets-type" aria-label="Filter asset type"><option value="">All types</option></select><button type="button" id="assets-refresh" aria-label="Refresh assets">↻</button></div><div class="asset-location"><nav id="assets-breadcrumb" aria-label="Asset folders"></nav><button id="assets-folder-open" type="button">Open folder…</button></div><div class="asset-feedback"><span id="assets-loading" class="matrix-loader" aria-hidden="true" hidden>${matrixCells}</span><p id="assets-status" role="status"></p></div><div class="asset-browser"><div id="assets-grid"></div><section id="asset-detail" aria-label="Asset details"><p>Choose an asset to preview it.</p></section></div>`;
   document.body.append(dialog);
   const settings = el("section");
   settings.className = "asset-library-settings";
@@ -263,7 +263,7 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
           type = "";
           $("#assets-search").value = "";
           refresh().catch(error);
-        } else call("assets-open", { scope }).catch(error);
+        } else call("assets-open", { scope, folder }).catch(error);
       };
       empty.append(action);
       grid.append(empty);
@@ -390,6 +390,8 @@ export function setupAssetManager({ call, token, onError, onPrompt }) {
   settingsOpen.type = "button";
   settingsOpen.onclick = openManager;
   $(".settings-tabs").append(settingsOpen);
+  $("#assets-folder-open").onclick = () =>
+    call("assets-open", { scope, folder }).catch(error);
   $("#assets-close").onclick = () => dialog.close();
   dialog.addEventListener("close", () => {
     selectedAsset = null;

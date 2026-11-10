@@ -84,12 +84,13 @@ try {
       return "";
     };
   });
+  assert.equal(await page.locator("#chat #project-folder-open").count(), 0);
+  await page.getByRole("button", { name: "Assets", exact: true }).click();
   await page.getByRole("button", { name: "Open folder…", exact: true }).click();
   assert.equal(
     await app.evaluate(() => globalThis.openedProjectFolder),
-    path.join(workspace, "projects/My video"),
+    path.join(workspace, "assets"),
   );
-  await page.getByRole("button", { name: "Assets", exact: true }).click();
   await page.getByRole("button", { name: "Workspace", exact: true }).waitFor();
   assert.equal(await page.locator("#assets-project").textContent(), "My video");
   await page.getByRole("button", { name: "Close assets", exact: true }).click();
