@@ -99,8 +99,11 @@ function VideoLayer({
   const ref = useRef<HTMLVideoElement>(null);
   const active = time >= clip.start && time < clip.start + clip.duration;
   const playbackEpoch = useRef(0);
+  const pendingPlay = useRef<Promise<void> | null>(null);
+  const lastResync = useRef(-Infinity);
   useEffect(() => {
     playbackEpoch.current++;
+    pendingPlay.current = null;
     return () => {
       playbackEpoch.current++;
     };
@@ -108,7 +111,7 @@ function VideoLayer({
   useEffect(() => {
     if (ref.current)
       setMediaGain(ref.current, clip.muted ? 0 : (clip.volume ?? 1));
-  }, [clip.volume, clip.muted]);
+  }, [clip.volume, clip.muted, playing, active]);
   useEffect(() => {
     const media = ref.current;
     return () => {
@@ -122,24 +125,62 @@ function VideoLayer({
     v.playbackRate = playbackRate;
     v.preservesPitch = true;
     const target = Math.max(0, clip.in + time - clip.start);
-    if (active) {
-      if (!playing || Math.abs(v.currentTime - target) > 0.18)
+    const restoreAudio = () =>
+      setMediaGain(v, clip.muted ? 0 : (clip.volume ?? 1));
+    const sync = () => {
+      if (!active || !playing) {
+        v.pause();
+        if (active && Math.abs(v.currentTime - target) > 0.001)
+          v.currentTime = target;
+        return;
+      }
+      // Wait for a seek to finish before playing. Chasing the UI clock with a
+      // seek every frame can continually flush the audio decoder on 4K media.
+      if (v.seeking) return;
+      const now = performance.now();
+      if (
+        Math.abs(v.currentTime - target) > 0.18 &&
+        now - lastResync.current > 750
+      ) {
+        lastResync.current = now;
         v.currentTime = target;
-      if (playing && v.paused)
-        v.play().catch((error: unknown) => {
-          // Pause, seeking and source changes can interrupt a pending play().
-          // Its cancellation is expected, and an old request cannot describe
-          // the current playback state after another toggle or unmount.
-          if (
-            epoch !== playbackEpoch.current ||
-            (error as { name?: string })?.name === "AbortError"
-          )
-            return;
-          report("This video couldn’t start playing. Try Play again.");
-        });
-      else if (!playing) v.pause();
-    } else v.pause();
-  }, [time, playing, playbackRate, active, clip.in, clip.start, clip.assetId]);
+        return;
+      }
+      if (v.paused && !pendingPlay.current) {
+        const attempt = v.play();
+        pendingPlay.current = attempt;
+        attempt
+          .catch((error: unknown) => {
+            if (
+              epoch !== playbackEpoch.current ||
+              (error as { name?: string })?.name === "AbortError"
+            )
+              return;
+            report("This video couldn’t start playing. Try Play again.");
+          })
+          .finally(() => {
+            if (pendingPlay.current === attempt) pendingPlay.current = null;
+          });
+      }
+    };
+    v.addEventListener("seeked", sync);
+    v.addEventListener("playing", restoreAudio);
+    sync();
+    return () => {
+      v.removeEventListener("seeked", sync);
+      v.removeEventListener("playing", restoreAudio);
+    };
+  }, [
+    time,
+    playing,
+    playbackRate,
+    active,
+    clip.in,
+    clip.start,
+    clip.assetId,
+    clip.volume,
+    clip.muted,
+  ]);
   return (
     <video
       ref={ref}
@@ -196,19 +237,46 @@ function GraphicsLayer({
   track?: number;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const lastResync = useRef(-Infinity);
+  const pendingPlay = useRef<Promise<void> | null>(null);
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     const sync = () => {
       v.playbackRate = playbackRate;
-      if (!playing || Math.abs(v.currentTime - time) > 0.12)
-        v.currentTime = Math.min(time, Math.max(0, v.duration - 1 / 60));
-      if (playing && time < overlay.duration) v.play().catch(() => {});
-      else v.pause();
+      const target = Math.min(time, Math.max(0, v.duration - 1 / 60));
+      if (!playing || time >= overlay.duration) {
+        v.pause();
+        if (Math.abs(v.currentTime - target) > 0.001) v.currentTime = target;
+        return;
+      }
+      if (v.seeking) return;
+      const now = performance.now();
+      if (
+        Math.abs(v.currentTime - target) > 0.12 &&
+        now - lastResync.current > 750
+      ) {
+        lastResync.current = now;
+        v.currentTime = target;
+        return;
+      }
+      if (v.paused && !pendingPlay.current) {
+        const attempt = v.play();
+        pendingPlay.current = attempt;
+        attempt
+          .catch(() => {})
+          .finally(() => {
+            if (pendingPlay.current === attempt) pendingPlay.current = null;
+          });
+      }
     };
     if (v.readyState && Number.isFinite(v.duration)) sync();
     else v.addEventListener("loadedmetadata", sync, { once: true });
-    return () => v.removeEventListener("loadedmetadata", sync);
+    v.addEventListener("seeked", sync);
+    return () => {
+      v.removeEventListener("loadedmetadata", sync);
+      v.removeEventListener("seeked", sync);
+    };
   }, [overlay.url, time, playing, playbackRate]);
   return (
     <video

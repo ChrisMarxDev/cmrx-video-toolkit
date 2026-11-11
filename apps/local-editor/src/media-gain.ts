@@ -10,7 +10,8 @@ const graphs = new WeakMap<
   }
 >();
 function resume() {
-  if (context?.state === "suspended") void context.resume().catch(() => {});
+  if (context && context.state !== "running" && context.state !== "closed")
+    void context.resume().catch(() => {});
 }
 window.addEventListener("pointerdown", resume, { capture: true });
 window.addEventListener("keydown", resume, { capture: true });

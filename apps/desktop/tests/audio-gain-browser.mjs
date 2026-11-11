@@ -157,6 +157,60 @@ try {
   const loud = await sample();
   assert.equal(loud.gain, 4);
   assert(loud.rms > 0.01, JSON.stringify(loud));
+  // Verify actual audio output after every restart, not just a moving picture.
+  for (let round = 0; round < 20; round++) {
+    await page.getByRole("button", { name: "Pause", exact: true }).click();
+    await ruler.press("Home");
+    if (round % 4 === 0)
+      await page.evaluate(() => window.__gainNodes[0].context.suspend());
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await page.getByRole("button", { name: "Pause", exact: true }).click();
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await page.waitForFunction(
+      () =>
+        !document.querySelector(".stage video").paused &&
+        !document.querySelector(".stage video").seeking &&
+        window.__gainNodes[0].context.state === "running",
+    );
+    assert(
+      (await sample()).rms > 0.01,
+      `Audio did not recover after toggle round ${round}`,
+    );
+  }
+  // A decoder/UI-clock drift must not trigger a seek on every animation frame.
+  await page.evaluate(() => {
+    const v = document.querySelector(".stage video");
+    const clock = Object.getOwnPropertyDescriptor(
+      HTMLMediaElement.prototype,
+      "currentTime",
+    );
+    window.__resyncCount = 0;
+    Object.defineProperty(v, "currentTime", {
+      configurable: true,
+      get() {
+        return clock.get.call(this) - 0.3;
+      },
+      set(value) {
+        window.__resyncCount++;
+        clock.set.call(this, value);
+      },
+    });
+  });
+  await page.waitForTimeout(1100);
+  assert(
+    (await page.evaluate(() => window.__resyncCount)) <= 2,
+    "Audio decoder was repeatedly flushed by catch-up seeks",
+  );
+  await page.evaluate(() => {
+    delete document.querySelector(".stage video").currentTime;
+  });
+  await page.waitForFunction(
+    () => !document.querySelector(".stage video").seeking,
+  );
+  assert(
+    (await sample()).rms > 0.01,
+    "Audio did not recover after drift correction",
+  );
   const patch = async (patch) => {
     project = (await app.editor("/api/context")).project;
     await app.editor("/api/clip", { revision: project.revision, id, patch });
