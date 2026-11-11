@@ -1093,3 +1093,31 @@ button:has(> .icon) {
 .editor :is(input, textarea, [contenteditable="true"]) {
   user-select: text;
 }
+
+.playback-audio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex: 0 1 auto;
+}
+.transport .playback-audio button {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: transparent;
+}
+.playback-audio input[type="range"] {
+  width: clamp(48px, 7vw, 80px);
+  min-width: 48px;
+  padding: 0;
+  accent-color: currentColor;
+}
+.transport:has(.playback-audio) {
+  flex-wrap: wrap;
+  height: auto;
+  flex-basis: auto;
+  min-height: 42px;
+  padding-block: 3px;
+}

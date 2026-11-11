@@ -211,6 +211,51 @@ try {
     (await sample()).rms > 0.01,
     "Audio did not recover after drift correction",
   );
+  const beforeListeningControls = fs.readFileSync(
+    path.join(app.workspace, "project.json"),
+    "utf8",
+  );
+  const volumeControl = page.getByRole("slider", { name: "Playback volume" });
+  await volumeControl.press("Home");
+  assert.equal((await sample()).rms, 0);
+  for (let i = 0; i < 25; i++) await volumeControl.press("ArrowRight");
+  await page.waitForFunction(() => window.__gainNodes[0].gain.value === 1);
+  const lowered = await sample();
+  assert(
+    Math.abs(loud.rms / lowered.rms - 4) < 0.25,
+    "Listening volume did not attenuate the audio",
+  );
+  await page
+    .getByRole("button", { name: "Mute playback", exact: true })
+    .press("Space");
+  await page.waitForFunction(() => window.__gainNodes[0].gain.value === 0);
+  assert.equal((await sample()).rms, 0);
+  assert.equal(
+    await page.getByRole("button", { name: "Pause", exact: true }).count(),
+    1,
+    "Muting must not pause video",
+  );
+  await page
+    .getByRole("button", { name: "Unmute playback", exact: true })
+    .click();
+  await page.waitForFunction(() => window.__gainNodes[0].gain.value === 1);
+  assert((await sample()).rms > 0.002);
+  await volumeControl.press("Home");
+  await page
+    .getByRole("button", { name: "Unmute playback", exact: true })
+    .click();
+  assert.equal(
+    await volumeControl.inputValue(),
+    "25",
+    "Unmute restores previous audible level",
+  );
+  await volumeControl.press("End");
+  await page.waitForFunction(() => window.__gainNodes[0].gain.value === 4);
+  assert.equal(
+    fs.readFileSync(path.join(app.workspace, "project.json"), "utf8"),
+    beforeListeningControls,
+    "Playback volume must not author export changes",
+  );
   const patch = async (patch) => {
     project = (await app.editor("/api/context")).project;
     await app.editor("/api/clip", { revision: project.revision, id, patch });

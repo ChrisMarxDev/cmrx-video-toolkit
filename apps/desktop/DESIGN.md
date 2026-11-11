@@ -125,3 +125,7 @@ not belong in the chat header.
 
 Asset breadcrumbs are plain monospace file paths, with ../ to go up inside the
 selected asset root. Ancestors are text links; the current folder is plain text.
+
+Player sound: keep one quiet mute toggle and a compact listening-volume slider
+beside playback controls. These adjust monitoring, not exports; use hover labels
+to explain that distinction. Restore the previous audible level on unmute.

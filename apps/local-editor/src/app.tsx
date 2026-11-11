@@ -88,12 +88,14 @@ function VideoLayer({
   time,
   playing,
   playbackRate,
+  listeningVolume,
   report,
 }: {
   clip: Clip;
   time: number;
   playing: boolean;
   playbackRate: number;
+  listeningVolume: number;
   report: (s: string) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -110,8 +112,11 @@ function VideoLayer({
   }, [playing, active, clip.assetId, clip.in, clip.start, playbackRate]);
   useEffect(() => {
     if (ref.current)
-      setMediaGain(ref.current, clip.muted ? 0 : (clip.volume ?? 1));
-  }, [clip.volume, clip.muted, playing, active]);
+      setMediaGain(
+        ref.current,
+        clip.muted ? 0 : (clip.volume ?? 1) * listeningVolume,
+      );
+  }, [clip.volume, clip.muted, listeningVolume, playing, active]);
   useEffect(() => {
     const media = ref.current;
     return () => {
@@ -126,7 +131,7 @@ function VideoLayer({
     v.preservesPitch = true;
     const target = Math.max(0, clip.in + time - clip.start);
     const restoreAudio = () =>
-      setMediaGain(v, clip.muted ? 0 : (clip.volume ?? 1));
+      setMediaGain(v, clip.muted ? 0 : (clip.volume ?? 1) * listeningVolume);
     const sync = () => {
       if (!active || !playing) {
         v.pause();
@@ -180,12 +185,13 @@ function VideoLayer({
     clip.assetId,
     clip.volume,
     clip.muted,
+    listeningVolume,
   ]);
   return (
     <video
       ref={ref}
       src={resource("media", { id: clip.assetId! })}
-      muted={clip.muted}
+      muted={clip.muted || listeningVolume === 0}
       playsInline
       preload="auto"
       onError={() =>
@@ -491,6 +497,7 @@ function App() {
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
   }, []);
+  const lastListeningVolume = useRef(1);
   const [state, setState] = useState<State | null>(null),
     [connected, setConnected] = useState(false),
     [notice, setNotice] = useState(""),
@@ -498,6 +505,8 @@ function App() {
     [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false),
     [playbackRate, setPlaybackRate] = useState(1),
+    [listeningVolume, setListeningVolume] = useState(1),
+    [listeningMuted, setListeningMuted] = useState(false),
     [zoom, setZoom] = useState(80),
     [timelineWidth, setTimelineWidth] = useState(1000),
     [fitView, setFitView] = useState(
@@ -848,7 +857,7 @@ function App() {
         !connected ||
         e.isComposing ||
         target.isContentEditable ||
-        target.closest("input,textarea,select")
+        target.closest("input,textarea,select,.playback-audio")
       )
         return;
       e.preventDefault();
@@ -920,7 +929,9 @@ function App() {
         !connected ||
         e.isComposing ||
         target.isContentEditable ||
-        target.closest('textarea, select, a, input:not([type="range"])') ||
+        target.closest(
+          'textarea, select, a, .playback-audio, input:not([type="range"])',
+        ) ||
         (target.closest('input[type="range"], [role="separator"]') &&
           [
             "ArrowLeft",
@@ -1411,6 +1422,9 @@ function App() {
                               time={time}
                               playing={playing}
                               playbackRate={playbackRate}
+                              listeningVolume={
+                                listeningMuted ? 0 : listeningVolume
+                              }
                               report={setNotice}
                             />
                           ) : clip.kind === "graphics" &&
@@ -1535,6 +1549,55 @@ function App() {
                   <span className="time">
                     {seconds(time)} <span>/ {seconds(duration)}</span>
                   </span>
+                  <div
+                    className="playback-audio"
+                    role="group"
+                    aria-label="Playback sound"
+                  >
+                    <button
+                      type="button"
+                      aria-label={
+                        listeningMuted || listeningVolume === 0
+                          ? "Unmute playback"
+                          : "Mute playback"
+                      }
+                      aria-pressed={listeningMuted || listeningVolume === 0}
+                      title="Playback sound · exports unchanged"
+                      onClick={() => {
+                        if (listeningMuted || listeningVolume === 0) {
+                          setListeningMuted(false);
+                          if (listeningVolume === 0)
+                            setListeningVolume(lastListeningVolume.current);
+                        } else setListeningMuted(true);
+                      }}
+                    >
+                      <Icon
+                        name={
+                          listeningMuted || listeningVolume === 0
+                            ? "mute"
+                            : "volume"
+                        }
+                      />
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      aria-label="Playback volume"
+                      aria-valuetext={`${listeningMuted ? 0 : Math.round(listeningVolume * 100)}%`}
+                      title="Playback volume · exports unchanged"
+                      value={
+                        listeningMuted ? 0 : Math.round(listeningVolume * 100)
+                      }
+                      onChange={(event) => {
+                        const volume = Number(event.target.value) / 100;
+                        setListeningVolume(volume);
+                        setListeningMuted(false);
+                        if (volume > 0) lastListeningVolume.current = volume;
+                      }}
+                    />
+                  </div>
                   <TakeSelector
                     project={p!}
                     disabled={disabled}
