@@ -65,6 +65,21 @@ try {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.addInitScript(() => {
+    const originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      const failure = window.__playFailure;
+      if (!failure) return originalPlay.call(this);
+      if (failure === "Deferred")
+        return new Promise((resolve, reject) =>
+          (window.__pendingPlayRejects ||= []).push(reject),
+        );
+      return new Promise((resolve, reject) =>
+        setTimeout(
+          () => reject(new DOMException("Test playback rejection", failure)),
+          25,
+        ),
+      );
+    };
     const Native = window.AudioContext;
     window.__gainNodes = [];
     window.AudioContext = class extends Native {
@@ -79,6 +94,45 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".stage video")?.readyState >= 2,
   );
+  // Deterministic cancellation, not dependent on decoder speed or OS scheduling.
+  await page.evaluate(() => {
+    window.__playFailure = "Deferred";
+  });
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.evaluate(() => {
+    for (const reject of window.__pendingPlayRejects || [])
+      reject(new DOMException("Outdated request", "NotAllowedError"));
+  });
+  await page.waitForTimeout(50);
+  assert.equal(await page.getByRole("alert").count(), 0);
+  await page.evaluate(() => {
+    window.__playFailure = "AbortError";
+  });
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.waitForTimeout(100);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  assert.equal(await page.getByRole("alert").count(), 0);
+  await page.evaluate(() => {
+    window.__playFailure = "NotAllowedError";
+  });
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("alert").waitFor();
+  assert.match(await page.getByRole("alert").innerText(), /couldn’t start/);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.getByRole("button", { name: "Dismiss notice" }).click();
+  await page.evaluate(() => {
+    window.__playFailure = null;
+  });
+  const ruler = page.getByRole("slider", { name: "Timeline playhead" });
+  await ruler.press("Home");
+  for (let i = 0; i < 12; i++) {
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await page.getByRole("button", { name: "Pause", exact: true }).click();
+  }
+  await page.waitForTimeout(100);
+  assert.equal(await page.getByRole("alert").count(), 0);
+  await ruler.press("Home");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.waitForFunction(
     () =>
@@ -119,7 +173,7 @@ try {
   assert((await sample()).rms > 0.01);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: real browser audio is amplified 4×; gain changes, mute and unmute remain live.",
+    "PASS: rapid Play/Pause, canceled/outdated play promises and real failure reporting; audio gain/mute remain live.",
   );
 } finally {
   await browser?.close();

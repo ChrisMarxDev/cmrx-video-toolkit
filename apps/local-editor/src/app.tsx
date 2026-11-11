@@ -98,6 +98,13 @@ function VideoLayer({
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const active = time >= clip.start && time < clip.start + clip.duration;
+  const playbackEpoch = useRef(0);
+  useEffect(() => {
+    playbackEpoch.current++;
+    return () => {
+      playbackEpoch.current++;
+    };
+  }, [playing, active, clip.assetId, clip.in, clip.start, playbackRate]);
   useEffect(() => {
     if (ref.current)
       setMediaGain(ref.current, clip.muted ? 0 : (clip.volume ?? 1));
@@ -111,6 +118,7 @@ function VideoLayer({
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
+    const epoch = playbackEpoch.current;
     v.playbackRate = playbackRate;
     v.preservesPitch = true;
     const target = Math.max(0, clip.in + time - clip.start);
@@ -118,14 +126,20 @@ function VideoLayer({
       if (!playing || Math.abs(v.currentTime - target) > 0.18)
         v.currentTime = target;
       if (playing && v.paused)
-        v.play().catch(() =>
-          report(
-            "Playback was blocked or the asset cannot decode. Press Play again, or inspect an FFmpeg render.",
-          ),
-        );
+        v.play().catch((error: unknown) => {
+          // Pause, seeking and source changes can interrupt a pending play().
+          // Its cancellation is expected, and an old request cannot describe
+          // the current playback state after another toggle or unmount.
+          if (
+            epoch !== playbackEpoch.current ||
+            (error as { name?: string })?.name === "AbortError"
+          )
+            return;
+          report("This video couldn’t start playing. Try Play again.");
+        });
       else if (!playing) v.pause();
     } else v.pause();
-  }, [time, playing, playbackRate, active, clip.in, clip.start]);
+  }, [time, playing, playbackRate, active, clip.in, clip.start, clip.assetId]);
   return (
     <video
       ref={ref}
