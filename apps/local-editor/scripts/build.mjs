@@ -3,6 +3,14 @@ import { mkdir, copyFile } from "node:fs/promises";
 await mkdir("dist/public", { recursive: true });
 await Promise.all([
   build({
+    entryPoints: ["src/playback-proxy.mjs"],
+    outfile: "dist/playback-proxy.mjs",
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node22",
+  }),
+  build({
     entryPoints: ["src/mcp-bridge.ts"],
     outfile: "dist/mcp-bridge.js",
     bundle: true,

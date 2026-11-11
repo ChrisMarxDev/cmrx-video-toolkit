@@ -1,3 +1,7 @@
+import {
+  PlaybackProxies,
+  publicProxy,
+} from "../../local-editor/dist/playback-proxy.mjs";
 import { projectRuntime, timelineOwner } from "./project-runtime.mjs";
 import fs from "node:fs";
 import path from "node:path";
@@ -204,6 +208,9 @@ export async function startApp({
     );
     fs.renameSync(queueFile + ".tmp", queueFile);
   };
+  const playbackProxies = new PlaybackProxies(
+    path.join(workspace, ".editor/playback-proxies"),
+  );
   let playground, agent;
   let importController, importTask;
   let importing = false,
@@ -594,12 +601,47 @@ export async function startApp({
           }
           return;
         }
+        if (url.pathname === "/chat/overlay-preview") {
+          const file = playground.overlayArtifact(
+            url.searchParams.get("id"),
+            url.searchParams.get("track"),
+          );
+          if (!file) throw Error("Choose a completed graphics preview");
+          if (typeof autoPreview === "function" && !autoPreview()) {
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ status: "preparing", deferred: true }));
+            return;
+          }
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify(
+              publicProxy(
+                playbackProxies.request(
+                  file,
+                  url.searchParams.get("quality"),
+                  true,
+                  url.searchParams.get("retry") === "1",
+                  url.searchParams.get("refresh") === "1",
+                ),
+              ),
+            ),
+          );
+          return;
+        }
         if (["/chat/artifact", "/chat/overlay"].includes(url.pathname)) {
           const id = url.searchParams.get("id");
           const isOverlay = url.pathname === "/chat/overlay";
-          const file = isOverlay
+          let file = isOverlay
             ? playground.overlayArtifact(id, url.searchParams.get("track"))
             : playground.artifact(id);
+          if (file && isOverlay && url.searchParams.has("quality")) {
+            const preview = playbackProxies.request(
+              file,
+              url.searchParams.get("quality"),
+              true,
+            );
+            if (preview.status === "ready") file = preview.file;
+          }
           if (file) {
             const size = fs.statSync(file).size;
             const range = req.headers.range;
@@ -1277,6 +1319,23 @@ export async function startApp({
         res.end(fs.readFileSync(path.join(here, url.pathname.slice(1))));
         return;
       }
+      if (
+        url.pathname === "/api/playback-preview" &&
+        typeof autoPreview === "function" &&
+        !autoPreview()
+      ) {
+        if (
+          req.headers.authorization !== "Bearer " + connection.token &&
+          url.searchParams.get("token") !== connection.token
+        ) {
+          res.writeHead(401);
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ status: "preparing", deferred: true }));
+        return;
+      }
       // Serve the unchanged editor and stream media/SSE without buffering. Rewrite only transport origin.
       const mutation =
         req.method !== "GET" &&
@@ -1407,6 +1466,7 @@ export async function startApp({
       await agent.close();
       child.kill();
       const forceExit = setTimeout(() => child.kill("SIGKILL"), 2000);
+      await playbackProxies.close();
       await playground.close();
       await childDone;
       clearTimeout(forceExit);

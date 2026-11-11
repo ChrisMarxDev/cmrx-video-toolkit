@@ -1121,3 +1121,30 @@ button:has(> .icon) {
   min-height: 42px;
   padding-block: 3px;
 }
+
+.preview-quality-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.preview-quality-control select {
+  width: 80px;
+  font-size: 11px;
+  padding: 4px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+}
+.preview-quality-status {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+.preview-warning-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e9ba71;
+}

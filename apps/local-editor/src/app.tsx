@@ -1,5 +1,12 @@
+import { usePlaybackProxy, type ProxyState } from "./use-playback-proxy.js";
 import { setMediaGain, releaseMediaGain } from "./media-gain.js";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   end,
@@ -89,6 +96,8 @@ function VideoLayer({
   playing,
   playbackRate,
   listeningVolume,
+  previewQuality,
+  reportProxy,
   report,
 }: {
   clip: Clip;
@@ -96,9 +105,21 @@ function VideoLayer({
   playing: boolean;
   playbackRate: number;
   listeningVolume: number;
+  previewQuality: string | null;
+  reportProxy: (id: string, status: ProxyState | null) => void;
   report: (s: string) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const mediaURL = resource("media", { id: clip.assetId! });
+  const preview = usePlaybackProxy(
+    mediaURL,
+    resource("playback-preview", { id: clip.assetId! }),
+    previewQuality,
+  );
+  useEffect(() => {
+    reportProxy(clip.id, preview.status);
+    return () => reportProxy(clip.id, null);
+  }, [clip.id, preview.status, reportProxy]);
   const active = time >= clip.start && time < clip.start + clip.duration;
   const playbackEpoch = useRef(0);
   const pendingPlay = useRef<Promise<void> | null>(null);
@@ -109,7 +130,7 @@ function VideoLayer({
     return () => {
       playbackEpoch.current++;
     };
-  }, [playing, active, clip.assetId, clip.in, clip.start, playbackRate]);
+  }, [playing, active, preview.url, clip.in, clip.start, playbackRate]);
   useEffect(() => {
     if (ref.current)
       setMediaGain(
@@ -168,10 +189,12 @@ function VideoLayer({
           });
       }
     };
+    v.addEventListener("loadedmetadata", sync);
     v.addEventListener("seeked", sync);
     v.addEventListener("playing", restoreAudio);
     sync();
     return () => {
+      v.removeEventListener("loadedmetadata", sync);
       v.removeEventListener("seeked", sync);
       v.removeEventListener("playing", restoreAudio);
     };
@@ -183,6 +206,7 @@ function VideoLayer({
     clip.in,
     clip.start,
     clip.assetId,
+    preview.url,
     clip.volume,
     clip.muted,
     listeningVolume,
@@ -190,15 +214,21 @@ function VideoLayer({
   return (
     <video
       ref={ref}
-      src={resource("media", { id: clip.assetId! })}
+      src={preview.url}
+      data-preview-state={preview.status}
+      data-preview-quality={previewQuality || "original"}
       muted={clip.muted || listeningVolume === 0}
       playsInline
       preload="auto"
-      onError={() =>
+      onError={() => {
+        if (preview.url !== mediaURL) {
+          preview.fallback();
+          return;
+        }
         report(
           `Cannot decode ${clip.name}; use a browser-compatible MP4 proxy.`,
-        )
-      }
+        );
+      }}
       style={{
         display: active ? "block" : "none",
         left: clip.x,
@@ -235,14 +265,26 @@ function GraphicsLayer({
   playing,
   playbackRate,
   track,
+  previewQuality,
+  reportProxy,
 }: {
   overlay: NonNullable<PreviewBridge["overlay"]>;
   time: number;
   playing: boolean;
   playbackRate: number;
   track?: number;
+  previewQuality: string | null;
+  reportProxy: (id: string, status: ProxyState | null) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const statusURL = new URL(overlay.url, location.origin);
+  statusURL.pathname = "/chat/overlay-preview";
+  const preview = usePlaybackProxy(overlay.url, statusURL.href, previewQuality);
+  const proxyId = "graphics-" + String(track ?? "all");
+  useEffect(() => {
+    reportProxy(proxyId, preview.status);
+    return () => reportProxy(proxyId, null);
+  }, [proxyId, preview.status, reportProxy]);
   const lastResync = useRef(-Infinity);
   const pendingPlay = useRef<Promise<void> | null>(null);
   useEffect(() => {
@@ -283,14 +325,19 @@ function GraphicsLayer({
       v.removeEventListener("loadedmetadata", sync);
       v.removeEventListener("seeked", sync);
     };
-  }, [overlay.url, time, playing, playbackRate]);
+  }, [preview.url, time, playing, playbackRate]);
   return (
     <video
       aria-label="Flutter graphics layer"
+      onError={() => {
+        if (preview.url !== overlay.url) preview.fallback();
+      }}
       data-overlay={overlay.id}
       data-preview-track={track}
       ref={ref}
-      src={overlay.url}
+      src={preview.url}
+      data-preview-state={preview.status}
+      data-preview-quality={previewQuality || "original"}
       muted
       playsInline
       preload="auto"
@@ -505,6 +552,15 @@ function App() {
     [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false),
     [playbackRate, setPlaybackRate] = useState(1),
+    [previewQuality, setPreviewQuality] = useState(() => {
+      try {
+        const saved = sessionStorage.getItem("preview-quality");
+        if (saved && ["auto", "720", "1080", "original"].includes(saved))
+          return saved;
+      } catch {}
+      return "auto";
+    }),
+    [proxyStates, setProxyStates] = useState<Record<string, ProxyState>>({}),
     [listeningVolume, setListeningVolume] = useState(1),
     [listeningMuted, setListeningMuted] = useState(false),
     [zoom, setZoom] = useState(80),
@@ -597,6 +653,34 @@ function App() {
     } | null>(null),
     stage = useRef<HTMLDivElement>(null),
     [scale, setScale] = useState(1);
+  const reportProxy = useCallback((id: string, status: ProxyState | null) => {
+    setProxyStates((previous) => {
+      if (previous[id] === status || (!status && !previous[id]))
+        return previous;
+      const next = { ...previous };
+      if (status) next[id] = status;
+      else delete next[id];
+      return next;
+    });
+  }, []);
+  const autoPixels = state
+    ? Math.min(state.project.width, state.project.height) *
+      scale *
+      (window.devicePixelRatio || 1)
+    : 0;
+  const proxyQuality =
+    previewQuality === "original"
+      ? null
+      : previewQuality === "auto"
+        ? autoPixels > 1080
+          ? null
+          : autoPixels > 720
+            ? "1080"
+            : "720"
+        : previewQuality;
+  const proxiesPreparing = Object.values(proxyStates).includes("preparing");
+  const proxiesFailed = Object.values(proxyStates).includes("failed");
+
   useEffect(() => {
     if (!token) {
       setNotice(
@@ -1261,7 +1345,7 @@ function App() {
               role="status"
               aria-label={previewBridge.activity.label}
               data-phase={previewBridge.activity.phase}
-              data-working={previewBridge.activity.working}
+              data-working={previewBridge.activity.working || proxiesPreparing}
               aria-description={previewBridge.activity.details}
             >
               <span aria-hidden="true" />
@@ -1422,6 +1506,8 @@ function App() {
                               time={time}
                               playing={playing}
                               playbackRate={playbackRate}
+                              previewQuality={proxyQuality}
+                              reportProxy={reportProxy}
                               listeningVolume={
                                 listeningMuted ? 0 : listeningVolume
                               }
@@ -1493,6 +1579,8 @@ function App() {
                                   <GraphicsLayer
                                     key={track}
                                     track={track}
+                                    previewQuality={proxyQuality}
+                                    reportProxy={reportProxy}
                                     overlay={{
                                       ...previewBridge.overlay!,
                                       url: url.href,
@@ -1505,6 +1593,8 @@ function App() {
                               })
                           : !needsLayerCache && (
                               <GraphicsLayer
+                                previewQuality={proxyQuality}
+                                reportProxy={reportProxy}
                                 overlay={previewBridge.overlay}
                                 time={time}
                                 playing={playing}
@@ -1546,6 +1636,49 @@ function App() {
                       </option>
                     ))}
                   </select>
+                  <div className="preview-quality-control">
+                    <select
+                      aria-label="Preview quality"
+                      title="Preview quality · exports stay full resolution"
+                      value={previewQuality}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setPreviewQuality(value);
+                        try {
+                          sessionStorage.setItem("preview-quality", value);
+                        } catch {}
+                      }}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="720">720p</option>
+                      <option value="1080">1080p</option>
+                      <option value="original">Original</option>
+                    </select>
+                    <span
+                      className="preview-quality-status"
+                      role="status"
+                      title={
+                        proxiesPreparing
+                          ? "Preparing smaller previews…"
+                          : proxiesFailed
+                            ? "Preview unavailable; original video is playing. Choose another quality to retry."
+                            : "Preview ready"
+                      }
+                      aria-label={
+                        proxiesPreparing
+                          ? "Preparing smaller previews"
+                          : proxiesFailed
+                            ? "Preview unavailable; using original"
+                            : "Preview ready"
+                      }
+                    >
+                      {proxiesPreparing ? (
+                        <MatrixLoader />
+                      ) : proxiesFailed ? (
+                        <span className="preview-warning-dot" />
+                      ) : null}
+                    </span>
+                  </div>
                   <span className="time">
                     {seconds(time)} <span>/ {seconds(duration)}</span>
                   </span>

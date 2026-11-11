@@ -1,3 +1,4 @@
+import { PlaybackProxies, publicProxy } from "./playback-proxy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { createServer, type ServerResponse } from "node:http";
@@ -123,6 +124,9 @@ function broadcast() {
 }
 renderer = new Renderer(root, extensions, broadcast);
 const mediaPreviews = new MediaPreviews(root);
+const playbackProxies = new PlaybackProxies(
+  path.join(root, ".editor/playback-proxies"),
+);
 workspace.on("change", broadcast);
 function send(res: ServerResponse, value: unknown, status = 200) {
   res.writeHead(status, {
@@ -239,12 +243,39 @@ const server = createServer(async (req, res) => {
         send(res, await mediaPreviews.get(asset));
         return;
       }
+      if (route === "/api/playback-preview") {
+        const asset = workspace.project.assets.find(
+          (a) => a.id === url.searchParams.get("id"),
+        );
+        if (!asset) throw new Fault(404, "Asset not found");
+        send(
+          res,
+          publicProxy(
+            playbackProxies.request(
+              safeFile(root, asset.path),
+              url.searchParams.get("quality"),
+              false,
+              url.searchParams.get("retry") === "1",
+              url.searchParams.get("refresh") === "1",
+            ),
+          ),
+        );
+        return;
+      }
       if (route === "/api/media") {
         const asset = workspace.project.assets.find(
           (a) => a.id === url.searchParams.get("id"),
         );
         if (!asset) throw new Fault(404, "Asset not found");
-        stream(res, safeFile(root, asset.path), req.headers.range);
+        let file = safeFile(root, asset.path);
+        if (url.searchParams.has("quality")) {
+          const preview = playbackProxies.request(
+            file,
+            url.searchParams.get("quality"),
+          );
+          if (preview.status === "ready") file = preview.file;
+        }
+        stream(res, file, req.headers.range);
         return;
       }
       if (route === "/api/artifact") {
@@ -490,6 +521,7 @@ function shutdown() {
   workspace.close();
   renderer.close();
   mediaPreviews.close();
+  void playbackProxies.close();
   for (const c of clients) c.end();
   server.close();
   fs.rmSync(lock, { recursive: true, force: true });

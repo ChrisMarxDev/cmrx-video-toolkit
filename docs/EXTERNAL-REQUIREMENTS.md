@@ -305,3 +305,7 @@ adds no runtime dependency to the desktop app; exported pubspecs retain their so
 packages' Flutter/Fluvie and other pub requirements.
 
 Branded Mac disk images use macOS `hdiutil` and Xcode's `SetFile` to store `.VolumeIcon.icns` and its custom-volume flag inside an HFS+ image. These are maintainer-only system/Xcode tools updated through Apple; end users need none of them.
+
+Desktop playback proxies reuse FFmpeg/ffprobe with libx264, AAC, libvpx-vp9, scale
+and setsar. Transparent cache resizing requires libvpx VP9 decoding as well as
+encoding; it must preserve alpha. No additional service, model or download is used.

@@ -112,3 +112,20 @@ by preview visibility/mute controls.
 Screen/camera/microphone sources can be recorded separately into project assets
 without editing the timeline. See [recording](RECORDING.md) for use, file layout,
 permissions and the remaining native-platform verification requirements.
+
+## Preview quality
+
+The player's Preview quality selector offers Auto, 720p, 1080p and Original. Auto
+matches the displayed player size and pixel density. Smaller footage and transparent
+graphics copies are prepared once in the background and reused from the project’s
+`.editor/playback-proxies/` cache; the current video keeps playing while preparing.
+The fixed-size status indicator explains preparation or fallback on hover. If
+preparation fails, original media stays available; choose another quality to retry.
+The selection is remembered for the current tab session.
+
+These are playback copies only. Source assets, project dimensions, source timestamps,
+comments, transforms and exports remain full quality. No project revision changes
+when selecting preview quality. Original bypasses proxy generation for pixel checks.
+Lower-resolution sources are not upscaled. Cached source previews use frequent
+keyframes for seeking; transparent graphics retain their alpha channel. Generated
+files can be deleted with the other disposable `.editor` caches when the app is closed.

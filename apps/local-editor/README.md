@@ -44,3 +44,9 @@ selected clip without closing its gap. Escape clears a range or dismisses the me
 including when embedded in the desktop app. For local debugging with React's
 additional diagnostics, use `EDITOR_DEV=1 npm run build`. Rebuild normally before
 packaging or profiling performance; neither mode changes export resolution.
+
+Playback quality uses disposable cached media through `/api/playback-preview` and
+`/api/media?quality=720|1080`. The authenticated status request starts background
+preparation; media requests use the ready copy or fall back to the original.
+It never rewrites asset paths or changes FFmpeg export inputs. See the desktop
+README for the quality controls and cache lifecycle.

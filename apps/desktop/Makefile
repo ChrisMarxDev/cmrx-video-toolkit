@@ -32,6 +32,7 @@ agent-browser-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/timeline-import-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-controls-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/audio-gain-browser.mjs
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-quality-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/image-paste-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/markdown-browser.mjs
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" EDITOR_RESULTS="$(EDITOR_RESULTS)" node tests/project-agent-browser.mjs
@@ -99,3 +100,8 @@ audio-browser-check: build
 # Build the branded installer from a signed/stapled app: make macos-dmg MAC_APP=/path/App.app MAC_DMG=/new/output.dmg
 macos-dmg:
 	python3 scripts/package-macos-dmg.py --app "$(MAC_APP)" --output "$(MAC_DMG)"
+
+.PHONY: preview-quality-check
+# Verify cached preview qualities, timing, alpha and export isolation: make preview-quality-check EDITOR_PLAYWRIGHT=/path/to/playwright
+preview-quality-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-quality-browser.mjs
