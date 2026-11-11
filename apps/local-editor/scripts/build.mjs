@@ -22,6 +22,13 @@ await Promise.all([
   }),
   build({
     entryPoints: ["src/app.tsx"],
+    // Desktop/review builds are user-facing. React's development JSX runtime
+    // allocates debug tasks/stacks on every playback frame.
+    define: {
+      "process.env.NODE_ENV": JSON.stringify(
+        process.env.EDITOR_DEV === "1" ? "development" : "production",
+      ),
+    },
     outfile: "dist/public/app.js",
     bundle: true,
     format: "esm",

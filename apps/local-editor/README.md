@@ -37,3 +37,10 @@ comments shift with the edit, clamping moments inside the removed range to its s
 Right-click the timeline or open More for range actions, split, delete, history,
 transcript and shortcuts. Desktop also exposes Export there. Backspace deletes a
 selected clip without closing its gap. Escape clears a range or dismisses the menu.
+
+### Renderer build mode
+
+`npm run build` builds the player with React's production runtime by default,
+including when embedded in the desktop app. For local debugging with React's
+additional diagnostics, use `EDITOR_DEV=1 npm run build`. Rebuild normally before
+packaging or profiling performance; neither mode changes export resolution.
