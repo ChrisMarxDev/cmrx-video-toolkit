@@ -1,5 +1,8 @@
 # Desktop app development
 
+For ongoing app development, use `.agents/skills/desktop-app/SKILL.md`.
+This is app-maintenance context, separate from the in-app video creator skills.
+
 Follow the toolkit root AGENTS.md. For Mac build/sign/notarize/release tasks, read
 `.agents/skills/desktop-deploy/SKILL.md`. That app-maintenance skill is versioned
 with this app; it is not part of the creative agent's `skills/` directory or the
