@@ -45,6 +45,11 @@ generated videos follow their own project style. Use the app development skill a
 12. **Status dots stay dots.** Change color, never shape or size. Working is yellow.
     Keep the same 6px dot in tabs and editor status, with state text on hover/focus.
 
+13. **Hover the whole element.** Small controls highlight their complete existing
+    surface, never an inset splash or a new shape. Animate existing fill, border,
+    text or icon color; preserve geometry, radius and layout. Compound controls
+    such as project tabs own one hover surface; children stay transparent.
+
 ## Foundations and implementation
 
 | Role | Source / current choice |

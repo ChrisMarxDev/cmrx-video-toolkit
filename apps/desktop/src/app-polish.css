@@ -1553,3 +1553,16 @@ button:active:not(:disabled) {
   flex: 1;
   min-width: 0;
 }
+
+/* Highlight the complete model control, not its nested selected-content button. */
+#model-select {
+  border-radius: var(--app-radius-compact);
+}
+#model-select:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+#model-select > button,
+#model-select > button:hover:not(:disabled),
+#model-select > button:active:not(:disabled) {
+  background: transparent;
+}

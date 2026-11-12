@@ -266,3 +266,29 @@ button:disabled {
 dialog {
   border-radius: var(--app-radius-panel);
 }
+
+/* The tab is one surface; its child buttons must not paint inset hover pills. */
+#tabs .tab {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+#tabs .tab:hover {
+  background: var(--app-hover);
+}
+#tabs .tab.active:hover {
+  background: color-mix(in srgb, var(--app-selected) 85%, var(--app-text) 15%);
+}
+#tabs .tab > button,
+#tabs .tab > button:hover:not(:disabled),
+#tabs .tab > button:active:not(:disabled) {
+  background: transparent;
+}
+#tabs .close:hover:not(:disabled) {
+  color: var(--app-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  #tabs .tab {
+    transition: none;
+  }
+}
