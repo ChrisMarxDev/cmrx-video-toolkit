@@ -1,7 +1,10 @@
-# 0.1.2 — current-source candidate
+# 0.1.2 — playback and preview improvements
 
 - Restore saved device-provider connections across app restarts.
 - Place folder opening beside the asset-browser breadcrumb.
+- Add playback volume and mute controls.
+- Cache preview quality for footage and transparent graphics.
+- Animate onboarding with fixed-grid dither waves and spheres.
 - Include resumable Mac deployment helpers and corrected cross-version audio checks.
 
 This candidate is a local build until its own notarization and downloaded-installer

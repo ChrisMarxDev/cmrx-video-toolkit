@@ -86,7 +86,11 @@ test("playback cache preserves timing/audio, deduplicates, reuses receipts and r
     const video = output.streams.find((s) => s.codec_type === "video");
     assert.equal(video.nb_frames, "30");
     assert.equal(video.avg_frame_rate, "24/1");
-    assert.equal(Number(output.format.duration), 1.25);
+    assert.equal(Number(video.duration), 1.25);
+    // AAC encoder padding can extend the container by up to one audio frame.
+    const audio = output.streams.find((s) => s.codec_type === "audio");
+    const padding = 1024 / Number(audio.sample_rate);
+    assert(Math.abs(Number(output.format.duration) - 1.25) <= padding);
     assert(output.streams.some((s) => s.codec_type === "audio"));
     await cache.close();
     cache = new PlaybackProxies(path.join(dir, "cache"));
