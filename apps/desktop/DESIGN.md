@@ -31,7 +31,10 @@ generated videos follow their own project style. Use the app development skill a
 9. **Expressive setup, quiet editing.** Lead onboarding with original dither artwork
    and a short heading. Offer Upload or Open empty project. Use subtle dither edge
    light in editing chrome, never over media, text fields or dense timeline content.
-   Keep the Bayer cell grid fixed; animate light/opacity rather than scaling cells.
+   Use a full-width animated field in onboarding: lit spheres and slow ribbons.
+   Keep the Bayer cell grid fixed; animate the underlying light, never scale cells.
+   Pause offscreen/hidden, cap at 24fps, and use a still for reduced motion.
+   Editing chrome stays static so decoration does not compete with playback.
 10. **One loading language.** Compact wave-animated square-cell matrices (14px)
     belong in loading areas. Installation uses a dithered bar: real percentages
     when reported, indeterminate motion otherwise. Respect reduced motion; keep
@@ -129,3 +132,8 @@ selected asset root. Ancestors are text links; the current folder is plain text.
 Player sound: keep one quiet mute toggle and a compact listening-volume slider
 beside playback controls. These adjust monitoring, not exports; use hover labels
 to explain that distinction. Restore the previous audible level on unmute.
+
+Dither implementation: original WebGL field in `src/dither-art.mjs`, with a static
+Canvas fallback. Research references: [Paper Shaders](https://github.com/paper-design/shaders)
+and [dithercn](https://dithercn.dev/), discovered through
+[Uncommon Web](https://webdev.teknium.io/). No upstream source or package is bundled.
