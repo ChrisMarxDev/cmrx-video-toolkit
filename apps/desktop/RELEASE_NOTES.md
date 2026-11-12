@@ -1,3 +1,9 @@
+# 0.1.3 — borderless Mac window
+
+- Remove the default grey Mac title bar; native window buttons share the app header.
+- Keep header dragging and interactive tabs/buttons working independently.
+- Set the approved CMRX Dock icon explicitly, including development launches.
+
 # 0.1.2 — playback and preview improvements
 
 - Restore saved device-provider connections across app restarts.

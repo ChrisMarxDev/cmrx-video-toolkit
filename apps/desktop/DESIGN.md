@@ -162,3 +162,12 @@ local effect; reuse suitable implementations when they fit the app's stack.
 
 Current artwork remains our original implementation; this rule sets the direction
 for future additions and revisions. Paper Shaders remains a secondary reference.
+
+## Mac window chrome
+
+The Mac main window is borderless: content extends to the top edge with no native
+grey title strip. Keep standard traffic lights in the 46px app header, reserve
+88px at the left for them, and allow header dragging without making tabs, buttons
+or inputs draggable. Keep native window resizing/fullscreen behavior. The approved
+CMRX split-disc ICNS is the packaged launcher icon; set its PNG explicitly for the
+runtime Dock icon so development launches also avoid the Electron placeholder.

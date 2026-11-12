@@ -222,6 +222,10 @@ const apps = await packager({
 // The packager may absolutize source symlinks even with dereferencing disabled.
 // Relocate those links into the shipped bundle and keep framework links relative.
 const bundle = path.join(apps[0], "CMRX Chat Editor.app");
+const iconName = run("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundleIconFile", path.join(bundle, "Contents/Info.plist")]).trim();
+const installedIcon = path.join(bundle, "Contents/Resources", iconName.endsWith(".icns") ? iconName : iconName + ".icns");
+if (sha(installedIcon) !== sha(path.join(repo, "apps/desktop/resources/app-icon.icns")))
+  throw Error("Packaged launcher icon differs from approved CMRX artwork");
 function relocateLinks(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const file = path.join(dir, entry.name);

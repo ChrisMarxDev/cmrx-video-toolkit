@@ -1,3 +1,4 @@
+document.documentElement.dataset.platform = window.projects.platform;
 const $ = (s) => document.querySelector(s);
 let state = { tabs: [] },
   menuOpen = false,

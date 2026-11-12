@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("projects", {
+  platform: process.platform,
   command: (action, data) =>
     ipcRenderer.invoke("projects:command", action, data),
   subscribe: (callback) => {

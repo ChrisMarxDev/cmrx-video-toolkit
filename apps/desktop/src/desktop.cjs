@@ -39,6 +39,8 @@ else {
   });
   app.whenReady().then(async () => {
     try {
+      if (process.platform === "darwin")
+        app.dock.setIcon(path.resolve(__dirname, "../resources/app-icon.png"));
       app.setAboutPanelOptions({
         applicationName: "CMRX Chat Editor",
         applicationVersion: app.getVersion(),
@@ -115,6 +117,9 @@ else {
         minHeight: 640,
         backgroundColor: "#151417",
         title: "Editing room",
+        ...(process.platform === "darwin"
+          ? { titleBarStyle: "hidden", trafficLightPosition: { x: 16, y: 16 } }
+          : {}),
         icon: path.resolve(__dirname, "../resources/app-icon.png"),
         webPreferences: {
           preload: path.join(__dirname, "desktop-preload.cjs"),
