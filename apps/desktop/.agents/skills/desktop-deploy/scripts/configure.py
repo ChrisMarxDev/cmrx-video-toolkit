@@ -2,6 +2,7 @@
 """Save an existing Apple app-specific password privately; never create a new one."""
 import argparse
 import getpass
+from pathlib import Path
 import subprocess
 import deploy_config as local
 
@@ -15,13 +16,14 @@ def main():
     if any(not config.get(key) for key in required):
         parser.error('Initialize the nonsecret private config.json with profile, keychain, team_id and credentials_file first')
     if args.dialog:
-        def ask(message, hidden=False):
-            script = 'on run argv\ntext returned of (display dialog (item 1 of argv) default answer "" ' + ('with hidden answer ' if hidden else '') + 'with title "CMRX deployment credentials" buttons {"Cancel", "Save locally"} default button "Save locally")\nend run'
-            result = subprocess.run(['osascript', '-e', script, message], capture_output=True, text=True)
+        saved = local.read_private(config['credentials_file']) if Path(config['credentials_file']).exists() else {}
+        def ask(message, hidden=False, default=''):
+            script = 'on run argv\nactivate\ntext returned of (display dialog (item 1 of argv) default answer (item 2 of argv) ' + ('with hidden answer ' if hidden else '') + 'with title "CMRX deployment credentials" buttons {"Cancel", "Save locally"} default button "Save locally")\nend run'
+            result = subprocess.run(['osascript', '-e', script, message, default], capture_output=True, text=True)
             if result.returncode:
                 raise ValueError('Cancelled; existing saved configuration is unchanged.')
             return result.stdout.strip()
-        email = ask('Apple Developer account email. This stays in the private local deployment file.')
+        email = ask('Confirm the Apple Developer account for this password. This stays local.', default=saved.get('apple_id', ''))
         password = ask('Paste your EXISTING app-specific password. Do not create another password. This is saved locally with owner-only permissions so releases can restore the Keychain profile.', True)
     else:
         email = input('Apple Developer account email: ').strip()
