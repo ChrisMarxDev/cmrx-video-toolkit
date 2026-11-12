@@ -75,7 +75,14 @@ def restore_profile(config):
                 _, status = os.waitpid(child, 0)
             result = os.waitstatus_to_exitcode(status)
         if result or not sent:
-            raise ValueError('Saved notarization credentials could not be validated; no credential output was logged.')
+            text = output.lower()
+            reason = ('Apple authentication rejected (401)' if b'401' in text else
+                      'Apple authorization rejected (403)' if b'403' in text else
+                      'Keychain access failed' if b'keychain' in text and (b'error' in text or b'failed' in text) else
+                      'network request failed' if b'network' in text or b'timed out' in text else
+                      'secure password prompt was not reached' if not sent else
+                      'notarytool exited without successful validation')
+            raise ValueError(f'{reason}; process exit {result}. Private credential backup retained; no credential output logged.')
     finally:
         os.close(master)
         output = b''
