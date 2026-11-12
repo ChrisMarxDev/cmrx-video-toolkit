@@ -299,3 +299,8 @@ desktop-macos-dmg:
 # Resume one Apple notarization submission; see desktop-deploy repeat-release.md for variables.
 desktop-notarize:
 	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy notarize
+
+.PHONY: desktop-deploy-configure
+# Retain existing Apple credentials privately: make desktop-deploy-configure CONFIG_DIALOG=1
+desktop-deploy-configure:
+	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy configure

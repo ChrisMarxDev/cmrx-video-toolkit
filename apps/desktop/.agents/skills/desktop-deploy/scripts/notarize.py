@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import deploy_config
 
 
 def digest(path):
@@ -87,7 +88,9 @@ def main():
     parser.add_argument('--artifact', required=True, type=Path)
     parser.add_argument('--target', required=True, type=Path, help='App.app for a ZIP, or the same DMG')
     parser.add_argument('--state', required=True, type=Path)
-    parser.add_argument('--profile', required=True, help='Existing nonsecret Keychain profile name')
+    config = deploy_config.load()
+    parser.add_argument('--profile', default=config.get('profile'), help='Existing Keychain profile; defaults to private deployment config')
+    parser.add_argument('--keychain', default=config.get('keychain'), help='Explicit Keychain path')
     parser.add_argument('--submission-id', help='Recover an already submitted artifact; verify its identity in history first')
     args = parser.parse_args()
     if sys.platform != 'darwin':
@@ -97,7 +100,7 @@ def main():
         parser.error('Artifact and stapling target must exist')
     if artifact.suffix not in ('.zip', '.dmg') or (artifact.suffix == '.dmg' and artifact != target) or (artifact.suffix == '.zip' and target.suffix != '.app'):
         parser.error('Use ZIP + App.app, or DMG + same DMG')
-    if not args.profile.strip():
+    if not args.profile or not args.profile.strip():
         parser.error('An existing Keychain profile name is required')
     run('codesign', '--verify', '--deep', '--strict', str(target))
     signature = subprocess.check_output(['codesign', '--display', '--verbose=4', str(target)], stderr=subprocess.STDOUT, text=True)
@@ -118,7 +121,13 @@ def main():
         if not state:
             state = dict(artifact=str(artifact), sha256=digest(artifact), phase='ready', target=str(target), cdhash=cdhash)
             save(receipt, state)
-        result = advance(state, artifact, args.profile, lambda value: save(receipt, value), submission_id=args.submission_id)
+        def execute(*command):
+            if command[:2] == ('xcrun', 'notarytool') and args.keychain:
+                command += ('--keychain', args.keychain)
+            return run(*command)
+        if state.get('phase') != 'complete' and config and args.profile == config.get('profile') and args.keychain == config.get('keychain'):
+            deploy_config.ensure_profile(config, run)
+        result = advance(state, artifact, args.profile, lambda value: save(receipt, value), execute, submission_id=args.submission_id)
         print(json.dumps(result, indent=2))
         return 3 if result['phase'] != 'complete' else 0
 

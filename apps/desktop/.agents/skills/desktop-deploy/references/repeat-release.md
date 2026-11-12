@@ -5,6 +5,38 @@ runtime inputs still match the agreed release. A later tooling/docs commit does
 not require rebuilding an already frozen candidate. Never change a published
 installer; app/icon changes require a new version.
 
+## Persistent local state
+
+Use `~/Library/Application Support/CMRX Deployment/` (directory mode 700), outside
+all repositories. `config.json` (mode 600) records `profile`, explicit `keychain`,
+`team_id`, `sign_identity`, `credentials_file`, `release_root`, `active_release`,
+source and version. Initialize it with operator-approved nonsecret identity values
+using `scripts/deploy_config.py`'s `save_private`, then keep release artifacts,
+receipts, logs and submission IDs under `release_root`, never only `/private/tmp`.
+The active release receipt remains authoritative; read it before starting work.
+
+With operator authorization to retain credentials, run
+`make desktop-deploy-configure CONFIG_DIALOG=1` from the toolkit root for native
+local entry, or omit CONFIG_DIALOG for a maintainer Terminal prompt. This takes the
+EXISTING app-specific password, never asks the operator to generate a replacement,
+and saves it in the private `credentials_file` with owner-only mode 600. The backup
+is plaintext protected by filesystem permissions, not an encrypted vault. Do not
+read/print its contents, copy it into Git, publish it, or put secrets in command
+arguments/logs. Respect host UI permission and announce Keychain prompts first.
+
+Notarization loads the saved profile and explicit Keychain automatically; callers
+may override --profile/--keychain deliberately. If profile lookup fails with exit69
+and a private credential backup exists, it restores that same profile through the
+secure password prompt, validates access and resumes. Passwords never enter argv
+or logs. Missing/invalid backups block dependent work without deleting artifacts,
+repeated dialogs, new passwords or duplicate uploads. A valid profile never reads
+the backup. Symlinks, foreign-owned or group/world-readable config files are refused.
+
+When migrating a release directory, copy it intact, verify ZIP/DMG hashes, update
+only external receipt paths and active_release, and preserve submission IDs and
+CDHashes. Never rewrite signed app contents. Don't delete the original until the
+migration is verified. Avoid opening credential setup automatically on every run.
+
 ## Fast preparation
 
 Keep pinned SDK, offline Pub cache and static-media build receipts outside the

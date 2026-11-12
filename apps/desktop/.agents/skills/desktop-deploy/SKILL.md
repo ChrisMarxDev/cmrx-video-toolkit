@@ -37,7 +37,9 @@ work. Creating/editing this skill does not execute any deployment.
 For an implemented Mac app, start with [repeat release](references/repeat-release.md):
 reuse pinned builder inputs and frozen candidates, check Keychain authentication
 before expensive work, and use `make desktop-notarize` for locked, resumable Apple
-submissions. Keep version/source, app and DMG paths, submission IDs, final hashes,
+submissions. Persist private configuration and authorized credential recovery in the owner-only
+local deployment directory described in that reference. Do not rely on temporary
+folders or chat memory for release state. Keep version/source, app and DMG paths, submission IDs, final hashes,
 coverage and GitHub assets in a task-owned release receipt outside the checkout.
 Inspect existing state/processes before doing work; never duplicate a live upload.
 Read the readiness reference only when implementing support or diagnosing a gap.
