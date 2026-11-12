@@ -137,3 +137,23 @@ Dither implementation: original WebGL field in `src/dither-art.mjs`, with a stat
 Canvas fallback. Research references: [Paper Shaders](https://github.com/paper-design/shaders)
 and [dithercn](https://dithercn.dev/), discovered through
 [Uncommon Web](https://webdev.teknium.io/). No upstream source or package is bundled.
+
+## Dither direction
+
+Approved 2026-11-12: **prefer [dithercn](https://dithercn.dev/) for new dither
+components and visual direction.** Consult its catalog before inventing another
+local effect; reuse suitable implementations when they fit the app's stack.
+
+- Be expressive in onboarding and empty states: full-width waves, auroras,
+  gradients, globes and sculptural spheres. Give the artwork room.
+- In editing, use restrained edge treatments and occasional accents. Keep video,
+  timeline, text and inputs clear; do not texture every control.
+- Use the app palette and fixed dither cells. Motion is slow, pauses when hidden,
+  respects reduced motion and must not impair video playback.
+- Preserve accessible controls and existing layout footprints. Decoration never
+  substitutes for real progress or status.
+- When adopting code, retain its license/provenance and record dependencies.
+  Preference does not mean importing the entire registry or changing frameworks.
+
+Current artwork remains our original implementation; this rule sets the direction
+for future additions and revisions. Paper Shaders remains a secondary reference.
