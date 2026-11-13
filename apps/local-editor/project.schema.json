@@ -196,6 +196,54 @@
             },
             "additionalProperties": true
           }
+        },
+        "media": {
+          "type": "object",
+          "required": [
+            "schemaVersion",
+            "original",
+            "render",
+            "mapping"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "original": {
+              "$ref": "#/$defs/mediaRepresentation"
+            },
+            "render": {
+              "$ref": "#/$defs/mediaRepresentation"
+            },
+            "mapping": {
+              "type": "object",
+              "required": [
+                "timing",
+                "color",
+                "orientation"
+              ],
+              "properties": {
+                "timing": {
+                  "enum": [
+                    "identity",
+                    "resampled"
+                  ]
+                },
+                "color": {
+                  "enum": [
+                    "identity",
+                    "hdr-to-sdr"
+                  ]
+                },
+                "orientation": {
+                  "enum": [
+                    "identity",
+                    "baked"
+                  ]
+                }
+              }
+            }
+          }
         }
       },
       "required": [
@@ -412,6 +460,54 @@
         "createdRevision",
         "anchor"
       ],
+      "additionalProperties": true
+    },
+    "mediaRepresentation": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "width",
+        "height",
+        "duration",
+        "frameRate",
+        "rotation",
+        "transfer"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^media/(?!.*\\.\\.)(?!.*\\\\).+"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 86400
+        },
+        "frameRate": {
+          "type": "string"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "transfer": {
+          "type": "string"
+        }
+      },
       "additionalProperties": true
     }
   },

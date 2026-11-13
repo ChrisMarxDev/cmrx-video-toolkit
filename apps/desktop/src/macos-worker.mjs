@@ -114,7 +114,7 @@ export class MacOSWorker {
         else fs.copyFileSync(file, target);
       }
     }
-    const media = path.join(owner.workspace, "media");
+    const media = path.join(original, "media");
     if (fs.existsSync(media)) {
       regularTree(media);
       if (!fs.existsSync(path.join(work, "media")))

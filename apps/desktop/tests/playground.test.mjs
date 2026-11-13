@@ -226,7 +226,7 @@ test("review comments and revision-only updates keep previews fresh; content cha
   }
 });
 
-test("legacy render receipts migrate only when snapshot content and authored source match", () => {
+test("legacy receipts without media/engine identities stay stale without losing exports", () => {
   const root = folder();
   try {
     const file = path.join(root, "project.json");
@@ -234,7 +234,7 @@ test("legacy render receipts migrate only when snapshot content and authored sou
     fs.writeFileSync(file, JSON.stringify(project, null, 2));
     const p = new Playground({ workspace: root });
     const legacyProject = fs.readFileSync(file);
-    const fingerprint = p.fingerprint({ legacyProject });
+    const fingerprint = "legacy-v3-without-media-identity";
     const snapshot = path.join(root, ".editor/playground/legacy");
     fs.mkdirSync(snapshot);
     fs.writeFileSync(path.join(snapshot, "project.json"), legacyProject);
@@ -250,7 +250,7 @@ test("legacy render receipts migrate only when snapshot content and authored sou
     fs.writeFileSync(file, JSON.stringify(project, null, 2));
     assert.equal(
       new Playground({ workspace: root }).state().preview.stale,
-      false,
+      true,
     );
     p.jobs[0].fingerprint = fingerprint;
     p.persist();

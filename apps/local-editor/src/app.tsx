@@ -38,6 +38,8 @@ type State = {
   error: string;
   canUndo: boolean;
   canRedo: boolean;
+  undoLabel?: string;
+  redoLabel?: string;
   boxes: Record<string, Box[]>;
   extensions: {
     id: string;
@@ -70,7 +72,9 @@ async function api(route: string, body?: unknown) {
           "Content-Type": "application/json",
         },
     credentials: "omit",
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body
+      ? { body: JSON.stringify({ actor: "ui", ...(body as object) }) }
+      : {}),
   });
   const data = await r.json();
   if (!r.ok) throw Error(data.error);
@@ -2170,7 +2174,7 @@ function App() {
               disabled={disabled || !state.canUndo}
               onClick={() => mutate("undo")}
               aria-label="Undo"
-              title="Undo (Ctrl/⌘+Z)"
+              title={`Undo${state.undoLabel ? ": " + state.undoLabel : ""} (Ctrl/⌘+Z)`}
               aria-keyshortcuts="Control+Z Meta+Z"
             >
               <Icon name="undo" />
@@ -2179,7 +2183,7 @@ function App() {
               disabled={disabled || !state.canRedo}
               onClick={() => mutate("redo")}
               aria-label="Redo"
-              title="Redo (Ctrl/⌘+Shift+Z)"
+              title={`Redo${state.redoLabel ? ": " + state.redoLabel : ""} (Ctrl/⌘+Shift+Z)`}
               aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z"
             >
               <Icon name="redo" />

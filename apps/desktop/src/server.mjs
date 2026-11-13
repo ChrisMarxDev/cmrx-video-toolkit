@@ -1,8 +1,10 @@
-import {
-  PlaybackProxies,
-  publicProxy,
-} from "../../local-editor/dist/playback-proxy.mjs";
-import { projectRuntime, timelineOwner } from "./project-runtime.mjs";
+import { mediaPaths, serveMedia } from "./media-routes.mjs";
+import { publicRenderJob } from "../../local-editor/dist/render-contract.mjs";
+import { startManualRender } from "./render-service.mjs";
+import { providerAction, providerPaths } from "./provider-routes.mjs";
+import { createDocumentService } from "./document-service.mjs";
+import { PlaybackProxies } from "../../local-editor/dist/playback-proxy.mjs";
+import { projectRuntime } from "./project-runtime.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -216,15 +218,15 @@ export async function startApp({
   let importing = false,
     preparingRender = false;
   let activeWrites = 0;
-  const locked = () =>
-    !!timelineOwner({
-      busy: state.busy,
-      switching: state.switching,
+  const runtime = () =>
+    projectRuntime({
+      ...state,
+      ...(playground?.state() ?? {}),
       importing,
       steering: !!steeringPayload,
       preparingRender,
-      blockingRender: !!playground?.blocking,
     });
+  const locked = () => !runtime().capabilities.editTimeline.allowed;
   const publish = () => {
     state.locked = locked();
     state.importing = importing;
@@ -249,23 +251,11 @@ export async function startApp({
       Object.assign(state, manager.snapshot());
       state.connected = !!manager.entries.get(manager.id).connected;
     }
-    state.runtime = projectRuntime({ ...state, preparingRender });
+    state.runtime = runtime();
     const value = "data: " + JSON.stringify(state) + "\n\n";
     for (const c of clients) c.write(value);
   };
-  const editor = async (route, body) => {
-    const r = await fetch(connection.url + route, {
-      method: body ? "POST" : "GET",
-      headers: {
-        Authorization: "Bearer " + connection.token,
-        "Content-Type": "application/json",
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
-    const value = await r.json();
-    if (!r.ok) throw Error(value.error || JSON.stringify(value));
-    return value;
-  };
+  const editor = createDocumentService(connection);
   agentRoot ||= providerFactory
     ? path.join(workspace, ".editor/agent-profile")
     : path.join(path.dirname(home), "project-agent");
@@ -376,17 +366,13 @@ export async function startApp({
       // Rendering takes minutes; avoid repeated full project/transcript responses.
       for (let n = 0; n < 80 && job.status === "running" && state.busy; n++)
         await delay(250);
-      return { ...job, error: job.error?.slice(0, 8000) };
+      return { ...publicRenderJob(job), error: job.error?.slice(0, 8000) };
     }
     if (name === "editor_context") {
       return {
         ...(await editor("/api/context")),
         playground: playground.state(),
-        runtime: projectRuntime({
-          ...state,
-          ...playground.state(),
-          preparingRender,
-        }),
+        runtime: runtime(),
         sourceFiles: playground.files(),
         projectAgent: agent.context(),
       };
@@ -513,8 +499,7 @@ export async function startApp({
     }
   }
   const server = createServer(async (req, res) => {
-    let reservedImport = false,
-      reservedRender = false;
+    let reservedImport = false;
     try {
       const url = new URL(req.url, "http://127.0.0.1");
       if (
@@ -601,99 +586,16 @@ export async function startApp({
           }
           return;
         }
-        if (url.pathname === "/chat/overlay-preview") {
-          const file = playground.overlayArtifact(
-            url.searchParams.get("id"),
-            url.searchParams.get("track"),
-          );
-          if (!file) throw Error("Choose a completed graphics preview");
-          if (typeof autoPreview === "function" && !autoPreview()) {
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ status: "preparing", deferred: true }));
-            return;
-          }
-          res.setHeader("Content-Type", "application/json");
-          res.end(
-            JSON.stringify(
-              publicProxy(
-                playbackProxies.request(
-                  file,
-                  url.searchParams.get("quality"),
-                  true,
-                  url.searchParams.get("retry") === "1",
-                  url.searchParams.get("refresh") === "1",
-                ),
-              ),
-            ),
+        if (mediaPaths.has(url.pathname)) {
+          await serveMedia(
+            { playground, playbackProxies, autoPreview, connection },
+            req,
+            res,
+            url,
           );
           return;
         }
-        if (["/chat/artifact", "/chat/overlay"].includes(url.pathname)) {
-          const id = url.searchParams.get("id");
-          const isOverlay = url.pathname === "/chat/overlay";
-          let file = isOverlay
-            ? playground.overlayArtifact(id, url.searchParams.get("track"))
-            : playground.artifact(id);
-          if (file && isOverlay && url.searchParams.has("quality")) {
-            const preview = playbackProxies.request(
-              file,
-              url.searchParams.get("quality"),
-              true,
-            );
-            if (preview.status === "ready") file = preview.file;
-          }
-          if (file) {
-            const size = fs.statSync(file).size;
-            const range = req.headers.range;
-            let start = 0,
-              end = size - 1,
-              status = 200;
-            if (range) {
-              const match = /^bytes=(\d*)-(\d*)$/.exec(range);
-              if (!match || (!match[1] && !match[2])) {
-                res.writeHead(416, { "Content-Range": `bytes */${size}` });
-                res.end();
-                return;
-              }
-              start = match[1]
-                ? Number(match[1])
-                : Math.max(0, size - Number(match[2]));
-              end =
-                match[1] && match[2]
-                  ? Math.min(Number(match[2]), size - 1)
-                  : size - 1;
-              if (start > end || start >= size) {
-                res.writeHead(416, { "Content-Range": `bytes */${size}` });
-                res.end();
-                return;
-              }
-              status = 206;
-            }
-            res.writeHead(status, {
-              "Content-Type": isOverlay ? "video/webm" : "video/mp4",
-              "Accept-Ranges": "bytes",
-              "Content-Length": end - start + 1,
-              ...(status === 206
-                ? { "Content-Range": `bytes ${start}-${end}/${size}` }
-                : {}),
-            });
-            fs.createReadStream(file, { start, end }).pipe(res);
-            return;
-          }
-          if (isOverlay) throw Error("Graphics preview not ready");
-          const r = await fetch(
-            connection.url + "/api/artifact?id=" + encodeURIComponent(id),
-            { headers: { Authorization: "Bearer " + connection.token } },
-          );
-          if (!r.ok) throw Error("Preview not ready");
-          res.writeHead(200, {
-            "Content-Type": "video/mp4",
-            "Content-Disposition": "attachment; filename=preview.mp4",
-          });
-          const { Readable } = await import("node:stream");
-          Readable.fromWeb(r.body).pipe(res);
-          return;
-        }
+
         if (url.pathname === "/chat/events") {
           res.writeHead(200, {
             "Content-Type": "text/event-stream",
@@ -983,45 +885,12 @@ export async function startApp({
           state.onboarding = onboarding;
           publish();
           result = { onboarding };
-        } else if (url.pathname === "/chat/model") {
-          if (state.busy || state.switching || state.queue.length)
-            throw Error(
-              "Finish or remove queued messages before changing models",
-            );
-          state.switching = true;
-          publish();
-          try {
-            await manager.select(body);
-            state.error = null;
-          } finally {
-            state.switching = false;
-            publish();
-          }
-          result = manager.snapshot();
-        } else if (url.pathname === "/chat/refresh-provider") {
-          const id = body.provider;
-          if (!manager.entries.has(id)) throw Error("Unknown provider");
-          if (state.busy) throw Error("Wait for the current turn to finish");
-          if (!manager.enabled.has(id)) throw Error("Choose Connect first");
-          await manager.refresh(id);
-          result = manager.snapshot();
-        } else if (url.pathname === "/chat/login") {
-          const id = body.provider || manager.id;
-          if (state.busy) throw Error("Wait for the current turn to finish");
-          const login = await manager.login(id, { method: body.method });
-          state.error = null;
-          publish();
-          if (login.authUrl) openExternal(login.authUrl);
-          result = { ...manager.snapshot(), url: login.authUrl };
-        } else if (url.pathname === "/chat/logout") {
-          if (state.busy) throw Error("Wait for the current turn to finish");
-          await manager.logout(body.provider || manager.id);
-          result = manager.snapshot();
-        } else if (url.pathname === "/chat/cancel-login") {
-          const id = body.provider;
-          if (!manager.entries.has(id)) throw Error("Unknown provider");
-          await manager.cancelLogin(id);
-          publish();
+        } else if (providerPaths.has(url.pathname)) {
+          result = await providerAction(
+            { manager, state, publish, openExternal },
+            url.pathname,
+            body,
+          );
         } else if (url.pathname === "/chat/tool") {
           if (manager.id !== "claude")
             throw Error("Claude does not own this editing turn");
@@ -1202,16 +1071,16 @@ export async function startApp({
             }
           }
         } else if (url.pathname === "/chat/render") {
-          if (locked()) throw Error("An edit or render is still running");
-          preparingRender = true;
-          reservedRender = true;
-          publish();
-          while (activeWrites) await delay(10);
-          result = await playground.render(
-            (await editor("/api/context")).project.revision,
-          );
-          preparingRender = false;
-          publish();
+          result = await startManualRender({
+            runtime,
+            reserve: (value) => {
+              preparingRender = value;
+            },
+            publish,
+            activeWrites: () => activeWrites,
+            editor,
+            playground,
+          });
         } else if (url.pathname === "/chat/import") {
           if (locked()) throw Error("An edit or render is still running");
           state.error = null;
@@ -1347,6 +1216,8 @@ export async function startApp({
         res.end(
           JSON.stringify({
             error: "Timeline is locked while the agent or renderer works.",
+            code: "timeline_locked",
+            runtime: runtime(),
           }),
         );
         return;
@@ -1381,12 +1252,17 @@ export async function startApp({
         importing = false;
         state.activity = "";
       }
-      if (reservedRender) preparingRender = false;
       const message = agent ? agent.secrets.redact(e.message) : e.message;
       state.error = message;
       publish();
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: message }));
+      res.end(
+        agent
+          ? agent.secrets.redact(
+              JSON.stringify({ error: message, ...(e.details ?? {}) }),
+            )
+          : JSON.stringify({ error: message, ...(e.details ?? {}) }),
+      );
     }
   });
   await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));

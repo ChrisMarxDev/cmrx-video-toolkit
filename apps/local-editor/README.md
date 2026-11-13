@@ -50,3 +50,8 @@ Playback quality uses disposable cached media through `/api/playback-preview` an
 preparation; media requests use the ready copy or fall back to the original.
 It never rewrites asset paths or changes FFmpeg export inputs. See the desktop
 README for the quality controls and cache lifecycle.
+
+
+Document edits share typed operations and support atomic `/api/operations` batches.
+See the desktop [editing/execution contracts](../desktop/ARCHITECTURE.md) for receipts,
+structured conflicts, media identities, render snapshots and trusted extensions.

@@ -1,22 +1,14 @@
+import { jobProjection, publicRenderJob } from "./render-contract.mjs";
+import { loadExtensions, extensionHooks } from "./extensions.js";
+import { operationTypes, type Operation } from "./operations.js";
 import { PlaybackProxies, publicProxy } from "./playback-proxy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { createServer, type ServerResponse } from "node:http";
 import { randomBytes } from "node:crypto";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { Workspace, Fault, atomic } from "./workspace.js";
-import {
-  validate,
-  patchClip,
-  patchLayer,
-  chooseTake,
-  splitClip,
-  rippleDeleteRange,
-  addComment,
-  updateComment,
-  clone,
-  type Project,
-} from "./model.js";
+import { validate, clone, type Project } from "./model.js";
 import { Renderer, getBoxes, safeFile, type Extension } from "./render.js";
 import { MediaPreviews } from "./media-preview.js";
 const app = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -58,35 +50,20 @@ try {
     );
 }
 fs.writeFileSync(path.join(lock, "pid"), String(process.pid));
-const extensions: Extension[] = [];
+let extensions: Extension[];
 try {
-  for (const base of process.env.EDITOR_DISABLE_EXTENSIONS === "1"
-    ? []
-    : [path.join(app, "extensions"), path.join(root, "extensions")])
-    if (fs.existsSync(base))
-      for (const folder of fs.readdirSync(base)) {
-        const dir = path.join(base, folder),
-          file = path.join(dir, "extension.json");
-        if (!fs.existsSync(file)) continue;
-        const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
-        if (
-          manifest.apiVersion !== 1 ||
-          !/^[\w-]+$/.test(manifest.id) ||
-          extensions.some((e) => e.manifest.id === manifest.id)
-        )
-          throw Error("Invalid or duplicate extension");
-        const worker = await import(
-          pathToFileURL(safeFile(dir, manifest.worker)).href
-        );
-        extensions.push({ dir, manifest, ...worker });
-      }
+  extensions = await loadExtensions(
+    process.env.EDITOR_DISABLE_EXTENSIONS === "1"
+      ? []
+      : [path.join(app, "extensions"), path.join(root, "extensions")],
+  );
 } catch (e) {
   fs.rmSync(lock, { recursive: true });
   throw e;
 }
 let workspace: Workspace;
 try {
-  workspace = new Workspace(root);
+  workspace = new Workspace(root, extensionHooks(extensions));
 } catch (e) {
   fs.rmSync(lock, { recursive: true });
   throw e;
@@ -109,11 +86,26 @@ function state() {
   }
   return {
     project: workspace.project,
+    transactions: (workspace.state.receipts ?? []).slice(-20),
+    latestTransaction: workspace.state.receipts?.at(-1) ?? null,
     error: workspace.error || extensionError,
     boxes,
     canUndo: workspace.state.cursor > 0,
     canRedo: workspace.state.cursor < workspace.state.history.length - 1,
-    jobs: renderer?.jobs ?? [],
+    undoLabel:
+      workspace.state.receipts?.find(
+        (r) =>
+          r.revision ===
+          workspace.state.history[workspace.state.cursor]?.revision,
+      )?.label ?? null,
+    redoLabel:
+      workspace.state.receipts?.find(
+        (r) =>
+          r.revision ===
+          workspace.state.history[workspace.state.cursor + 1]?.revision,
+      )?.label ?? null,
+    jobs: (renderer?.jobs ?? []).map(publicRenderJob),
+    renderJobs: (renderer?.jobs ?? []).map(jobProjection),
     extensions: extensions.map((e) => e.manifest),
     selection,
   };
@@ -326,144 +318,84 @@ const server = createServer(async (req, res) => {
     }
     const body = JSON.parse(raw || "{}");
     let value: unknown;
-    switch (route) {
-      case "/api/transcript":
-        if (!Array.isArray(body.transcript))
-          throw Error("Transcript must be an array of segments");
-        value = workspace.update(body.revision, (p) => {
-          const asset = p.assets.find((a) => a.id === body.assetId);
-          if (!asset) throw Error("Transcript source not found");
-          asset.transcript = body.transcript;
-          return validate(p);
-        });
-        break;
-      case "/api/comment":
-        value = workspace.update(body.revision, (p) =>
-          addComment(p, body.body, body.anchor),
-        );
-        break;
-      case "/api/comment-update":
-        value = workspace.update(body.revision, (p) =>
-          updateComment(p, body.id, body.patch),
-        );
-        break;
-      case "/api/take-choice":
-        value = workspace.update(body.revision, (p) =>
-          chooseTake(p, body.sectionId, body.takeId),
-        );
-        break;
-      case "/api/layer":
-        value = workspace.update(body.revision, (p) =>
-          patchLayer(p, body.track, body.patch),
-        );
-        break;
-      case "/api/clip":
-        value = workspace.update(body.revision, (p) =>
-          patchClip(p, body.id, body.patch),
-        );
-        break;
-      case "/api/project":
-        value = workspace.update(body.revision, () => validate(body.project));
-        break;
-      case "/api/split":
-        value = workspace.update(body.revision, (p) =>
-          splitClip(p, body.id, body.time),
-        );
-        break;
-      case "/api/ripple-delete":
-        value = workspace.update(body.revision, (p) =>
-          rippleDeleteRange(p, body.start, body.end),
-        );
-        break;
-      case "/api/delete":
-        value = workspace.update(body.revision, (p) => {
-          p.clips = p.clips.filter((c) => c.id !== body.id);
-          return p;
-        });
-        break;
-      case "/api/add-graphics":
-        value = workspace.update(body.revision, (p) => {
-          p.clips.push({
-            id: `graphics-${randomBytes(6).toString("hex")}`,
-            name: body.name || "Graphics",
-            kind: "graphics",
-            start: body.start ?? 0,
-            in: 0,
-            duration: body.duration,
-            track: body.track ?? 0,
-            x: 0,
-            y: 0,
-            width: p.width,
-            height: p.height,
-            muted: false,
-            props: { source: body.source },
+    const operationType = route.slice("/api/".length);
+    if (operationTypes.includes(operationType as Operation["type"])) {
+      const result = workspace.transact(
+        body.revision,
+        [{ ...body, type: operationType } as Operation],
+        {
+          operationId: body.operationId,
+          actor: body.actor ?? "client",
+          label:
+            body.label ??
+            {
+              clip: "Adjust clip",
+              layer: "Update layer",
+              project: "Replace document",
+              split: "Split clip",
+              "ripple-delete": "Remove time",
+              add: "Add footage",
+              "add-graphics": "Add graphics",
+              comment: "Add comment",
+              "comment-update": "Update comment",
+              transcript: "Update transcript",
+              "take-choice": "Choose take",
+              delete: "Delete clip",
+              extension: "Extension command",
+            }[operationType] ??
+            operationType,
+        },
+      );
+      res.setHeader("X-Operation-Id", result.receipt.operationId);
+      value = result.project;
+    } else
+      switch (route) {
+        case "/api/operations":
+          value = workspace.transact(body.revision, body.operations, body);
+          break;
+        case "/api/undo":
+          value = workspace.travel(body.revision, -1, body);
+          break;
+        case "/api/redo":
+          value = workspace.travel(body.revision, 1, body);
+          break;
+        case "/api/render":
+          workspace.ensure(body.revision);
+          value = publicRenderJob(renderer.start(workspace.project));
+          break;
+        case "/api/cancel":
+          renderer.cancel(body.id);
+          value = { ok: true };
+          break;
+        case "/api/selection":
+          if (
+            !Number.isFinite(body.time) ||
+            body.time < 0 ||
+            (body.clipId != null && typeof body.clipId !== "string")
+          )
+            throw Error("Invalid selection");
+          selection = { clipId: body.clipId, time: body.time };
+          fs.writeFileSync(selectionFile + ".tmp", JSON.stringify(selection), {
+            mode: 0o600,
           });
-          return validate(p);
-        });
-        break;
-      case "/api/add":
-        value = workspace.update(body.revision, (p) => {
-          const a = p.assets.find((a) => a.id === body.assetId);
-          if (!a) throw Error("Asset not found");
-          p.clips.push({
-            id: `clip-${randomBytes(6).toString("hex")}`,
-            name: a.name,
-            kind: "video",
-            assetId: a.id,
-            start: body.start ?? 0,
-            in: 0,
-            duration: body.duration ?? Math.min(4, a.duration),
-            track: body.track ?? 0,
-            x: 0,
-            y: 0,
-            width: p.width,
-            height: p.height,
-            muted: false,
-          });
-          return p;
-        });
-        break;
-      case "/api/undo":
-        value = workspace.travel(body.revision, -1);
-        break;
-      case "/api/redo":
-        value = workspace.travel(body.revision, 1);
-        break;
-      case "/api/render":
-        workspace.ensure(body.revision);
-        value = renderer.start(workspace.project);
-        break;
-      case "/api/cancel":
-        renderer.cancel(body.id);
-        value = { ok: true };
-        break;
-      case "/api/selection":
-        if (
-          !Number.isFinite(body.time) ||
-          body.time < 0 ||
-          (body.clipId != null && typeof body.clipId !== "string")
-        )
-          throw Error("Invalid selection");
-        selection = { clipId: body.clipId, time: body.time };
-        fs.writeFileSync(selectionFile + ".tmp", JSON.stringify(selection), {
-          mode: 0o600,
-        });
-        fs.renameSync(selectionFile + ".tmp", selectionFile);
-        value = { ok: true };
-        break;
-      case "/api/tool": {
-        const ext = extensions.find((e) =>
-          e.manifest.commands.some((c) => c.id === body.name),
-        );
-        if (!ext) throw new Fault(404, "Unknown extension command");
-        value = workspace.update(body.revision, (p) =>
-          ext.command(clone(p), body.name),
-        );
-        break;
+          fs.renameSync(selectionFile + ".tmp", selectionFile);
+          value = { ok: true };
+          break;
+        case "/api/tool": {
+          value = workspace.transact(
+            body.revision,
+            [{ type: "extension", name: body.name }],
+            {
+              actor: body.actor ?? "client",
+              label: body.name,
+              operationId: body.operationId,
+            },
+          ).project;
+          break;
+        }
+        default:
+          throw new Fault(404, "Unknown operation");
       }
-      default:
-        throw new Fault(404, "Unknown operation");
-    }
     send(res, value);
     broadcast();
   } catch (e) {
@@ -472,7 +404,16 @@ const server = createServer(async (req, res) => {
       return;
     }
     const error = e as Error;
-    send(res, { error: error.message }, e instanceof Fault ? e.status : 400);
+    send(
+      res,
+      {
+        error: error.message,
+        ...(e instanceof Fault
+          ? (e.details ?? {})
+          : { code: "invalid_request" }),
+      },
+      e instanceof Fault ? e.status : 400,
+    );
   }
 });
 let actualPort = port;

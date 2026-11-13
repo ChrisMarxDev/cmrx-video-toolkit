@@ -38,6 +38,13 @@ test("4K imports preserve resolution, selected aliases and a portable original",
       assert.equal(project.clips[0].name, "My recording.MOV");
       const asset = project.assets[0];
       assert.equal(asset.name, "My recording.MOV");
+      assert.equal(asset.media.schemaVersion,1);
+      assert.equal(asset.media.render.path,asset.path);
+      assert.equal(asset.media.original.path,asset.provenance.originalFile);
+      assert.equal(asset.media.original.sha256,asset.provenance.sha256);
+      assert.match(asset.media.render.sha256,/^[a-f0-9]{64}$/);
+      assert.equal(asset.media.render.height,3840);
+      assert.equal(asset.media.mapping.color,"identity");
       assert.deepEqual(
         fs.readFileSync(path.join(workspace, asset.provenance.originalFile)),
         fs.readFileSync(source),

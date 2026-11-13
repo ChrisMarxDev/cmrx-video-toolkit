@@ -18,14 +18,19 @@ const request = async (route, body) => {
       Authorization: `Bearer ${connection.token}`,
       "Content-Type": "application/json",
     },
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body ? { body: JSON.stringify({ actor: "cli", ...body }) } : {}),
   });
   const data = await r.json();
   if (!r.ok) throw Error(`${r.status}: ${data.error}`);
   return data;
 };
 let result;
-if (command === "context") result = await request("context");
+if (command === "batch")
+  result = await request(
+    "operations",
+    JSON.parse(fs.readFileSync(rest[0], "utf8")),
+  );
+else if (command === "context") result = await request("context");
 else if (command === "comment") {
   const [revision, file] = rest;
   const { body, anchor } = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -61,6 +66,6 @@ else if (command === "replace")
   });
 else
   throw Error(
-    "Usage: context | patch REV CLIP JSON | comment REV FILE | comment-status REV ID open|resolved | render REV | undo REV | redo REV | tool NAME REV | cancel JOB | replace REV FILE [--workspace DIR]",
+    "Usage: batch FILE | context | patch REV CLIP JSON | comment REV FILE | comment-status REV ID open|resolved | render REV | undo REV | redo REV | tool NAME REV | cancel JOB | replace REV FILE [--workspace DIR]",
   );
 console.log(JSON.stringify(result, null, 2));

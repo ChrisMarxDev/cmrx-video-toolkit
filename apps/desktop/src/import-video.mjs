@@ -1,3 +1,4 @@
+import { fileIdentity } from "../../local-editor/dist/render-contract.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
@@ -196,6 +197,55 @@ export async function importVideo({
       sha.update(chunk);
     }
     signal?.throwIfAborted();
+    const renderProbe = compatible
+      ? probe
+      : JSON.parse(
+          await run(
+            process.env.FFPROBE || "ffprobe",
+            [
+              "-v",
+              "error",
+              "-show_format",
+              "-show_streams",
+              "-of",
+              "json",
+              dest,
+            ],
+            signal,
+          ),
+        );
+    const representation = (info, file, relativePath) => {
+      const v = info.streams.find(
+        (s) => s.codec_type === "video" && !s.disposition?.attached_pic,
+      );
+      return {
+        path: relativePath,
+        ...fileIdentity(file),
+        width: v.width,
+        height: v.height,
+        duration: Number(info.format.duration),
+        frameRate: v.avg_frame_rate,
+        rotation: Number(
+          v.side_data_list?.find((s) => s.rotation !== undefined)?.rotation ||
+            v.tags?.rotate ||
+            0,
+        ),
+        transfer: v.color_transfer || "unspecified",
+      };
+    };
+    const sourceSha = sha.digest("hex");
+    if (sourceSha !== fileIdentity(originalDest).sha256)
+      throw Error("Source changed during import. Please retry.");
+    const media = {
+      schemaVersion: 1,
+      original: representation(probe, originalDest, originalFile),
+      render: representation(renderProbe, dest, relative),
+      mapping: {
+        timing: compatible || fps === rate ? "identity" : "resampled",
+        color: hdr ? "hdr-to-sdr" : "identity",
+        orientation: rotated ? "baked" : "identity",
+      },
+    };
     const latest = (await editor("/api/context")).project;
     if (latest.revision !== current.revision)
       throw Error("Your project changed during import. Please try again.");
@@ -205,12 +255,13 @@ export async function importVideo({
       id,
       name: selectedName,
       path: relative,
+      media,
       duration,
       audio: probe.streams.some((s) => s.codec_type === "audio"),
       provenance: {
         original: absolute,
         originalFile,
-        sha256: sha.digest("hex"),
+        sha256: sourceSha,
         playback: compatible
           ? "Exact source copy"
           : `${width}×${height} H.264 playback copy`,

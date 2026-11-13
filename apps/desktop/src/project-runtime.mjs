@@ -1,3 +1,4 @@
+import { jobProjection } from "../../local-editor/dist/render-contract.mjs";
 // A pure projection of independent lifecycles, not another mutable authority.
 // Legacy flags remain wire-compatible; callers share named capability reasons.
 export function timelineOwner(s) {
@@ -16,9 +17,7 @@ const terminalFailure = new Set([
 ]);
 export function renderStage(job) {
   if (!job) return "idle";
-  if (job.status !== "running") return job.status;
-  if (job.cancelRequested) return "canceling";
-  return job.phase || (job.waitingForRender ? "waiting" : "rendering");
+  return jobProjection(job).phase;
 }
 export function projectRuntime(s) {
   const jobs = s.jobs || [];
@@ -92,6 +91,7 @@ export function projectRuntime(s) {
   else label = "Ready to edit";
   return {
     schemaVersion: 1,
+    renderJobs: jobs.map(jobProjection),
     connection: {
       phase: s.connected
         ? "connected"

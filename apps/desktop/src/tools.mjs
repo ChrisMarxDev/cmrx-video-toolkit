@@ -63,6 +63,8 @@ export const tools = [
             "comment-update",
           ],
         },
+        operationId: string,
+        label: string,
         revision: { type: "integer" },
         id: string,
         assetId: string,
@@ -77,6 +79,48 @@ export const tools = [
         patch: { type: "object", additionalProperties: true },
       },
       ["operation", "revision"],
+    ),
+  ],
+  [
+    "editor_batch",
+    "Apply 1–100 typed document operations atomically as one revision and undo step. Operations use type instead of operation. Read editor_context first. Supply a stable operationId for safe retries; reusing an ID with different input rejects. This transaction covers project.json, not source files or external actions. Inspect receipt and current project in the result.",
+    object(
+      {
+        revision: { type: "integer" },
+        operationId: string,
+        label: string,
+        operations: {
+          type: "array",
+          minItems: 1,
+          maxItems: 100,
+          items: {
+            type: "object",
+            properties: {
+              type: {
+                type: "string",
+                enum: [
+                  "project",
+                  "clip",
+                  "layer",
+                  "take-choice",
+                  "split",
+                  "ripple-delete",
+                  "delete",
+                  "comment",
+                  "comment-update",
+                  "transcript",
+                  "add",
+                  "add-graphics",
+                  "extension",
+                ],
+              },
+            },
+            required: ["type"],
+            additionalProperties: true,
+          },
+        },
+      },
+      ["revision", "operations"],
     ),
   ],
   [
@@ -242,6 +286,8 @@ export async function executeTool(name, args, editor) {
   if (name === "editor_context") return editor("/api/context");
   if (name === "editor_render")
     return editor("/api/render", { revision: args.revision });
+  if (name === "editor_batch")
+    return editor("/api/operations", { ...args, actor: "agent" });
   if (name !== "editor_edit") throw Error("Unknown editor tool");
   const { operation, ...body } = args;
   if (
@@ -261,5 +307,5 @@ export async function executeTool(name, args, editor) {
     throw Error("Unsupported editing operation");
   if (!Number.isInteger(body.revision))
     throw Error("A current revision is required");
-  return editor("/api/" + operation, body);
+  return editor("/api/" + operation, { ...body, actor: "agent" });
 }

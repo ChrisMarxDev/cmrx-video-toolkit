@@ -27,7 +27,9 @@ Chat edits are primary. One composited player supports seeking, timed comments
 and small manual cuts. Arbitrary Flutter/Fluvie source authoring remains essential;
 do not replace it with a fixed template library. Generated graphics remain
 editable timeline layers. Smaller playback proxies are disposable; editing and
-exports retain original media, coordinates, timing and resolution.
+exports retain full-resolution render inputs and their coordinates/timing. Imports
+may normalize recording codec, HDR, rotation or frame rate; preserved recordings
+and disposable playback proxies are distinct representations.
 
 Preserve saved provider sessions, project tabs, drafts, queues and user media.
 Sending during work queues; steering requires an explicit action. Before restarting
@@ -41,7 +43,8 @@ Paths below are relative to `apps/desktop/` unless stated otherwise:
 - Native window/tabs: `src/desktop.cjs`, `src/desktop-shell.*`, `src/desktop-session.mjs`.
 - Chat/onboarding/settings: `src/chat.js`, `src/onboarding.mjs`, `src/agent-settings.mjs`.
 - Project service/agent/providers: `src/server.mjs`, `src/project-agent.mjs`,
-  `src/codex.mjs`, `src/claude.mjs`. Read `STATE_MACHINES.md` before changing lifecycle.
+  `src/codex.mjs`, `src/claude.mjs`. Read `STATE_MACHINES.md` before changing lifecycle and `ARCHITECTURE.md` for
+  document transactions, media identities, render snapshots and extension contracts.
 - Rendering/toolchain: `src/playground.mjs`, `src/bundled-engine.mjs` and worker modules.
   Provider/network processes are separate from the offline render worker; do not
   describe the entire agent or app as OS-sandboxed.

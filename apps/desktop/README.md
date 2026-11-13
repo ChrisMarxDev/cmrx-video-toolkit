@@ -129,3 +129,9 @@ when selecting preview quality. Original bypasses proxy generation for pixel che
 Lower-resolution sources are not upscaled. Cached source previews use frequent
 keyframes for seeking; transparent graphics retain their alpha channel. Generated
 files can be deleted with the other disposable `.editor` caches when the app is closed.
+
+
+For shared document operations, atomic batches, receipts, media representations,
+render snapshots and trusted extension boundaries, see [architecture](ARCHITECTURE.md).
+"Full-resolution export" uses the full-resolution render input; incompatible source
+recordings may have been normalized at import. Originals remain preserved separately.

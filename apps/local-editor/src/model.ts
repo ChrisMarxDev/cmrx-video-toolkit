@@ -4,6 +4,26 @@ export type TranscriptSegment = {
   text: string;
   [key: string]: unknown;
 };
+export type MediaRepresentation = {
+  path: string;
+  sha256: string;
+  width: number;
+  height: number;
+  duration: number;
+  frameRate: string;
+  rotation: number;
+  transfer: string;
+};
+export type MediaRepresentations = {
+  schemaVersion: 1;
+  original: MediaRepresentation;
+  render: MediaRepresentation;
+  mapping: {
+    timing: "identity" | "resampled";
+    color: "identity" | "hdr-to-sdr";
+    orientation: "identity" | "baked";
+  };
+};
 export type Asset = {
   id: string;
   name: string;
@@ -11,6 +31,7 @@ export type Asset = {
   duration: number;
   audio: boolean;
   transcript?: TranscriptSegment[];
+  media?: MediaRepresentations;
   [key: string]: unknown;
 };
 export type Clip = {
@@ -155,6 +176,7 @@ export type Job = {
   status: string;
   progress: number;
   log: string;
+  [key: string]: unknown;
   artifact?: string;
   error?: string;
 };
@@ -290,6 +312,38 @@ export function validate(p: Project): Project {
     );
   }
   for (const asset of p.assets) {
+    if (asset.media !== undefined) {
+      const m = asset.media;
+      check(m?.schemaVersion === 1, "Unsupported media representations");
+      for (const r of [m.original, m.render])
+        check(
+          r &&
+            typeof r.path === "string" &&
+            r.path.startsWith("media/") &&
+            !r.path.includes("..") &&
+            !r.path.includes("\\") &&
+            /^[a-f0-9]{64}$/.test(r.sha256) &&
+            num(r.width, 1, 32768) &&
+            num(r.height, 1, 32768) &&
+            num(r.duration, 0.001, 86400) &&
+            typeof r.frameRate === "string" &&
+            Number.isFinite(r.rotation) &&
+            typeof r.transfer === "string",
+          "Invalid media representation",
+        );
+      check(
+        m.render.path === asset.path,
+        "Asset path must identify its render input",
+      );
+      check(
+        m.mapping &&
+          ["identity", "resampled"].includes(m.mapping.timing) &&
+          ["identity", "hdr-to-sdr"].includes(m.mapping.color) &&
+          ["identity", "baked"].includes(m.mapping.orientation),
+        "Invalid media mapping",
+      );
+    }
+
     if (asset.transcript === undefined) continue;
     check(
       Array.isArray(asset.transcript) && asset.transcript.length <= 5000,

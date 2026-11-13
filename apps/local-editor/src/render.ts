@@ -1,3 +1,9 @@
+import {
+  captureFiles,
+  describeInputs,
+  createRenderJob,
+  requestCancellation,
+} from "./render-contract.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
@@ -7,12 +13,15 @@ import { atomic } from "./workspace.js";
 export type Extension = {
   manifest: {
     id: string;
+    worker?: string;
+    capabilities?: Record<string, number>;
     name: string;
     kind: string;
     browser?: string;
     commands: { id: string; label: string }[];
   };
   dir: string;
+  validateClip?: (clip: import("./model.js").Clip) => void;
   boxes: (c: any) => Box[];
   command: (p: Project, id: string) => Project;
 };
@@ -28,6 +37,8 @@ export function getBoxes(p: Project, extensions: Extension[]) {
     if (p.layers?.[c.track]?.disabled) continue;
     const ext = extensions.find((e) => e.manifest.kind === c.kind);
     if (!ext) continue;
+    if (!ext.manifest.capabilities?.render && ext.manifest.capabilities)
+      throw Error("Extension does not support rendering");
     const boxes = ext.boxes(clone(c));
     if (!Array.isArray(boxes) || boxes.length > 100)
       throw Error("Invalid extension geometry");
@@ -52,6 +63,7 @@ export class Renderer {
   // Probe the selected binary once and keep graphs in files (they can exceed
   // platform command-line limits for many clips/extension rectangles).
   filterFileOption: string;
+  engineVersion: string;
   jobs: Job[] = [];
   processes = new Map<string, ChildProcess>();
   dir: string;
@@ -69,6 +81,11 @@ export class Renderer {
         timeout: 10000,
       },
     );
+    this.engineVersion =
+      spawnSync(process.env.FFMPEG || "ffmpeg", ["-version"], {
+        encoding: "utf8",
+        timeout: 10000,
+      }).stdout?.split("\n")[0] || "unavailable";
     this.filterFileOption = /-filter_complex_script\s/.test(help.stdout || "")
       ? "-filter_complex_script"
       : "-/filter_complex";
@@ -100,6 +117,23 @@ export class Renderer {
       boxes = getBoxes(p, this.extensions),
       duration = end(p),
       id = randomUUID();
+    const inputRoot = path.join(this.dir, `${id}.inputs`);
+    fs.mkdirSync(inputRoot, { recursive: true });
+    const inputPaths = p.assets.map((a) => a.path);
+    captureFiles(this.root, inputRoot, inputPaths);
+    const manifest = describeInputs(inputRoot, p, inputPaths, {
+      id: "ffmpeg",
+      version: this.engineVersion,
+      contractVersion: 1,
+      filterFileOption: this.filterFileOption,
+      extensions: this.extensions.map((e) => ({
+        id: e.manifest.id,
+        manifest: e.manifest,
+        worker: e.manifest.worker ? e.manifest.worker : null,
+      })),
+      boxes,
+    });
+    atomic(path.join(inputRoot, "manifest.json"), manifest);
     const args = [
       "-hide_banner",
       "-y",
@@ -121,7 +155,7 @@ export class Renderer {
     for (const c of clips)
       if (c.kind === "video") {
         const asset = p.assets.find((a) => a.id === c.assetId)!;
-        args.push("-i", safeFile(this.root, asset.path));
+        args.push("-i", safeFile(inputRoot, asset.path));
         indices.set(c.id, n++);
       } else if (!boxes[c.id])
         throw Error(
@@ -202,9 +236,12 @@ export class Renderer {
       path.join(this.root, artifact),
     );
     const job: Job = {
+      ...createRenderJob({
+        revision: p.revision,
+        engine: manifest.engine,
+        inputManifest: manifest,
+      }),
       id,
-      revision: p.revision,
-      status: "running",
       progress: 0,
       log: "",
     };
@@ -248,6 +285,7 @@ export class Renderer {
     const job = this.jobs.find((j) => j.id === id),
       p = this.processes.get(id);
     if (!job || !p) throw Error("No running job");
+    requestCancellation(job);
     job.status = "cancelled";
     p.kill("SIGTERM");
     this.save(job);

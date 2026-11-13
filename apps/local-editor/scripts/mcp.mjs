@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { z } from "zod";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -73,6 +74,36 @@ export function createEditorMcp(workspace) {
           ],
         };
       }
+    },
+  );
+  server.registerTool(
+    "apply_editor_operations",
+    {
+      description:
+        "Apply an atomic document batch through the running Workspace. One revision/undo step; source files and external actions are outside this transaction. Reuse operationId only for identical retries.",
+      inputSchema: {
+        revision: z.number().int(),
+        operationId: z.string().optional(),
+        label: z.string().optional(),
+        operations: z.array(z.record(z.string(), z.unknown())).min(1).max(100),
+      },
+    },
+    async (args) => {
+      const c = await connection();
+      const response = await fetch(c.url + "/api/operations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${c.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...args, actor: "mcp" }),
+      });
+      const value = await response.json();
+      return {
+        content: [{ type: "text", text: JSON.stringify(value) }],
+        structuredContent: value,
+        ...(!response.ok ? { isError: true } : {}),
+      };
     },
   );
   server.registerTool(

@@ -1,3 +1,12 @@
+import {
+  captureFiles,
+  describeInputs,
+  inputFingerprint,
+  fileIdentity,
+  createRenderJob,
+  requestCancellation,
+  publicRenderJob,
+} from "../../local-editor/dist/render-contract.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -87,7 +96,7 @@ export class Playground {
         path.join(workspace, "pubspec.yaml"),
         JSON.stringify(spec, null, 2),
       );
-    this.migrateRenderFingerprints();
+    // Older fingerprints intentionally remain stale: they did not capture media/engine identity.
     this.persist();
   }
   files() {
@@ -166,77 +175,61 @@ export class Playground {
     this.onChange();
     return { path: name, saved: true };
   }
-  migrateRenderFingerprints() {
-    // Preserve verified v3 receipts across the metadata-only cache upgrade.
-    // Never bless changed source or changed timeline content as a fresh render.
-    try {
-      const current = JSON.parse(
-        fs.readFileSync(path.join(this.workspace, "project.json")),
-      );
-      const content = ({ revision, comments, ...video }) =>
-        JSON.stringify(video);
-      const fingerprint = this.fingerprint();
-      for (const job of this.jobs) {
-        if (job.fingerprintVersion === 4) continue;
-        if (job.fingerprint === fingerprint) {
-          job.fingerprintVersion = 4;
-          continue;
-        }
-        if (
-          job.status !== "complete" ||
-          typeof job.id !== "string" ||
-          !/^[a-zA-Z0-9-]+$/.test(job.id)
-        )
-          continue;
-        const dir = path.join(this.jobsDir, job.id);
-        const file = path.join(dir, "project.json");
-        if (
-          !fs.existsSync(file) ||
-          fs.lstatSync(dir).isSymbolicLink() ||
-          !fs.lstatSync(file).isFile() ||
-          fs.lstatSync(file).isSymbolicLink()
-        )
-          continue;
-        const legacyProject = fs.readFileSync(file);
-        if (
-          content(JSON.parse(legacyProject)) === content(current) &&
-          job.fingerprint === this.fingerprint({ legacyProject })
-        ) {
-          job.fingerprint = fingerprint;
-          job.fingerprintVersion = 4;
+  engineIdentity() {
+    const files = walk(templates).sort();
+    const componentFiles = [
+      ...walk(path.join(toolkit, "components/lib"), "lib/"),
+      ...walk(path.join(toolkit, "components/shaders"), "shaders/"),
+      "pubspec.yaml",
+    ]
+      .filter((name) => fs.existsSync(path.join(toolkit, "components", name)))
+      .sort();
+    const componentIdentity = componentFiles.map((name) => ({
+      path: name,
+      ...fileIdentity(path.join(toolkit, "components", name)),
+    }));
+    let sdkVersion = "unresolved";
+    const sdk = process.env.CHAT_FLUTTER_SDK;
+    if (sdk)
+      for (const name of ["bin/cache/flutter.version.json", "version"]) {
+        const file = path.join(sdk, name);
+        if (fs.existsSync(file)) {
+          sdkVersion = fileIdentity(file).sha256;
+          break;
         }
       }
-    } catch {
-      /* Old/unverifiable receipts remain stale; normal rendering repairs them. */
-    }
+    return {
+      id: "flutter-fluvie",
+      contractVersion: 1,
+      sdkVersion,
+      fluviePin: pin,
+      components: componentIdentity,
+      templates: files.map((name) => ({
+        path: name,
+        ...fileIdentity(path.join(templates, name)),
+      })),
+    };
   }
-  fingerprint({ legacyProject } = {}) {
-    const h = createHash("sha256").update(
-      legacyProject
-        ? "graphics-preview-tracks-v3"
-        : "graphics-preview-tracks-v4",
+  inputFiles() {
+    return [
+      ...this.files().filter((f) =>
+        sourceRoots.some((r) => f === r || f.startsWith(r + "/")),
+      ),
+      ...walk(path.join(this.workspace, "media"), "media/"),
+    ].sort();
+  }
+  fingerprint() {
+    const project = JSON.parse(
+      fs.readFileSync(path.join(this.workspace, "project.json")),
     );
-    for (const f of [
-      "project.json",
-      ...this.files()
-        .filter((f) =>
-          sourceRoots.some((r) => f === r || f.startsWith(r + "/")),
-        )
-        .sort(),
-    ]) {
-      h.update(f);
-      if (f === "project.json" && legacyProject) h.update(legacyProject);
-      else if (f === "project.json") {
-        // Review notes and revision counters do not change the video. In
-        // particular resolving feedback after a successful render must not
-        // invalidate the cache that was just reviewed.
-        const { revision, comments, ...content } = JSON.parse(
-          fs.readFileSync(path.join(this.workspace, f), "utf8"),
-        );
-        h.update(JSON.stringify(content));
-      } else h.update(fs.readFileSync(path.join(this.workspace, f)));
-    }
-    return h.digest("hex");
+    return inputFingerprint(
+      describeInputs(
+        this.workspace,
+        project,
+        this.inputFiles(),
+        this.engineIdentity(),
+      ),
+    );
   }
   get running() {
     return this.jobs.some((j) => j.status === "running");
@@ -275,15 +268,21 @@ export class Playground {
       sourceError = e.message;
     }
     return {
-      jobs: this.jobs,
+      jobs: this.jobs.map(publicRenderJob),
       preview: latest
-        ? { ...latest, stale: latest.fingerprint !== fingerprint }
+        ? {
+            ...publicRenderJob(latest),
+            stale: latest.fingerprint !== fingerprint,
+          }
         : null,
       running: this.running,
       sourceError,
       overlay:
         hasGraphics && overlay
-          ? { ...overlay, stale: overlay.fingerprint !== fingerprint }
+          ? {
+              ...publicRenderJob(overlay),
+              stale: overlay.fingerprint !== fingerprint,
+            }
           : null,
     };
   }
@@ -458,6 +457,7 @@ export class Playground {
       for (const root of [
         ...roots,
         "overlay.dart",
+        "input-manifest.json",
         "cmrx_full_capture_test.dart",
         "cmrx_overlay_capture_test.dart",
         "timeline_thumbnails.dart",
@@ -472,8 +472,11 @@ export class Playground {
         const file = path.join(work, root);
         if (fs.existsSync(file)) a.push("--ro-bind", file, "/work/" + root);
       }
-    if (fs.existsSync(path.join(this.workspace, "media")))
-      a.push("--ro-bind", path.join(this.workspace, "media"), "/work/media");
+    const media = path.join(
+      work === this.workspace ? this.workspace : work,
+      "media",
+    );
+    if (fs.existsSync(media)) a.push("--ro-bind", media, "/work/media");
     if (fs.existsSync(path.join(work, "project.json")))
       a.push(
         "--ro-bind",
@@ -575,7 +578,11 @@ export class Playground {
     )
       throw Error("pubspec.yaml needs a valid Dart package name");
     const j = {
-      id: randomUUID(),
+      ...createRenderJob({
+        revision,
+        kind: overlayOnly ? "overlay" : "export",
+        engine: this.engineIdentity(),
+      }),
       revision,
       kind: overlayOnly ? "overlay" : "export",
       width: project.width,
@@ -583,8 +590,7 @@ export class Playground {
       duration: Math.max(1, ...project.clips.map((c) => c.start + c.duration)),
       status: "running",
       phase: "preparing",
-      fingerprint: this.fingerprint(),
-      fingerprintVersion: 4,
+      fingerprintVersion: 5,
       createdAt: new Date().toISOString(),
     };
     const previewTracks = [
@@ -600,10 +606,25 @@ export class Playground {
       throw Error("Invalid graphics preview track");
     const dest = path.join(this.jobsDir, j.id);
     fs.mkdirSync(path.join(dest, "lib"), { recursive: true });
-    for (const f of ["project.json", ...this.files()]) {
-      fs.mkdirSync(path.dirname(path.join(dest, f)), { recursive: true });
-      fs.copyFileSync(path.join(this.workspace, f), path.join(dest, f));
-    }
+    const capturedFiles = this.inputFiles();
+    captureFiles(this.workspace, dest, [
+      "project.json",
+      ...this.files(),
+      ...capturedFiles,
+    ]);
+    const capturedProject = JSON.parse(
+      fs.readFileSync(path.join(dest, "project.json")),
+    );
+    if (JSON.stringify(capturedProject) !== JSON.stringify(project))
+      throw Error("Project changed during snapshot; retry");
+    const inputManifest = describeInputs(
+      dest,
+      capturedProject,
+      capturedFiles,
+      this.engineIdentity(),
+    );
+    j.fingerprint = inputFingerprint(inputManifest);
+    j.inputManifest = inputManifest;
     fs.writeFileSync(
       path.join(dest, "overlay.dart"),
       fs
@@ -624,6 +645,9 @@ export class Playground {
       throw Error(
         "Composition must import graphics.dart and call buildGraphics to render timeline graphics",
       );
+    // Preserve the original authored input; execution uses the derived binding.
+    const authoredComposition = path.join(dest, "authored-composition.dart");
+    fs.copyFileSync(composition, authoredComposition);
     fs.writeFileSync(composition, bound.source);
     const harness = fs.readFileSync(
       path.join(templates, "capture_test.dart"),
@@ -659,6 +683,32 @@ export class Playground {
           .replaceAll("__PROJECT_PACKAGE__", packageName),
       );
     }
+    const generated = walk(dest)
+      .filter(
+        (f) =>
+          (!capturedFiles.includes(f) || f === "lib/composition.dart") &&
+          f !== "project.json",
+      )
+      .sort()
+      .map((name) => ({ path: name, ...fileIdentity(path.join(dest, name)) }));
+    fs.writeFileSync(
+      path.join(dest, "input-manifest.json"),
+      JSON.stringify(
+        {
+          ...inputManifest,
+          generated,
+          sourceCopies: [
+            {
+              path: "lib/composition.dart",
+              snapshotPath: "authored-composition.dart",
+              ...fileIdentity(authoredComposition),
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
     this.jobs.push(j);
     this.persist();
     // The job has an immutable source+manifest snapshot, independent of the chat turn.
@@ -856,6 +906,11 @@ export class Playground {
               "utf8",
             )
             .slice(0, 1000);
+        if (
+          JSON.stringify(inputManifest.engine) !==
+          JSON.stringify(this.engineIdentity())
+        )
+          throw Error("Rendering engine changed during the job; render again");
         j.status = "complete";
         j.phase = "complete";
       } catch (e) {
@@ -869,7 +924,7 @@ export class Playground {
       this.renderController = null;
       this.persist();
     })();
-    return { ...j };
+    return publicRenderJob(j);
   }
   log(dest, text) {
     try {
@@ -929,8 +984,7 @@ export class Playground {
     this.renderController?.abort();
     for (const j of this.jobs)
       if (j.status === "running") {
-        j.cancelRequested = true;
-        j.phase = "canceling";
+        requestCancellation(j);
       }
     this.persist();
     for (const p of this.processes)
