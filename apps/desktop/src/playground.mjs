@@ -189,7 +189,21 @@ export class Playground {
       ...fileIdentity(path.join(toolkit, "components", name)),
     }));
     let sdkVersion = "unresolved";
-    const sdk = process.env.CHAT_FLUTTER_SDK;
+    const executable = (name) => {
+      const candidates = path.isAbsolute(name)
+        ? [name]
+        : (process.env.PATH || "")
+            .split(path.delimiter)
+            .map((dir) => path.join(dir, name));
+      return candidates.find(
+        (file) => fs.existsSync(file) && fs.statSync(file).isFile(),
+      );
+    };
+    const flutter = executable("flutter");
+    const sdk =
+      process.env.CHAT_FLUTTER_SDK ||
+      (flutter ? path.dirname(path.dirname(fs.realpathSync(flutter))) : null);
+    const ffmpeg = executable(process.env.FFMPEG || "ffmpeg");
     if (sdk)
       for (const name of ["bin/cache/flutter.version.json", "version"]) {
         const file = path.join(sdk, name);
@@ -202,6 +216,7 @@ export class Playground {
       id: "flutter-fluvie",
       contractVersion: 1,
       sdkVersion,
+      ffmpeg: ffmpeg ? fileIdentity(ffmpeg) : null,
       fluviePin: pin,
       components: componentIdentity,
       templates: files.map((name) => ({

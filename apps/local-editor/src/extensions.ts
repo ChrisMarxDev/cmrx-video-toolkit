@@ -92,7 +92,8 @@ export function extensionHooks(extensions: Extension[]) {
     validate(project: Project) {
       for (const clip of project.clips) {
         const ext = extensions.find((e) => e.manifest.kind === clip.kind);
-        if (ext?.validateClip) ext.validateClip(clone(clip));
+        if (ext?.manifest.capabilities?.validation && ext.validateClip)
+          ext.validateClip(clone(clip));
       }
     },
   };
