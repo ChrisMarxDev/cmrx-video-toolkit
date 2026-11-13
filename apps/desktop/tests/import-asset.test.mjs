@@ -55,7 +55,11 @@ test("dropped assets preserve bytes, reject unauthenticated requests and reach t
       await put(app, "recording.mp4", fs.readFileSync(video))
     ).json();
     assert.equal(v.timeline.exactCopy, true);
-    assert.equal((await app.editor("/api/context")).project.clips.length, 1);
+    const importedProject = (await app.editor("/api/context")).project;
+    assert.equal(importedProject.clips.length, 1);
+    assert.equal(importedProject.clips[0].name, "recording.mp4");
+    assert.equal(importedProject.assets[0].name, "recording.mp4");
+    assert.match(importedProject.assets[0].path, /media\/asset-/);
     fs.symlinkSync(os.tmpdir(), path.join(root, "assets", "escape"));
     assert.throws(
       () => app.playground.file("assets/escape/x", true),

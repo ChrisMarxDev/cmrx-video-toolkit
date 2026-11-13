@@ -135,3 +135,9 @@ For shared document operations, atomic batches, receipts, media representations,
 render snapshots and trusted extension boundaries, see [architecture](ARCHITECTURE.md).
 "Full-resolution export" uses the full-resolution render input; incompatible source
 recordings may have been normalized at import. Originals remain preserved separately.
+
+
+For the real Flutter graphics layout contract (including root `Positioned` widgets
+and transparent cache output), run `make -C apps/desktop graphics-layout-check`
+from the toolkit root with the installed rendering toolchain. It uses an isolated
+synthetic project; `CHAT_WORKER_ROOT` can reuse an existing app worker cache.

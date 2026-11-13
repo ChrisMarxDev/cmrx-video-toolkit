@@ -105,3 +105,8 @@ macos-dmg:
 # Verify cached preview qualities, timing, alpha and export isolation: make preview-quality-check EDITOR_PLAYWRIGHT=/path/to/playwright
 preview-quality-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/preview-quality-browser.mjs
+
+.PHONY: graphics-layout-check
+# Render arbitrary root Positioned graphics with the installed toolkit: make graphics-layout-check [CHAT_WORKER_ROOT=/existing/worker]
+graphics-layout-check: build
+	node tests/graphics-layout-render.mjs

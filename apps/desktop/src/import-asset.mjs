@@ -62,6 +62,7 @@ export async function importAsset({
       asset.timeline = await importVideo({
         workspace,
         source: file,
+        displayName: safeName,
         editor,
         signal,
         onProgress,

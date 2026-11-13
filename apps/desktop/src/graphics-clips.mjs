@@ -28,7 +28,8 @@ Widget buildGraphics(double time, Map<String,dynamic> manifest, {int? previewTra
   for(final clip in clips)
    if((previewTrack==null || clip['track']==previewTrack) && layers['\${clip['track']}']?['disabled']!=true && time>=clip['start'] && time<clip['start']+clip['duration'])
     Positioned(left:(clip['x'] as num).toDouble(),top:(clip['y'] as num).toDouble(),width:(clip['width'] as num).toDouble(),height:(clip['height'] as num).toDouble(),
-     child:_graphic(clip['props']['source'],(clip['in']+time-clip['start']).toDouble(),{...manifest,'graphicsClip':clip})),
+     child:Stack(fit:StackFit.expand,clipBehavior:Clip.none,children:[
+      _graphic(clip['props']['source'],(clip['in']+time-clip['start']).toDouble(),{...manifest,'graphicsClip':clip})])),
  ]);
 }
 Widget _graphic(String source,double time,Map<String,dynamic> manifest) {

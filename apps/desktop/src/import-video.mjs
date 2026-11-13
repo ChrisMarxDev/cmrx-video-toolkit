@@ -46,11 +46,12 @@ function run(command, args, signal, progress) {
 export async function importVideo({
   workspace,
   source,
+  displayName,
   editor,
   onProgress = () => {},
   signal,
 }) {
-  const selectedName = path.basename(path.resolve(source));
+  const selectedName = path.basename(displayName || path.resolve(source));
   const absolute = fs.realpathSync(source);
   if (!fs.statSync(absolute).isFile()) throw Error("Choose a video file");
   onProgress("Reading your video…");
@@ -149,6 +150,7 @@ export async function importVideo({
         `scale=${width}:${height}:flags=lanczos`,
         `fps=${fps}`,
       ];
+      let lastProgress = 0;
       await run(
         process.env.FFMPEG || "ffmpeg",
         [
@@ -185,10 +187,13 @@ export async function importVideo({
           dest,
         ],
         signal,
-        (seconds) =>
-          onProgress(
-            `Preparing playback… ${Math.min(99, Math.floor((seconds / duration) * 100))}%`,
-          ),
+        (seconds) => {
+          lastProgress = Math.max(
+            lastProgress,
+            Math.min(99, Math.floor((seconds / duration) * 100)),
+          );
+          onProgress(`Preparing playback… ${lastProgress}%`);
+        },
       );
     }
     const sha = createHash("sha256");

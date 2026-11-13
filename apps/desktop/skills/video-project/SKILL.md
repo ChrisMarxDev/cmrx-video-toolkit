@@ -59,6 +59,9 @@ Do not assume access to a phone, credentials or arbitrary host paths.
 - Graphics sit above footage; track orders graphics clips within that plane.
   Maintain the app's composition/dispatcher integration. Do not build a parallel
   player, flatten layers into a replacement clip, or replace the project with an MP4.
+- Each graphics clip has its own stacking context, so a root `Positioned` widget
+  is supported without conflicting with the timeline positioning wrapper. Use an
+  internal `Stack` when composing several positioned children.
 - A graphics module exports `Widget buildGraphics(double clipTime,
   Map<String, dynamic> manifest)`. Its time is **source time**, including trim:
   `clip.in + playhead - clip.start`. Use that time for deterministic animations;

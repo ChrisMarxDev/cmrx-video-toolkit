@@ -22,9 +22,19 @@ void main() {
       return await target.build();
     });
     if (video == null) throw StateError('No composition returned');
+    void checkFrame() {
+      final error = tester.takeException();
+      if (error != null) throw StateError('Graphics frame failed: $error');
+    }
     final host = RenderHostContext(
-      pumpWidget: tester.pumpWidget,
-      pumpFrame: () => tester.pump(),
+      pumpWidget: (widget) async {
+        await tester.pumpWidget(widget);
+        checkFrame();
+      },
+      pumpFrame: () async {
+        await tester.pump();
+        checkFrame();
+      },
       setViewSize: (width, height) {
         tester.view.physicalSize = Size(width.toDouble(), height.toDouble());
         tester.view.devicePixelRatio = 1;
