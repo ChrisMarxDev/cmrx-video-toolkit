@@ -138,3 +138,12 @@ staged partial sources. Close while recording requests stop/save. Quit waits for
 save before closing services, with a timeout retaining partials. Reopening reconciles
 abandoned PID-owned manifests and exposes their folder. No recorder phase edits or locks
 project.json. Native OS/device acceptance is separate from synthetic encoder testing.
+
+## Project restore recovery
+
+A checkpoint journal, accepted document revision and preserved safety checkpoint
+determine restore recovery. Lost responses do not imply rejection. Uncertain
+acceptance projects a distinct `recovery` owner/preview phase, blocks writes and
+retains seek/inspection. Project history or restart reconciles the journal; the
+Workspace repairs a stale file mirror only when it matches the preserved prior
+document. Independent edits remain a conflict, never an automatic overwrite.

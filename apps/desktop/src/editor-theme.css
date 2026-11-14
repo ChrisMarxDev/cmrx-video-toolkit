@@ -290,6 +290,7 @@ button:hover:not(:disabled) {
 .workspace-status[data-working="true"] > span:first-child {
   background: var(--app-status-working);
 }
+.workspace-status[data-phase="recovery"] > span:first-child,
 .workspace-status[data-phase="warning"] > span:first-child,
 .workspace-status[data-phase="failed"] > span:first-child,
 .workspace-status[data-phase="interrupted"] > span:first-child,

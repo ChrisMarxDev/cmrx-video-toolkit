@@ -254,3 +254,60 @@ test("non-browser generated video is normalized for review without changing sour
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("restart reconciles a committed checkpoint when project.json still contains the previous accepted file", async () => {
+  const root = temp();
+  let app;
+  try {
+    app = await startApp({ workspace: root, autoPreview: false });
+    const svc = new ProjectServices({
+        workspace: root,
+        editor: app.editor,
+        playground: app.playground,
+      }),
+      original = (await app.editor("/api/context")).project,
+      target = svc.checkpoints.create(original, "Target"),
+      code = app.playground.read("lib/graphics.dart");
+    app.playground.write("lib/graphics.dart", "// Later source");
+    await app.editor("/api/project", {
+      revision: 0,
+      project: { ...original, name: "Later" },
+    });
+    const previous = (await app.editor("/api/context")).project,
+      safety = svc.checkpoints.create(previous, "Safety");
+    fs.writeFileSync(path.join(root, "lib/graphics.dart"), code);
+    await app.editor("/api/project", {
+      revision: 1,
+      project: { ...original, revision: 1 },
+    });
+    await app.close();
+    app = null;
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(previous));
+    fs.writeFileSync(
+      path.join(root, ".editor/checkpoints/restore.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        target: target.id,
+        safety: safety.id,
+        baseRevision: 1,
+      }),
+    );
+    app = await startApp({ workspace: root, autoPreview: false });
+    const context = await app.editor("/api/context");
+    assert.equal(context.error, "");
+    assert.equal(context.project.name, original.name);
+    assert.equal(context.project.revision, 2);
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(root, "project.json"))).revision,
+      2,
+    );
+    assert.equal(app.playground.read("lib/graphics.dart"), code);
+    assert.equal(
+      fs.existsSync(path.join(root, ".editor/checkpoints/restore.json")),
+      false,
+    );
+  } finally {
+    await app?.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

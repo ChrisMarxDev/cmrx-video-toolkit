@@ -399,6 +399,9 @@ const server = createServer(async (req, res) => {
         case "/api/redo":
           value = workspace.travel(body.revision, 1, body);
           break;
+        case "/api/recover-file":
+          value = workspace.recoverAcceptedFile(body.revision, body.previous);
+          break;
         case "/api/render":
           workspace.ensure(body.revision);
           value = publicRenderJob(renderer.start(workspace.project));

@@ -1,4 +1,8 @@
-import { canonicalize, assertTiming } from "../../../flow/project/time.mjs";
+import {
+  canonicalize,
+  assertTiming,
+  documentKey,
+} from "../../../flow/project/time.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import {
   applyOperations,
@@ -219,6 +223,28 @@ export class Workspace extends EventEmitter {
       receipt,
       replayed: false,
     };
+  }
+  recoverAcceptedFile(revision: number, previous: Project) {
+    if (revision !== this.project.revision)
+      throw new Fault(409, "Recovery revision conflict");
+    const raw = validate(JSON.parse(fs.readFileSync(this.file, "utf8")));
+    const alreadyCurrent =
+      raw.revision === revision &&
+      documentKey(raw) === documentKey(this.project);
+    if (
+      !alreadyCurrent &&
+      (raw.revision !== previous?.revision ||
+        documentKey(raw) !== documentKey(previous))
+    )
+      throw new Fault(
+        409,
+        "Recovery found independent file edits; preserve and reconcile them first",
+      );
+    if (!alreadyCurrent) atomic(this.file, this.project);
+    this.raw = fs.readFileSync(this.file, "utf8");
+    this.error = "";
+    this.emit("change", "Recovered accepted file");
+    return this.project;
   }
   update(base: number, fn: (p: Project) => Project) {
     this.ensure(base);

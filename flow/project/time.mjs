@@ -169,3 +169,19 @@ export function sourceAt(clip, timeline) {
 export function timelineAt(clip, source) {
   return add(clipTime(clip, "start"), subtract(source, clipTime(clip, "in")));
 }
+
+export const documentKey = (p) => {
+  const c = canonicalize(p);
+  delete c.revision;
+  const ordered = (v) =>
+    Array.isArray(v)
+      ? v.map(ordered)
+      : v && typeof v === "object"
+        ? Object.fromEntries(
+            Object.keys(v)
+              .sort()
+              .map((k) => [k, ordered(v[k])]),
+          )
+        : v;
+  return JSON.stringify(ordered(c));
+};

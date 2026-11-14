@@ -467,3 +467,76 @@ test("immutable audio/video assets are referenced, not copied or removed by sour
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("lost restore replies reconcile accepted state; uncertain replies retain a journal and code-only uncommitted restores roll back", async () => {
+  const root = folder();
+  try {
+    fs.mkdirSync(path.join(root, "lib"));
+    fs.mkdirSync(path.join(root, "media"));
+    fs.writeFileSync(path.join(root, "media/input.mp4"), "source");
+    const file = path.join(root, "lib/a.dart");
+    fs.writeFileSync(file, "target");
+    const cp = new Checkpoints(root),
+      p = base(),
+      target = cp.create(p);
+    fs.writeFileSync(file, "current");
+    const current = { ...p, revision: 1 };
+    let accepted;
+    const result = await cp.restore(target.id, {
+      current,
+      baseRevision: 1,
+      apply: async (doc) => {
+        accepted = { ...doc, revision: 2 };
+        throw Error("lost response");
+      },
+      readCurrent: async () => accepted,
+    });
+    assert.equal(result.recovered, true);
+    assert.equal(fs.readFileSync(file, "utf8"), "target");
+    fs.writeFileSync(file, "current again");
+    await assert.rejects(
+      cp.restore(target.id, {
+        current: { ...p, revision: 3 },
+        baseRevision: 3,
+        apply: async () => {
+          throw Error("connection lost");
+        },
+        readCurrent: async () => {
+          throw Error("authority unavailable");
+        },
+      }),
+      /unavailable/,
+    );
+    assert.equal(fs.existsSync(path.join(cp.dir, "restore.json")), true);
+    assert.equal(fs.readFileSync(file, "utf8"), "target");
+    new Checkpoints(root).recover({ ...p, revision: 3 });
+    assert.equal(fs.readFileSync(file, "utf8"), "current again");
+    assert.equal(fs.existsSync(path.join(cp.dir, "restore.json")), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test("authority repairs an accepted file mirror after crash but refuses independent edits", () => {
+  const root = folder();
+  let w;
+  try {
+    const old = base();
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(old));
+    w = new Workspace(root);
+    w.transact(0, [{ type: "clip", id: "c", patch: { name: "Accepted" } }]);
+    w.close();
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(old));
+    w = new Workspace(root);
+    assert.match(w.error, /stale/);
+    w.recoverAcceptedFile(1, old);
+    assert.equal(w.error, "");
+    assert.equal(JSON.parse(fs.readFileSync(w.file)).revision, 1);
+    const independent = { ...old, name: "External work" };
+    fs.writeFileSync(w.file, JSON.stringify(independent));
+    assert.throws(() => w.recoverAcceptedFile(1, old), /independent/);
+    assert.equal(JSON.parse(fs.readFileSync(w.file)).name, "External work");
+  } finally {
+    w?.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

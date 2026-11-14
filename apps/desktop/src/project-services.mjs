@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Checkpoints } from "../../local-editor/dist/project-storage.mjs";
 import {
+  documentKey,
   exportOTIO,
   inspectOTIO,
 } from "../../local-editor/dist/project-core.mjs";
@@ -11,6 +12,36 @@ export class ProjectServices {
     Object.assign(this, { workspace, editor, playground });
     this.checkpoints = new Checkpoints(workspace);
     this.restoring = false;
+  }
+  async recover() {
+    const file = path.join(this.checkpoints.dir, "restore.json");
+    if (!fs.existsSync(file)) {
+      this.recoveryRequired = false;
+      return null;
+    }
+    this.recoveryRequired = true;
+    const journal = JSON.parse(fs.readFileSync(file, "utf8")),
+      context = await this.editor("/api/context");
+    if (context.error) {
+      const target = this.checkpoints.read(journal.target),
+        safety = this.checkpoints.read(journal.safety);
+      if (
+        context.project.revision >
+          (journal.baseRevision ?? safety.project.revision) &&
+        documentKey(context.project) === documentKey(target.project)
+      )
+        await this.editor("/api/recover-file", {
+          revision: context.project.revision,
+          previous: safety.project,
+        });
+      else
+        throw Error(
+          "Checkpoint recovery found an independent file conflict; preserve it before restarting",
+        );
+    }
+    const result = this.checkpoints.recover(context.project);
+    this.recoveryRequired = false;
+    return result;
   }
   async run(action, args = {}) {
     if (this.busy) throw Error("A project transaction is still running");
@@ -22,6 +53,7 @@ export class ProjectServices {
     ].includes(action);
     if (mutation) this.busy = true;
     try {
+      await this.recover();
       return await this.execute(action, args);
     } finally {
       if (mutation) this.busy = false;
@@ -55,6 +87,22 @@ export class ProjectServices {
       this.restoring = true;
       try {
         return await this.checkpoints.restore(args.id, {
+          readCurrent: async () => {
+            const c = await this.editor("/api/context");
+            if (c.error) {
+              const journal = JSON.parse(
+                fs.readFileSync(
+                  path.join(this.checkpoints.dir, "restore.json"),
+                  "utf8",
+                ),
+              );
+              await this.editor("/api/recover-file", {
+                revision: c.project.revision,
+                previous: this.checkpoints.read(journal.safety).project,
+              });
+            }
+            return c.project;
+          },
           baseRevision: args.revision,
           current: project,
           apply: (p, revision) =>
@@ -66,6 +114,9 @@ export class ProjectServices {
             }),
         });
       } finally {
+        this.recoveryRequired = fs.existsSync(
+          path.join(this.checkpoints.dir, "restore.json"),
+        );
         this.restoring = false;
       }
     }

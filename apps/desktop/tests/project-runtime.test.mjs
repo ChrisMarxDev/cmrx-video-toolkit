@@ -161,3 +161,16 @@ test("service snapshots and agent context agree on runtime ownership without blo
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("uncertain project recovery locks writes with a distinct reason while seeking and inspection remain available", () => {
+  const r = projectRuntime({
+    recoveryRequired: true,
+    connected: true,
+    queue: [],
+  });
+  assert.equal(r.capabilities.editTimeline.allowed, false);
+  assert.equal(r.capabilities.editTimeline.reason, "recovery");
+  assert.equal(r.capabilities.seek.allowed, true);
+  assert.equal(r.preview.phase, "recovery");
+  assert.equal(r.label, "Project recovery needed");
+});

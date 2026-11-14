@@ -2,6 +2,7 @@ import { jobProjection } from "../../local-editor/dist/render-contract.mjs";
 // A pure projection of independent lifecycles, not another mutable authority.
 // Legacy flags remain wire-compatible; callers share named capability reasons.
 export function timelineOwner(s) {
+  if (s.recoveryRequired) return "recovery";
   if (s.switching) return "provider-switch";
   if (s.importing) return "import";
   if (s.steering) return "steering";
@@ -31,19 +32,21 @@ export function projectRuntime(s) {
   const previewJob = jobs
     .filter((j) => j.kind === "overlay" || j.overlay)
     .at(-1);
-  const preview = active
-    ? {
-        phase: renderStage(active),
-        kind: active.kind === "overlay" ? "graphics" : "export",
-        jobId: active.id,
-        track: active.track ?? null,
-        trackCount: active.trackCount ?? null,
-      }
-    : s.sourceError
-      ? { phase: "failed", kind: "graphics", reason: "source-error" }
-      : previewJob && terminalFailure.has(previewJob.status)
-        ? { phase: previewJob.status, kind: "graphics", jobId: previewJob.id }
-        : { phase: s.overlay?.stale ? "stale" : "ready", kind: "graphics" };
+  const preview = s.recoveryRequired
+    ? { phase: "recovery", kind: "project", reason: "interrupted-checkpoint" }
+    : active
+      ? {
+          phase: renderStage(active),
+          kind: active.kind === "overlay" ? "graphics" : "export",
+          jobId: active.id,
+          track: active.track ?? null,
+          trackCount: active.trackCount ?? null,
+        }
+      : s.sourceError
+        ? { phase: "failed", kind: "graphics", reason: "source-error" }
+        : previewJob && terminalFailure.has(previewJob.status)
+          ? { phase: previewJob.status, kind: "graphics", jobId: previewJob.id }
+          : { phase: s.overlay?.stale ? "stale" : "ready", kind: "graphics" };
   const capability = (allowed, reason = null) => ({
     allowed,
     reason: allowed ? null : reason,
@@ -59,7 +62,8 @@ export function projectRuntime(s) {
           ? "waiting"
           : "ready";
   let label;
-  if (owner === "provider-switch") label = "Switching provider…";
+  if (owner === "recovery") label = "Project recovery needed";
+  else if (owner === "provider-switch") label = "Switching provider…";
   else if (owner === "import") label = s.activity || "Choosing a video…";
   else if (owner === "steering") label = "Delivering queued message…";
   else if (owner === "agent")

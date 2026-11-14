@@ -229,11 +229,13 @@ export async function startApp({
       ...state,
       ...(playground?.state() ?? {}),
       importing,
+      recoveryRequired: !!projectServices?.recoveryRequired,
       steering: !!steeringPayload,
       preparingRender,
     });
   const locked = () => !runtime().capabilities.editTimeline.allowed;
   const publish = () => {
+    state.recoveryRequired = !!projectServices?.recoveryRequired;
     state.locked = locked();
     state.importing = importing;
     state.steering = !!steeringPayload;
@@ -282,7 +284,15 @@ export async function startApp({
       });
   if (fs.existsSync(path.join(workspace, ".editor/checkpoints/restore.json"))) {
     projectServices = new ProjectServices({ workspace, editor, playground });
-    projectServices.checkpoints.recover((await editor("/api/context")).project);
+    try {
+      await projectServices.recover();
+    } catch (error) {
+      child.kill();
+      await playground.close();
+      await agent.close();
+      await childDone;
+      throw error;
+    }
   }
   const assets = new AssetLibrary({
     workspace,
@@ -358,7 +368,11 @@ export async function startApp({
                     ? "Inspecting an image…"
                     : "Working on your project…";
     publish();
-    if (projectServices?.busy)
+    if (
+      projectServices?.busy ||
+      (projectServices?.recoveryRequired &&
+        !["project_action", "editor_context", "editor_job"].includes(name))
+    )
       throw Error("A project transaction is still running");
     if (name === "project_action") {
       if (activeSourceTools)

@@ -1,4 +1,4 @@
-import { canonicalize } from "./time.mjs";
+import { documentKey } from "./time.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -17,21 +17,6 @@ const roots = [
   "design.md",
   "design-system",
 ];
-const documentKey = (p) => {
-  const c = canonicalize(p);
-  delete c.revision;
-  const ordered = (v) =>
-    Array.isArray(v)
-      ? v.map(ordered)
-      : v && typeof v === "object"
-        ? Object.fromEntries(
-            Object.keys(v)
-              .sort()
-              .map((k) => [k, ordered(v[k])]),
-          )
-        : v;
-  return JSON.stringify(ordered(c));
-};
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const mediaHashes = new Map();
 function hashFile(file) {
@@ -257,7 +242,10 @@ export class Checkpoints {
     const state = JSON.parse(fs.readFileSync(journal, "utf8")),
       target = this.read(state.target),
       safety = this.read(state.safety);
-    if (documentKey(current) !== documentKey(target.project)) {
+    if (!(
+      current.revision > (state.baseRevision ?? safety.project.revision) &&
+      documentKey(current) === documentKey(target.project)
+    )) {
       if (documentKey(current) !== documentKey(safety.project))
         throw Error(
           "Interrupted checkpoint restore conflicts with newer work. Inspect safety checkpoint " +
@@ -279,7 +267,10 @@ export class Checkpoints {
     fs.unlinkSync(journal);
     return { recovered: true, safetyCheckpoint: safety.id };
   }
-  async restore(id, { baseRevision, current, apply, injectFailure } = {}) {
+  async restore(
+    id,
+    { baseRevision, current, apply, readCurrent, injectFailure } = {},
+  ) {
     if (current.revision !== baseRevision)
       throw Error("Checkpoint revision conflict");
     const m = this.read(id),
@@ -314,16 +305,42 @@ export class Checkpoints {
         baseRevision,
       }),
     );
+    let applying = false;
     try {
       for (const [f, b] of data) write(safe(this.root, f), b);
       for (const f of diff.removed) fs.unlinkSync(safe(this.root, f));
       injectFailure?.();
       const project = structuredClone(m.project);
       project.revision = baseRevision;
+      applying = true;
       const accepted = await apply(project, baseRevision);
       fs.rmSync(journal, { force: true });
       return { restored: id, safetyCheckpoint: safety.id, project: accepted };
     } catch (e) {
+      // A lost HTTP reply is not proof of a rejected transaction. Keep the journal
+      // if acceptance is uncertain; restart recovery reconciles it against the authority.
+      if (applying && readCurrent) {
+        const observed = await readCurrent();
+        if (
+          observed.revision > baseRevision &&
+          documentKey(observed) === documentKey(m.project)
+        ) {
+          fs.rmSync(journal, { force: true });
+          return {
+            restored: id,
+            safetyCheckpoint: safety.id,
+            project: observed,
+            recovered: true,
+          };
+        }
+        if (
+          observed.revision !== baseRevision ||
+          documentKey(observed) !== documentKey(current)
+        )
+          throw Error(
+            "Checkpoint acceptance is uncertain; preserve the recovery journal and restart before editing",
+          );
+      }
       for (const f of sources(this.root))
         if (!backup.has(f)) fs.unlinkSync(safe(this.root, f));
       for (const [f, b] of backup) write(safe(this.root, f), b);

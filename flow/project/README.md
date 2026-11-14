@@ -120,7 +120,11 @@ keep large recordings under `media/`. Symlinks/path escapes reject.
 Review changes before restoring. A revision guard protects the document; changed
 or missing media refuses restoration. Current code/document are saved first.
 Restoration writes sources then accepts the document through Workspace; exceptions
-roll sources back. A durable journal recovers interrupted restores on app startup.
+roll sources back. A durable journal recovers interrupted restores on app startup. Lost replies
+are reconciled with the accepted revision before rolling code back. The authority
+can repair an old accepted file mirror after a crash; independent file edits are
+preserved and flagged. Remote storage adapters must supply `readCurrent` to
+disambiguate uncertain acceptance (the desktop adapter does).
 Use checkpoints to undo a source+document restore; ordinary timeline Undo only
 restores document history. External processes must still coordinate file edits;
 this is not cross-process CAS or collaborative merge.
