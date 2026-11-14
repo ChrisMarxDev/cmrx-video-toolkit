@@ -178,10 +178,13 @@ try {
     .getByRole("menuitem", { name: "Project history & interchange…" })
     .click();
   await page.getByRole("heading", { name: "Project history" }).waitFor();
-  page.once("dialog", (d) => d.accept("UI checkpoint"));
   await page
     .getByRole("button", { name: "Save checkpoint", exact: true })
     .click();
+  await page
+    .getByLabel("Checkpoint name", { exact: true })
+    .fill("UI checkpoint");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.getByText("UI checkpoint", { exact: false }).waitFor();
   await page.getByRole("button", { name: "Close", exact: true }).click();
   fs.mkdirSync(path.join(root, "assets"), { recursive: true });

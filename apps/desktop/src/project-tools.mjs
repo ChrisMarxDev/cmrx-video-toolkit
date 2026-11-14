@@ -8,9 +8,39 @@ export function setupProjectTools({ call, showError }) {
   const button = (label, fn) => {
     const b = document.createElement("button");
     b.textContent = label;
-    b.onclick = () => void Promise.resolve().then(fn).catch(showError);
+    b.type = "button";
+    b.onclick = () => void Promise.resolve().then(fn).catch(report);
     return b;
   };
+  function report(error) {
+    if (!dialog?.isConnected) {
+      showError(error);
+      return;
+    }
+    let message = dialog.querySelector("[role=alert]");
+    if (!message) {
+      message = document.createElement("p");
+      message.setAttribute("role", "alert");
+      dialog.append(message);
+    }
+    message.textContent = error.message;
+  }
+  function review(text, label, accept, enabled = true) {
+    dialog.querySelector(".checkpoint-review")?.remove();
+    const box = document.createElement("section");
+    box.className = "checkpoint-review";
+    const description = document.createElement("pre");
+    description.textContent = text;
+    const proceed = button(label, accept);
+    proceed.disabled = !enabled;
+    box.append(
+      description,
+      button("Cancel", () => box.remove()),
+      proceed,
+    );
+    dialog.append(box);
+    box.scrollIntoView({ block: "nearest" });
+  }
   const run = async (action, args = {}) =>
     call("project-action", { action, ...args });
   async function open() {
@@ -29,11 +59,42 @@ export function setupProjectTools({ call, showError }) {
     }).then((r) => r.json());
     const revision = context.project.revision;
     dialog.append(
-      button("Save checkpoint", async () => {
-        const label = prompt("Checkpoint name", "Before next edit");
-        if (label === null) return;
-        await run("checkpoint-create", { revision, label });
-        await open();
+      button("Save checkpoint", () => {
+        if (dialog.querySelector(".checkpoint-name")) {
+          dialog.querySelector(".checkpoint-name input").focus();
+          return;
+        }
+        const form = document.createElement("form");
+        form.className = "checkpoint-name";
+        const label = document.createElement("label");
+        label.textContent = "Checkpoint name";
+        const input = document.createElement("input");
+        input.required = true;
+        input.maxLength = 200;
+        input.value = "Before next edit";
+        label.append(input);
+        const save = document.createElement("button");
+        save.type = "submit";
+        save.textContent = "Save";
+        form.append(
+          label,
+          button("Cancel", () => form.remove()),
+          save,
+        );
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          save.disabled = true;
+          try {
+            await run("checkpoint-create", { revision, label: input.value });
+            await open();
+          } catch (error) {
+            report(error);
+            save.disabled = false;
+          }
+        };
+        dialog.append(form);
+        input.focus();
+        input.select();
       }),
     );
     dialog.append(
@@ -61,16 +122,16 @@ export function setupProjectTools({ call, showError }) {
             if (file.size > 2 * 1024 ** 2)
               throw Error("Timeline file must be smaller than 2 MB");
             const timeline = JSON.parse(await file.text());
-            if (
-              !confirm(
-                "Replace footage cuts with this timeline? Current graphics and source files stay in the project.",
-              )
-            )
-              return;
-            await run("interchange-import", { revision, timeline });
-            close();
+            review(
+              "Replace footage cuts? Graphics and source files stay in the project.",
+              "Import timeline",
+              async () => {
+                await run("interchange-import", { revision, timeline });
+                close();
+              },
+            );
           } catch (e) {
-            showError(e);
+            report(e);
           }
         };
         input.click();
@@ -102,13 +163,18 @@ export function setupProjectTools({ call, showError }) {
                 .filter((m) => !m.valid)
                 .map((m) => "Missing/changed media: " + m.path),
             ].join("\n") || "No changes";
-          if (!confirm(text + "\n\nRestore? Current work will be saved first."))
-            return;
-          await run("checkpoint-restore", {
-            id: c.id,
-            revision: d.baseRevision,
-          });
-          close();
+          review(
+            text + "\n\nCurrent work will be saved first.",
+            "Restore checkpoint",
+            async () => {
+              await run("checkpoint-restore", {
+                id: c.id,
+                revision: d.baseRevision,
+              });
+              close();
+            },
+            d.media.every((m) => m.valid),
+          );
         }),
       );
       dialog.append(row);

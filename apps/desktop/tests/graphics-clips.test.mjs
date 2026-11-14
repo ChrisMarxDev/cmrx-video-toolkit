@@ -83,3 +83,16 @@ test("render acceptance rejects export/cache duration or resolution mismatches a
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("resolved instance dispatch omits unused legacy imports and hidden instances cannot fall back to legacy graphics", () => {
+  const source = graphicsDispatcher(
+    { graphicsMode: "instances", clips: [] },
+    "video_playground",
+  );
+  assert.doesNotMatch(source, /as legacy/);
+  assert.match(source, /if\(clips.isEmpty\) return const SizedBox.shrink/);
+  assert.match(
+    graphicsDispatcher({ clips: [] }, "video_playground"),
+    /legacy.buildGraphics/,
+  );
+});

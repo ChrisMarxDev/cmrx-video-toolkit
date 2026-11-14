@@ -132,3 +132,8 @@ use a real 601-second recording fixture and only insert four seconds. Browser
 acceptance checks one rendered player, controls, source insertion and history UI.
 Linux checkout verification does not establish a new signed installer or Mac test.
 See the owning Make targets and `flow/project/README.md` for reproduction and limits.
+
+The actual Linux Electron shell also passes checkpoint naming with a DOM form,
+Enter-to-save, review/restore and the safety checkpoint. Generated instance dispatch
+is analyzer-clean; fully hidden instances cannot fall back to legacy graphics.
+Video/audio assets remain immutable references during checkpoint restore.

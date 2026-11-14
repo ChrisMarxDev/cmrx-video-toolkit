@@ -428,3 +428,42 @@ test("single-frame edits preserve minimum duration through exact migration, spli
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("immutable audio/video assets are referenced, not copied or removed by source checkpoint restore", async () => {
+  const root = folder();
+  try {
+    fs.mkdirSync(path.join(root, "media"));
+    fs.mkdirSync(path.join(root, "assets"));
+    fs.mkdirSync(path.join(root, "lib"));
+    fs.writeFileSync(path.join(root, "media/input.mp4"), "source");
+    fs.writeFileSync(path.join(root, "assets/upload.mov"), "recording");
+    fs.writeFileSync(path.join(root, "lib/a.dart"), "before");
+    const cp = new Checkpoints(root),
+      p = base(),
+      saved = cp.create(p);
+    assert.ok(
+      cp.read(saved.id).media.some((m) => m.path === "assets/upload.mov"),
+    );
+    assert.equal(
+      cp.read(saved.id).files.some((f) => f.path === "assets/upload.mov"),
+      false,
+    );
+    fs.writeFileSync(path.join(root, "assets/new-upload.mov"), "new recording");
+    fs.writeFileSync(path.join(root, "lib/a.dart"), "after");
+    await cp.restore(saved.id, {
+      current: p,
+      baseRevision: 0,
+      apply: async (p) => p,
+    });
+    assert.equal(
+      fs.readFileSync(path.join(root, "lib/a.dart"), "utf8"),
+      "before",
+    );
+    assert.equal(
+      fs.readFileSync(path.join(root, "assets/new-upload.mov"), "utf8"),
+      "new recording",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

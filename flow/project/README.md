@@ -112,8 +112,8 @@ instance. Raw Dart clips with only `props.source` remain fully supported.
 
 Use the player's … menu → Project history & interchange. Checkpoints capture the
 authoring document and project-owned `lib`, shaders, tools, skills, tests, assets,
-project instructions/memory/script/design and pubspec. Original/render media are
-referenced by content identity, not duplicated. Provider profiles, chat sessions,
+project instructions/memory/script/design and pubspec. Original/render media and video/audio assets are
+referenced by content identity, not duplicated or removed by source restoration. Provider profiles, chat sessions,
 caches and shared libraries are excluded. Source snapshots have a 512 MB bound;
 keep large recordings under `media/`. Symlinks/path escapes reject.
 
@@ -162,6 +162,7 @@ make project-interchange PROJECT=/path/to/open/project
 make project-core-check
 make -C apps/desktop toolkit-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright/index.mjs
 make -C apps/desktop toolkit-render-check EDITOR_SOURCE_PROJECT=/path/to/imported/project
+make -C apps/desktop toolkit-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
 ```
 
 Write commands require the running app and use its authenticated local service;

@@ -33,6 +33,30 @@ const documentKey = (p) => {
   return JSON.stringify(ordered(c));
 };
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const mediaHashes = new Map();
+function hashFile(file) {
+  const keyOf = () => {
+    const s = fs.statSync(file, { bigint: true });
+    return [file, s.ino, s.size, s.mtimeNs, s.ctimeNs].join(":");
+  };
+  const key = keyOf();
+  if (mediaHashes.has(key)) return mediaHashes.get(key);
+  const hash = createHash("sha256"),
+    buffer = Buffer.allocUnsafe(1024 * 1024),
+    fd = fs.openSync(file, "r");
+  try {
+    let n;
+    while ((n = fs.readSync(fd, buffer, 0, buffer.length, null)))
+      hash.update(buffer.subarray(0, n));
+  } finally {
+    fs.closeSync(fd);
+  }
+  if (keyOf() !== key) throw Error("Media changed while capturing checkpoint");
+  const value = hash.digest("hex");
+  if (mediaHashes.size > 1000) mediaHashes.clear();
+  mediaHashes.set(key, value);
+  return value;
+}
 function safe(root, relative) {
   if (
     typeof relative !== "string" ||
@@ -53,7 +77,10 @@ function safe(root, relative) {
   }
   return parent;
 }
-function sources(root) {
+const immutableMedia = (f) =>
+  f.startsWith("assets/") &&
+  /\.(mp4|mov|m4v|mkv|webm|avi|wav|mp3|aac|m4a|flac|ogg)$/i.test(f);
+function sources(root, includeMedia = false) {
   const list = [];
   function walk(relative) {
     const full = safe(root, relative);
@@ -64,8 +91,9 @@ function sources(root) {
         if (name.startsWith(".")) continue;
         walk(relative + "/" + name);
       }
-    } else if (stat.isFile()) list.push(relative);
-    else throw Error("Only regular source files can be checkpointed");
+    } else if (stat.isFile()) {
+      if (includeMedia || !immutableMedia(relative)) list.push(relative);
+    } else throw Error("Only regular source files can be checkpointed");
   }
   for (const r of roots) walk(r);
   return list.sort();
@@ -158,6 +186,12 @@ export class Checkpoints {
             ? [{ id: a.id + ":original", path: a.media.original.path }]
             : []),
         ])
+        .concat(
+          sources(this.root, true)
+            .filter(immutableMedia)
+            .map((f) => ({ id: "file:" + f, path: f })),
+        )
+        .filter((a, i, all) => all.findIndex((b) => b.path === a.path) === i)
         .map((a) => {
           const full = path.resolve(this.root, a.path);
           if (!fs.realpathSync(full).startsWith(this.root + path.sep))
@@ -165,7 +199,7 @@ export class Checkpoints {
           return {
             assetId: a.id,
             path: a.path,
-            sha256: sha(fs.readFileSync(full)),
+            sha256: hashFile(full),
           };
         });
       const manifest = {
@@ -211,7 +245,7 @@ export class Checkpoints {
           const full = fs.realpathSync(path.resolve(this.root, a.path));
           valid =
             full.startsWith(this.root + path.sep) &&
-            sha(fs.readFileSync(full)) === a.sha256;
+            hashFile(full) === a.sha256;
         } catch {}
         return { ...a, valid };
       }),

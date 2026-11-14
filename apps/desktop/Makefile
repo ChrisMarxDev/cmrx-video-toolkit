@@ -120,3 +120,8 @@ toolkit-browser-check: build
 # Real source+Flutter acceptance; usage: make toolkit-render-check EDITOR_SOURCE_PROJECT=/path/to/imported/project
 toolkit-render-check: build
 	EDITOR_SOURCE_PROJECT="$(EDITOR_SOURCE_PROJECT)" node tests/toolkit-environment-render.mjs
+
+.PHONY: toolkit-native-check
+# Actual Electron history/forms; usage: make toolkit-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
+toolkit-native-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/toolkit-environment-native.mjs

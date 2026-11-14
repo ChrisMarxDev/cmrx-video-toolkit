@@ -1033,3 +1033,8 @@ a {
 .project-tools-dialog button {margin:8px 8px 12px 0;}
 .project-tools-dialog section {border-top:1px solid #ffffff12;padding:12px 0;}
 .project-tools-dialog small {display:block;margin:12px 0;color:#aaa;}
+
+.project-tools-dialog .checkpoint-name {display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:16px 0;}
+.project-tools-dialog label {display:grid;gap:8px;font-size:12px;}
+.project-tools-dialog input {background:#29292c;color:#eee;border:1px solid #ffffff25;border-radius:7px;padding:10px;font:inherit;}
+.project-tools-dialog pre {white-space:pre-wrap;font:inherit;font-size:12px;line-height:1.7;color:#b8b8be;max-height:200px;overflow:auto;}

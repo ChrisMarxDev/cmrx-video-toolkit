@@ -16,7 +16,7 @@ export function graphicsDispatcher(project, packageName) {
     s.replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("$", "\\$") +
     "'";
   return `import 'package:flutter/widgets.dart';
-import 'package:${packageName}/graphics.dart' as legacy;
+${project.graphicsMode === "instances" ? "" : `import 'package:${packageName}/graphics.dart' as legacy;`}
 export 'package:${packageName}/graphics.dart' hide buildGraphics;
 ${sources.map((source, i) => `import ${literal("package:" + packageName + "/" + source.slice(4))} as layer${i};`).join("\n")}
 Widget buildGraphics(double time, Map<String,dynamic> manifest, {int? previewTrack}) {
