@@ -239,13 +239,13 @@ try {
   await page.locator("#prompt").fill("Draft a short opening");
   await page.locator("#prompt").press("Enter");
   await shell.locator(".dot.working").first().waitFor();
-  assert.equal(
-    await shell
-      .locator(".dot.working")
-      .first()
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
-    "matrix-cells",
-  );
+  const workingDot = await shell.locator(".dot.working").first().evaluate((el) => {
+    const style = getComputedStyle(el);
+    return { width: style.width, height: style.height, color: style.backgroundColor };
+  });
+  assert.equal(workingDot.width, "6px");
+  assert.equal(workingDot.height, "6px");
+  assert.notEqual(workingDot.color, "rgba(0, 0, 0, 0)");
   await shell.locator(".dot.working").waitFor({ state: "hidden" });
   assert.deepEqual(errors, []);
   console.log(

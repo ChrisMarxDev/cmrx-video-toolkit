@@ -32,16 +32,26 @@ fs.writeFileSync(
 let app;
 try {
   app = await _electron.launch({
-    executablePath: process.env.EDITOR_ELECTRON || "/usr/bin/electron43",
+    executablePath: process.env.EDITOR_PACKAGED_APP
+      ? path.join(process.env.EDITOR_PACKAGED_APP, "Contents/MacOS/CMRX Chat Editor")
+      : process.env.EDITOR_ELECTRON || "/usr/bin/electron43",
     args: [
       "--user-data-dir=" + path.join(root, "profile"),
-      fileURLToPath(new URL("../src/desktop.cjs", import.meta.url)),
+      ...(process.env.EDITOR_PACKAGED_APP
+        ? []
+        : [fileURLToPath(new URL("../src/desktop.cjs", import.meta.url))]),
       "--",
       "--workspace",
       workspace,
     ],
     env: {
-      ...process.env,
+      ...(process.env.EDITOR_PACKAGED_APP
+        ? {
+            HOME: os.homedir(),
+            PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+            DEVELOPER_DIR: "/cmrx-no-developer-tools",
+          }
+        : process.env),
       ELECTRON_RUN_AS_NODE: "",
       CHAT_PROJECTS_DIR: path.join(root, "workspace"),
       CHAT_DESKTOP_TEST_PROVIDER: fileURLToPath(
@@ -143,7 +153,7 @@ try {
     });
   }
   console.log(
-    "PASS actual Linux Electron: project history, DOM naming form, Enter save, review/restore source+document, safety checkpoint and no renderer errors.",
+    `PASS actual Electron (${process.platform}): project history, DOM naming form, Enter save, review/restore source+document, safety checkpoint and no renderer errors.`,
   );
 } finally {
   await app?.close();

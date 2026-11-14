@@ -122,6 +122,6 @@ toolkit-render-check: build
 	EDITOR_SOURCE_PROJECT="$(EDITOR_SOURCE_PROJECT)" node tests/toolkit-environment-render.mjs
 
 .PHONY: toolkit-native-check
-# Actual Electron history/forms; usage: make toolkit-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
+# Actual Electron history/forms (optional MAC_APP=/path/App.app); usage: make toolkit-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
 toolkit-native-check: build
-	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/toolkit-environment-native.mjs
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" EDITOR_PACKAGED_APP="$(MAC_APP)" node tests/toolkit-environment-native.mjs

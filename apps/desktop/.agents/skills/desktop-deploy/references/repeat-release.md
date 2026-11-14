@@ -45,6 +45,17 @@ packager; do not rebuild FFmpeg or download Flutter on every release. Use a new
 candidate output directory each time. Install locked npm dependencies when the
 lockfile changes; source packaging still performs the required editor build.
 
+Keep builder inputs in the same durable deployment root, for example
+`builder/sdk`, `builder/pub-cache` and `builder/media`. Record their paths and
+provenance in `builder/inputs.json`. Temporary system directories can disappear
+between releases. If the original builder cache is gone, an intact candidate's
+**unsigned staging** runtime can restore the already prepared SDK, offline cache
+and media inputs. Verify each restored media binary against that staging
+`runtime/media-build.json`, retain its licenses and corresponding-source archive,
+and let the packager recheck the pinned SDK revision and test-port marker. Never
+substitute signed app binaries for the unsigned media hashes or change an existing
+release artifact to recover builder inputs.
+
 Before a release build, check `security find-identity -v -p codesigning` and
 `xcrun notarytool history --keychain-profile "$CMRX_NOTARY_PROFILE" --output-format json`.
 Warn the operator before possible Keychain prompts. An absent profile blocks
