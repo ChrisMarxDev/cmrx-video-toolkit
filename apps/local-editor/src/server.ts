@@ -1,3 +1,5 @@
+import { resolveProject } from "../../../flow/project/resolve.mjs";
+import { sourceWindow } from "../../../flow/project/source-index.mjs";
 import { jobProjection, publicRenderJob } from "./render-contract.mjs";
 import { loadExtensions, extensionHooks } from "./extensions.js";
 import { operationTypes, type Operation } from "./operations.js";
@@ -77,15 +79,17 @@ try {
 } catch {}
 let renderer: Renderer;
 function state() {
+  const resolution = resolveProject(workspace.project);
   let boxes = {};
   let extensionError = "";
   try {
-    boxes = getBoxes(workspace.project, extensions);
+    boxes = getBoxes(resolution.project as Project, extensions);
   } catch (e) {
     extensionError = (e as Error).message;
   }
   return {
     project: workspace.project,
+    resolution,
     transactions: (workspace.state.receipts ?? []).slice(-20),
     latestTransaction: workspace.state.receipts?.at(-1) ?? null,
     error: workspace.error || extensionError,
@@ -227,12 +231,48 @@ const server = createServer(async (req, res) => {
         });
         return;
       }
+      if (route === "/api/source-window") {
+        const asset = workspace.project.assets.find(
+          (a) => a.id === url.searchParams.get("id"),
+        );
+        if (!asset) throw new Fault(404, "Asset not found");
+        const start = Number(url.searchParams.get("start") ?? 0),
+          duration = Number(url.searchParams.get("duration") ?? 30);
+        if (
+          !Number.isFinite(start) ||
+          start < 0 ||
+          start >= asset.duration ||
+          !Number.isFinite(duration) ||
+          duration <= 0 ||
+          duration > 120
+        )
+          throw new Fault(400, "Choose a source window of up to 120 seconds");
+        const preview = await mediaPreviews.get(asset, { start, duration });
+        send(res, sourceWindow(asset, preview, { start, duration }));
+        return;
+      }
       if (route === "/api/media-preview") {
         const asset = workspace.project.assets.find(
           (a) => a.id === url.searchParams.get("id"),
         );
         if (!asset) throw new Fault(404, "Asset not found");
-        send(res, await mediaPreviews.get(asset));
+        const window = url.searchParams.has("start")
+          ? {
+              start: Number(url.searchParams.get("start")),
+              duration: Number(url.searchParams.get("duration")),
+            }
+          : undefined;
+        if (
+          window &&
+          (!Number.isFinite(window.start) ||
+            window.start < 0 ||
+            window.start >= asset.duration ||
+            !Number.isFinite(window.duration) ||
+            window.duration <= 0 ||
+            window.duration > 601)
+        )
+          throw new Fault(400, "Invalid timeline source window");
+        send(res, await mediaPreviews.get(asset, window));
         return;
       }
       if (route === "/api/playback-preview") {

@@ -25,3 +25,14 @@ Ask the user before UI automation when required by the host workspace.
 Reusable Flutter primitives live in components/, not a design system. Require
 caller-owned appearance; brand tokens, fonts and design direction belong in the
 consuming workspace. Keep browser demonstration styling application-local.
+
+
+## Toolkit-first product imperative
+
+The desktop app is a UI and development environment for this toolkit. Keep Flutter
+and arbitrary agent-authored code first-class. Never reduce toolkit capabilities to
+fit the editor: unsupported interactive features may use a verified rendered-only
+review path. Components are coded dynamically; property controls derive from their
+authored schemas, not a hardcoded video-element catalog. Source transcripts, sound
+maps and sampled frames are complementary evidence, not a transcript-first product.
+See apps/desktop/TOOLKIT_ENVIRONMENT_PLAN.md for the implementation/acceptance plan.

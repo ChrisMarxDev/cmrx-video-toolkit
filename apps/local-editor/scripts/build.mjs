@@ -3,6 +3,22 @@ import { mkdir, copyFile } from "node:fs/promises";
 await mkdir("dist/public", { recursive: true });
 await Promise.all([
   build({
+    entryPoints: ["../../flow/project/checkpoints.mjs"],
+    outfile: "dist/project-storage.mjs",
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node22",
+  }),
+  build({
+    entryPoints: ["../../flow/project/index.mjs"],
+    outfile: "dist/project-core.mjs",
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node22",
+  }),
+  build({
     entryPoints: ["src/render-contract.mjs"],
     outfile: "dist/render-contract.mjs",
     bundle: true,

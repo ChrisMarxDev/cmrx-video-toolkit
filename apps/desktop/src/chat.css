@@ -1027,3 +1027,9 @@ a {
   gap: 4px;
   flex-shrink: 0;
 }
+
+.project-tools-dialog {width:min(560px,90vw);max-height:80vh;overflow:auto;background:#202022;color:#eee;border:1px solid #ffffff18;border-radius:20px;padding:28px;}
+.project-tools-dialog::backdrop {background:#0008;}
+.project-tools-dialog button {margin:8px 8px 12px 0;}
+.project-tools-dialog section {border-top:1px solid #ffffff12;padding:12px 0;}
+.project-tools-dialog small {display:block;margin:12px 0;color:#aaa;}

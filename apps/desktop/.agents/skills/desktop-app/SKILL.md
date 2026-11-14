@@ -19,6 +19,15 @@ creator catalog. For editing a user's video, use the app's
 
 ## Product contract
 
+This app is the toolkit's UI and development environment, not a transcript-first
+editor. Never limit toolkit capabilities because interactive editor support is
+missing: retain arbitrary Flutter/code authoring and a verified rendered-review
+fallback. Components are coded dynamically; optional controls come from authored
+schemas rather than a hardcoded catalog. Use transcripts, sound maps and sampled
+frames together to clarify source time. Read TOOLKIT_ENVIRONMENT_PLAN.md for the
+current shared app/toolkit implementation and acceptance contract.
+
+
 Nontechnical users install one app, connect their own provider account and start
 from a video or an empty project. Required toolchains must be bundled or prepared
 automatically. A working developer checkout does not establish installer readiness.

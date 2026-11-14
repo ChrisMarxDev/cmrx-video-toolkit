@@ -39,7 +39,8 @@ track. Those rows are derived, zoom-dependent UI geometry and are never persiste
 as track IDs or used to change render ordering. Unknown
 kinds/data survive mutations; unsupported kinds block rendering.
 
-Desktop graphics clips use `kind: graphics` and require `props.source`, a Dart
+Desktop graphics clips use `kind: graphics` and a project-defined `componentId`
+or `props.source`, a Dart
 module path under `lib/` with no dot-prefixed path segments. They need no asset.
 Each module exports `Widget buildGraphics(double clipTime, Map<String, dynamic>
 manifest)`. The desktop capture stack applies the same timing formula below,
@@ -47,7 +48,8 @@ rectangle, track order and disabled-layer flags in preview and export. These
 graphics form a plane above footage; they do not interleave beneath media clips.
 The standalone FFmpeg renderer does not support Dart graphics clips.
 
-V1 time values are **seconds**, with integer `fps`. UI gestures snap to frames;
+V1 numeric time fields are **seconds**, with integer `fps`. Accepted edits add
+exact rational `timing` and derive the seconds projection. UI gestures snap to frames;
 raw/API edits may contain off-grid values. Active intervals are half-open:
 `[start, start + duration)`. For ordinary-speed media:
 
@@ -166,12 +168,14 @@ cannot be assumed to implement comment-aware split behavior.
 ## Next schema decisions, deliberately not hidden in v1
 
 The original brief calls for integer project frames and rational source timing.
-V1 does not satisfy that precision goal. A versioned v2 migration must address
-rational frame rates, mixed/variable-rate sources and explicit time conversions;
-renaming seconds fields without conversion would corrupt existing projects.
-Stable track entities, original/proxy relationships with content fingerprints,
-component source/version provenance and comment ranges/threads are also future
-contract work. They are not implemented merely because the UI can display clips.
+V1 now supports additive exact JSON-rational clip timing with a shared resolver;
+legacy numeric edits are projected at acceptance and inconsistent external fields
+reject. The existing integer sequence FPS remains; fractional source/sample
+arithmetic does not imply arbitrary sequence FPS, VFR PTS remapping or retiming.
+Stable track entities, full VFR PTS mappings, component implementation version
+interchange and comment ranges/threads remain future work. Explicit original/render
+representations, disposable proxies and content fingerprints are implemented;
+project-authored component schemas do not imply portable arbitrary effects.
 
 ## Derived timeline media
 
@@ -255,3 +259,23 @@ Review position is UI state: `.editor/view.json` retains the last accepted
 project revision or undo history. The browser restores it once on connection,
 clamps it to the current timeline and remains paused. Parent desktop tab switches
 may send same-origin `cmrx-pause` to stop review playback without moving the cut.
+
+
+## Toolkit development environment extensions
+
+See [shared project contracts](../../flow/project/README.md). The app is a UI for
+arbitrary toolkit/Flutter authoring, not a transcript-first editor or capability
+ceiling. `components` defines project-authored source/property schemas; instance
+`componentId`/`props` generate controls without a fixed element catalog. Optional
+anchors are resolved as a projection; missing/ambiguous targets hide with warnings,
+while authoring clips remain in the accepted document. `timing` contains exact
+`{value,rate}` integer strings for start/in/duration; seconds are compatibility fields.
+
+Source assets may be up to 24h, independently of the interactive 10-minute sequence.
+Source windows combine timed cues/revisions, levels and sampled frames. Media time
+is the normalized full-resolution input's clock. Checkpoints capture document/code,
+separately from document-only Undo. `previewMode: rendered` and verified
+`renderedOutput` select arbitrary toolkit output in the same player without
+requiring interactive clips. The agent can continue source authoring; structured
+editing remains available in the interactive projection. OTIO carries a documented
+footage subset and native/source sidecars with loss reporting.

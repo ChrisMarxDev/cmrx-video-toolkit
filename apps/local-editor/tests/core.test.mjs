@@ -1,3 +1,4 @@
+import {canonicalize} from "../dist/project-core.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -450,7 +451,7 @@ test("layer controls preserve clips, validate flags, persist, undo and render si
       { revision: 1, track: 0, patch: { muted: "yes" } },
       400,
     );
-    assert.deepEqual((await call("state")).project.clips, clean().clips);
+    assert.deepEqual((await call("state")).project.clips, canonicalize(clean()).clips);
     const render = async () => {
       const state = await call("state");
       const job = await call("render", { revision: state.project.revision });
@@ -729,7 +730,7 @@ test("ripple API is revision checked and one undo restores all tracks", async ()
     assert.equal(changed.revision, 1);
     assert.equal((await request("undo", { revision: 1 })).status, 200);
     const restored = (await (await request("state")).json()).project;
-    assert.deepEqual(restored.clips, before.clips);
+    assert.deepEqual(restored.clips, canonicalize(before).clips);
     assert.deepEqual(restored.assets, before.assets);
   } finally {
     await server.stop();

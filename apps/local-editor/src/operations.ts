@@ -1,3 +1,5 @@
+import { seconds, time } from "../../../flow/project/time.mjs";
+import { indexTranscript } from "../../../flow/project/source-index.mjs";
 import { randomUUID } from "node:crypto";
 import {
   validate,
@@ -18,6 +20,14 @@ export type OperationContext = {
   validate?: (project: Project) => void;
 };
 export type Operation =
+  | {
+      type: "clip-time";
+      id: string;
+      timing: Record<string, { value: string; rate: string }>;
+    }
+  | { type: "anchor"; id: string; anchor: Record<string, unknown> | null }
+  | { type: "component"; definition: any }
+  | { type: "component-props"; id: string; props: Record<string, unknown> }
   | { type: "extension"; name: string }
   | { type: "project"; project: Project }
   | { type: "clip"; id: string; patch: Parameters<typeof patchClip>[2] }
@@ -32,18 +42,26 @@ export type Operation =
       id: string;
       patch: Parameters<typeof updateComment>[2];
     }
-  | { type: "transcript"; assetId: string; transcript: TranscriptSegment[] }
+  | {
+      type: "transcript";
+      assetId: string;
+      transcript: TranscriptSegment[];
+      reconcile?: boolean;
+    }
   | {
       type: "add";
       assetId: string;
       id?: string;
       start?: number;
+      in?: number;
       duration?: number;
       track?: number;
     }
   | {
       type: "add-graphics";
-      source: string;
+      source?: string;
+      componentId?: string;
+      props?: Record<string, unknown>;
       duration: number;
       id?: string;
       name?: string;
@@ -51,6 +69,10 @@ export type Operation =
       track?: number;
     };
 export const operationTypes = [
+  "clip-time",
+  "anchor",
+  "component",
+  "component-props",
   "extension",
   "project",
   "clip",
@@ -74,6 +96,42 @@ export function applyOperation(
     throw Error("Unknown document operation");
   const p = clone(project);
   switch (op.type) {
+    case "clip-time": {
+      const c = p.clips.find((c) => c.id === op.id);
+      if (!c) throw Error("Clip not found");
+      const exact = { ...((c.timing as any) ?? {}) };
+      for (const [key, t] of Object.entries(op.timing)) {
+        if (!["start", "in", "duration"].includes(key))
+          throw Error("Unknown timing field");
+        const canonical = time(t.value, t.rate);
+        (c as any)[key] = seconds(canonical);
+        exact[key] = canonical;
+      }
+      c.timing = exact;
+      break;
+    }
+    case "anchor": {
+      const c = p.clips.find((c) => c.id === op.id);
+      if (!c || c.kind !== "graphics") throw Error("Graphics clip not found");
+      if (op.anchor === null) delete c.anchor;
+      else c.anchor = op.anchor;
+      break;
+    }
+    case "component": {
+      const defs = (p.components ?? []) as any[];
+      p.components = [
+        ...defs.filter((d) => d.id !== op.definition?.id),
+        op.definition,
+      ];
+      break;
+    }
+    case "component-props": {
+      const c = p.clips.find((c) => c.id === op.id);
+      if (!c || !c.componentId) throw Error("Schema-driven clip not found");
+      c.props = { ...c.props, ...op.props };
+      break;
+    }
+
     case "extension":
       if (!context.command) throw Error("Extension commands unavailable");
       return validate(context.command(p, op.name));
@@ -101,7 +159,12 @@ export function applyOperation(
     case "transcript": {
       const asset = p.assets.find((a) => a.id === op.assetId);
       if (!asset) throw Error("Transcript source not found");
-      asset.transcript = op.transcript;
+      Object.assign(
+        asset,
+        indexTranscript(asset, op.transcript, {
+          reconcile: op.reconcile === true,
+        }),
+      );
       break;
     }
     case "add":
@@ -115,15 +178,25 @@ export function applyOperation(
         kind: op.type === "add" ? "video" : "graphics",
         ...(asset ? { assetId: asset.id } : {}),
         start: op.start ?? 0,
-        in: 0,
-        duration: op.duration ?? Math.min(4, asset!.duration),
+        in: op.type === "add" ? (op.in ?? 0) : 0,
+        duration:
+          op.duration ??
+          Math.min(4, asset!.duration - (op.type === "add" ? (op.in ?? 0) : 0)),
         track: op.track ?? 0,
         x: 0,
         y: 0,
         width: p.width,
         height: p.height,
         muted: false,
-        ...(op.type === "add-graphics" ? { props: { source: op.source } } : {}),
+        ...(op.type === "add-graphics"
+          ? {
+              ...(op.componentId ? { componentId: op.componentId } : {}),
+              props: {
+                ...op.props,
+                ...(op.source ? { source: op.source } : {}),
+              },
+            }
+          : {}),
       });
       break;
     }

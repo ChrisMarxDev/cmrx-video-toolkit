@@ -304,3 +304,21 @@ desktop-notarize:
 # Retain existing Apple credentials privately: make desktop-deploy-configure CONFIG_DIALOG=1
 desktop-deploy-configure:
 	$(MAKE) -C apps/desktop/.agents/skills/desktop-deploy configure
+
+.PHONY: project-core-check project-inspect project-checkpoint project-interchange
+# Shared app/toolkit contracts; usage: make project-core-check
+project-core-check:
+	npm --prefix apps/local-editor run build
+	node --test apps/local-editor/tests/project-core.test.mjs apps/desktop/tests/project-services.test.mjs
+# Resolved source/timeline view; usage: make project-inspect PROJECT=/path/to/project
+project-inspect:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	node flow/project/cli.mjs --workspace "$(PROJECT)" --action inspect
+# Save source plus document through the running app; usage: make project-checkpoint PROJECT=/path LABEL=Before
+project-checkpoint:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	node flow/project/cli.mjs --workspace "$(PROJECT)" --action checkpoint-create --label "$(or $(LABEL),Checkpoint)"
+# OTIO plus native sources through the running app; usage: make project-interchange PROJECT=/path
+project-interchange:
+	$(if $(strip $(PROJECT)),,$(error PROJECT is required))
+	node flow/project/cli.mjs --workspace "$(PROJECT)" --action interchange-export

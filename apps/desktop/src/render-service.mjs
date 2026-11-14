@@ -19,6 +19,14 @@ export async function startManualRender({
   try {
     while (activeWrites())
       await new Promise((resolve) => setTimeout(resolve, 10));
+    const current = playground.state();
+    if (current.rendered) {
+      if (current.rendered.stale)
+        throw Error(
+          "This toolkit output is outdated. Ask the agent to generate and register it again before exporting.",
+        );
+      return current.preview;
+    }
     return await playground.render(
       (await editor("/api/context")).project.revision,
     );

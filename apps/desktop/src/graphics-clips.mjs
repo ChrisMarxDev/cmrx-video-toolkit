@@ -22,7 +22,7 @@ ${sources.map((source, i) => `import ${literal("package:" + packageName + "/" + 
 Widget buildGraphics(double time, Map<String,dynamic> manifest, {int? previewTrack}) {
  final clips=List<Map<String,dynamic>>.from(manifest['clips']).where((c)=>c['kind']=='graphics').toList()
  ..sort((a,b)=>(a['track'] as num).compareTo(b['track'] as num));
- if(clips.isEmpty) return legacy.buildGraphics(time,manifest);
+ if(clips.isEmpty) return ${project.graphicsMode === "instances" ? "const SizedBox.shrink()" : "legacy.buildGraphics(time,manifest)"};
  final layers=Map<String,dynamic>.from(manifest['layers']??{});
  return Stack(fit:StackFit.expand,clipBehavior:Clip.hardEdge,children:[
   for(final clip in clips)

@@ -110,3 +110,13 @@ preview-quality-check: build
 # Render arbitrary root Positioned graphics with the installed toolkit: make graphics-layout-check [CHAT_WORKER_ROOT=/existing/worker]
 graphics-layout-check: build
 	node tests/graphics-layout-render.mjs
+
+.PHONY: toolkit-browser-check
+# Shared toolkit project UX: make toolkit-browser-check EDITOR_PLAYWRIGHT=/path/to/playwright/index.mjs
+toolkit-browser-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_CHROMIUM="$(EDITOR_CHROMIUM)" node tests/toolkit-environment-browser.mjs
+
+.PHONY: toolkit-render-check
+# Real source+Flutter acceptance; usage: make toolkit-render-check EDITOR_SOURCE_PROJECT=/path/to/imported/project
+toolkit-render-check: build
+	EDITOR_SOURCE_PROJECT="$(EDITOR_SOURCE_PROJECT)" node tests/toolkit-environment-render.mjs

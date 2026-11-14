@@ -47,6 +47,7 @@ export async function importVideo({
   workspace,
   source,
   displayName,
+  assetOnly = false,
   editor,
   onProgress = () => {},
   signal,
@@ -73,10 +74,9 @@ export async function importVideo({
     (end, c) => Math.max(end, c.start + c.duration),
     0,
   );
-  if (start + duration > 600)
-    throw Error(
-      "This preview supports projects up to 10 minutes. Choose a shorter video.",
-    );
+  // Long recordings are sources, not an instruction to fill the sequence.
+  assetOnly = assetOnly || start + duration > 600;
+  if(duration>86400)throw Error("Import a recording shorter than 24 hours");
   const [a, b] = String(video.avg_frame_rate || "30/1")
     .split("/")
     .map(Number);
@@ -255,7 +255,7 @@ export async function importVideo({
     if (latest.revision !== current.revision)
       throw Error("Your project changed during import. Please try again.");
     const project = structuredClone(latest);
-    if (!project.clips.length) Object.assign(project, { width, height, fps });
+    if (!assetOnly && !project.clips.length) Object.assign(project, { width, height, fps });
     project.assets.push({
       id,
       name: selectedName,
@@ -276,7 +276,7 @@ export async function importVideo({
     const fit = Math.min(project.width / width, project.height / height);
     const clipWidth = Math.round(width * fit),
       clipHeight = Math.round(height * fit);
-    project.clips.push({
+    if (!assetOnly) project.clips.push({
       id: "clip-" + randomUUID(),
       kind: "video",
       name: selectedName,
@@ -293,7 +293,7 @@ export async function importVideo({
       props: {},
     });
     await editor("/api/project", { revision: latest.revision, project });
-    return { assetId: id, width, height, duration, exactCopy: compatible };
+    return { assetId: id, width, height, duration, assetOnly, exactCopy: compatible };
   } catch (error) {
     fs.rmSync(dest, { force: true });
     if (originalDest !== dest) fs.rmSync(originalDest, { force: true });

@@ -1,4 +1,10 @@
+import { promisify } from "node:util";
 import {
+  canonicalize,
+  resolveProject,
+} from "../../local-editor/dist/project-core.mjs";
+import {
+  inputFile,
   captureFiles,
   describeInputs,
   inputFingerprint,
@@ -11,7 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
-import { spawn, execFileSync } from "node:child_process";
+import { spawn, execFile, execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { parse } from "yaml";
 import { MacOSWorker } from "./macos-worker.mjs";
@@ -19,6 +25,7 @@ import {
   graphicsDispatcher,
   bindGraphicsComposition,
 } from "./graphics-clips.mjs";
+const runFile = promisify(execFile);
 const templates = fileURLToPath(new URL("../templates/", import.meta.url));
 const toolkit = fileURLToPath(new URL("../../../", import.meta.url));
 const pin = "10e442c1bb469118516df3335547f85ec92155e6";
@@ -214,7 +221,8 @@ export class Playground {
       }
     return {
       id: "flutter-fluvie",
-      contractVersion: 1,
+      contractVersion: 2,
+      projectResolverVersion: 1,
       sdkVersion,
       ffmpeg: ffmpeg ? fileIdentity(ffmpeg) : null,
       fluviePin: pin,
@@ -256,6 +264,11 @@ export class Playground {
   }
   hasGraphics() {
     if (
+      JSON.parse(fs.readFileSync(path.join(this.workspace, "project.json")))
+        .previewMode === "rendered"
+    )
+      return false;
+    if (
       JSON.parse(
         fs.readFileSync(path.join(this.workspace, "project.json")),
       ).clips?.some((c) => c.kind === "graphics")
@@ -283,6 +296,21 @@ export class Playground {
       sourceError = e.message;
     }
     return {
+      rendered: (() => {
+        try {
+          const p = JSON.parse(
+            fs.readFileSync(path.join(this.workspace, "project.json")),
+          );
+          const j = this.jobs.find(
+            (j) => j.id === p.renderedOutput?.id && j.status === "complete",
+          );
+          return p.previewMode === "rendered" && j
+            ? { ...p.renderedOutput, stale: j.fingerprint !== fingerprint }
+            : null;
+        } catch {
+          return null;
+        }
+      })(),
       jobs: this.jobs.map(publicRenderJob),
       preview: latest
         ? {
@@ -577,11 +605,241 @@ export class Playground {
         `${file} does not match the timeline: expected ${job.duration}s at ${job.width}×${job.height}, got ${media.format.duration}s at ${video?.width}×${video?.height}. Use timeline clips to set timing; do not hardcode a different composition duration.`,
       );
   }
+  async registerOutput(relative, revision, editor) {
+    if (this.running || this.outputController)
+      throw Error("Finish the current render or registration first");
+    if (
+      typeof relative !== "string" ||
+      !["assets/", "media/"].some((p) => relative.startsWith(p))
+    )
+      throw Error("Generated output must be under project assets/ or media/");
+    const file = inputFile(this.workspace, relative),
+      id = randomUUID(),
+      dest = path.join(this.jobsDir, id);
+    this.outputController = new AbortController();
+    fs.mkdirSync(dest, { recursive: true });
+    const run = async (binary, args) => {
+      this.outputTask = runFile(binary, args, {
+        encoding: "utf8",
+        maxBuffer: 2 * 1024 ** 2,
+        timeout: 1200000,
+        signal: this.outputController.signal,
+      });
+      return await this.outputTask;
+    };
+    const probe = async (file) =>
+      JSON.parse(
+        (
+          await run(process.env.FFPROBE || "ffprobe", [
+            "-v",
+            "error",
+            "-protocol_whitelist",
+            "file,pipe,crypto,data",
+            "-format_whitelist",
+            "mov,matroska,webm,avi,mpeg,mpegts,flv,ogg",
+            "-show_format",
+            "-show_streams",
+            "-of",
+            "json",
+            file,
+          ])
+        ).stdout,
+      );
+    let inserted = false,
+      accepted = false;
+    try {
+      const capturedFiles = this.inputFiles();
+      captureFiles(this.workspace, dest, capturedFiles);
+      const source = path.join(dest, relative),
+        sourceIdentity = fileIdentity(source);
+      const original = await probe(source),
+        v = original.streams.find(
+          (s) => s.codec_type === "video" && !s.disposition?.attached_pic,
+        );
+      if (!v || !(Number(original.format?.duration) > 0))
+        throw Error("Output has no valid video stream");
+      const hdr = ["smpte2084", "arib-std-b67"].includes(v.color_transfer),
+        rotated = !!v.side_data_list?.some((s) => s.rotation);
+      const compatible =
+        path.extname(source).toLowerCase() === ".mp4" &&
+        v.codec_name === "h264" &&
+        v.pix_fmt === "yuv420p" &&
+        !hdr &&
+        !rotated &&
+        original.streams
+          .filter((s) => s.codec_type === "audio")
+          .every((s) => s.codec_name === "aac");
+      const output = path.join(dest, "preview.mp4");
+      if (compatible)
+        fs.copyFileSync(
+          source,
+          output,
+          fs.constants.COPYFILE_EXCL | fs.constants.COPYFILE_FICLONE,
+        );
+      else
+        await run(process.env.FFMPEG || "ffmpeg", [
+          "-v",
+          "error",
+          "-nostdin",
+          "-threads",
+          "2",
+          "-filter_threads",
+          "1",
+          "-protocol_whitelist",
+          "file,pipe,crypto,data",
+          "-format_whitelist",
+          "mov,matroska,webm,avi,mpeg,mpegts,flv,ogg",
+          "-i",
+          source,
+          "-map",
+          "0:v:0",
+          "-map",
+          "0:a?",
+          "-sn",
+          "-dn",
+          "-vf",
+          [
+            ...(hdr
+              ? [
+                  "zscale=t=linear:npl=100",
+                  "format=gbrpf32le",
+                  "zscale=p=bt709",
+                  "tonemap=tonemap=hable:desat=0",
+                  "zscale=t=bt709:m=bt709:r=tv",
+                ]
+              : []),
+            "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+          ].join(","),
+          "-c:v",
+          "libx264",
+          "-threads",
+          "2",
+          "-preset",
+          "fast",
+          "-crf",
+          "16",
+          "-pix_fmt",
+          "yuv420p",
+          "-c:a",
+          "aac",
+          "-movflags",
+          "+faststart",
+          output,
+        ]);
+      // A successful metadata probe alone is not proof that a frame decodes.
+      await run(process.env.FFMPEG || "ffmpeg", [
+        "-v",
+        "error",
+        "-nostdin",
+        "-threads",
+        "1",
+        "-i",
+        output,
+        "-frames:v",
+        "1",
+        "-an",
+        "-f",
+        "null",
+        "-",
+      ]);
+      const media = await probe(output),
+        video = media.streams.find((s) => s.codec_type === "video"),
+        duration = Number(media.format?.duration),
+        identity = fileIdentity(output);
+      if (
+        !Number.isFinite(duration) ||
+        !(duration > 0) ||
+        !video?.width ||
+        !video.height
+      )
+        throw Error("Output has no decodable video");
+      if (sourceIdentity.sha256 !== fileIdentity(file).sha256)
+        throw Error("Output changed while registering; retry");
+      const { project } = await editor("/api/context");
+      if (project.revision !== revision) throw Error("Revision conflict");
+      const next = canonicalize({
+        ...project,
+        previewMode: "rendered",
+        renderedOutput: {
+          id,
+          path: relative,
+          sourceSha256: sourceIdentity.sha256,
+          sha256: identity.sha256,
+          width: video.width,
+          height: video.height,
+          duration,
+          normalized: !compatible,
+        },
+      });
+      const inputManifest = describeInputs(
+        dest,
+        next,
+        capturedFiles,
+        this.engineIdentity(),
+      );
+      fs.writeFileSync(path.join(dest, "project.json"), JSON.stringify(next));
+      fs.writeFileSync(
+        path.join(dest, "input-manifest.json"),
+        JSON.stringify(inputManifest),
+      );
+      const job = {
+        ...createRenderJob({
+          revision: revision + 1,
+          kind: "export",
+          engine: { id: "toolkit-output", contractVersion: 1 },
+          inputManifest,
+        }),
+        id,
+        status: "complete",
+        phase: "complete",
+        width: video.width,
+        height: video.height,
+        duration,
+        registered: true,
+        artifact: true,
+        outputIdentity: identity,
+      };
+      // Persist the immutable receipt before selecting it in the accepted document.
+      this.jobs.push(job);
+      inserted = true;
+      this.persist();
+      await editor("/api/project", {
+        revision,
+        project: next,
+        label: "Review toolkit output",
+      });
+      accepted = true;
+      this.onChange();
+      return publicRenderJob(job);
+    } catch (e) {
+      if (!accepted) {
+        if (inserted) {
+          this.jobs = this.jobs.filter((j) => j.id !== id);
+          this.persist();
+        }
+        fs.rmSync(dest, { recursive: true, force: true });
+      }
+      throw e;
+    } finally {
+      this.outputController = null;
+      this.outputTask = null;
+    }
+  }
   async render(revision, { overlayOnly = false } = {}) {
-    if (this.running) throw Error("Render already running");
-    const project = JSON.parse(
+    if (this.running || this.outputController)
+      throw Error("Render already running");
+    const authoredProject = JSON.parse(
       fs.readFileSync(path.join(this.workspace, "project.json")),
     );
+    if (authoredProject.previewMode === "rendered") {
+      const current = this.state();
+      if (!current.rendered || current.rendered.stale)
+        throw Error(
+          "Generate and register the revised toolkit output before rendering/exporting it",
+        );
+      return current.preview;
+    }
+    const project = resolveProject(authoredProject).project;
     if (project.revision !== revision)
       throw Error("Revision conflict: read editor_context again");
     const packageName = parse(
@@ -630,7 +888,7 @@ export class Playground {
     const capturedProject = JSON.parse(
       fs.readFileSync(path.join(dest, "project.json")),
     );
-    if (JSON.stringify(capturedProject) !== JSON.stringify(project))
+    if (JSON.stringify(capturedProject) !== JSON.stringify(authoredProject))
       throw Error("Project changed during snapshot; retry");
     const inputManifest = describeInputs(
       dest,
@@ -651,6 +909,11 @@ export class Playground {
       path.join(dest, "lib/_cmrx_render/graphics_stack.dart"),
       graphicsDispatcher(project, packageName),
     );
+    fs.writeFileSync(
+      path.join(dest, "authored-project.json"),
+      JSON.stringify(authoredProject),
+    );
+    fs.writeFileSync(path.join(dest, "project.json"), JSON.stringify(project));
     const composition = path.join(dest, "lib/composition.dart");
     const bound = bindGraphicsComposition(
       fs.readFileSync(composition, "utf8"),
@@ -996,6 +1259,7 @@ export class Playground {
     return path.join(this.jobsDir, id, "preview.mp4");
   }
   cancel() {
+    this.outputController?.abort();
     this.renderController?.abort();
     for (const j of this.jobs)
       if (j.status === "running") {
@@ -1016,5 +1280,6 @@ export class Playground {
   async close() {
     this.cancel();
     await this.renderTask;
+    await this.outputTask?.catch(() => {});
   }
 }

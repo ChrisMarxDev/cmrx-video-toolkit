@@ -58,12 +58,14 @@ function png(args) {
 }
 export async function inspectFrame({ workspace, project, playground, args }) {
   const time = args.time ?? 0;
-  if (!Number.isFinite(time) || time < 0 || time > 600)
-    throw Error("Choose a time from 0 to 600 seconds");
+  if (!Number.isFinite(time) || time < 0)
+    throw Error("Choose a nonnegative source/render time");
   let file, label;
   if (args.assetId) {
     const asset = project.assets.find((a) => a.id === args.assetId);
     if (!asset) throw Error("Asset not found");
+    if (time >= asset.duration)
+      throw Error("Choose a frame inside the source duration");
     file = inRoot(
       path.join(workspace, "media"),
       path.resolve(workspace, asset.path),
@@ -72,6 +74,8 @@ export async function inspectFrame({ workspace, project, playground, args }) {
   } else {
     const job = playground.jobs.find((j) => j.id === args.jobId);
     if (!job) throw Error("Choose a completed render job from editor_context");
+    if (Number.isFinite(job.duration) && time >= job.duration)
+      throw Error("Choose a frame inside the rendered output duration");
     file = playground.artifact(job.id) || playground.overlayArtifact(job.id);
     if (!file) throw Error("Render is not complete");
     file = inRoot(playground.jobsDir, file);

@@ -1,3 +1,10 @@
+import { MatrixLoader } from "./matrix-loader";
+import {
+  sourceAt,
+  fromSeconds,
+  seconds as timeSeconds,
+} from "../../../flow/project/time.mjs";
+import { SourcePanel, ComponentControls } from "./source-panel";
 import { usePlaybackProxy, type ProxyState } from "./use-playback-proxy.js";
 import { setMediaGain, releaseMediaGain } from "./media-gain.js";
 import React, {
@@ -35,6 +42,10 @@ import { ClipMedia } from "./clip-media";
 type State = {
   selection?: { clipId?: string; time?: number };
   project: Project;
+  resolution?: {
+    project: Project;
+    warnings: { clipId: string; code: string }[];
+  };
   error: string;
   canUndo: boolean;
   canRedo: boolean;
@@ -84,15 +95,6 @@ const seconds = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
     .padStart(2, "0")}:${(s % 60).toFixed(2).padStart(5, "0")}`;
-function MatrixLoader({ className = "matrix-loader" }: { className?: string }) {
-  return (
-    <span className={className} aria-hidden="true">
-      {Array.from({ length: 16 }, (_, i) => (
-        <i key={i} />
-      ))}
-    </span>
-  );
-}
 
 function VideoLayer({
   clip,
@@ -154,7 +156,7 @@ function VideoLayer({
     const epoch = playbackEpoch.current;
     v.playbackRate = playbackRate;
     v.preservesPitch = true;
-    const target = Math.max(0, clip.in + time - clip.start);
+    const target = Math.max(0, timeSeconds(sourceAt(clip, fromSeconds(time))));
     const restoreAudio = () =>
       setMediaGain(v, clip.muted ? 0 : (clip.volume ?? 1) * listeningVolume);
     const sync = () => {
@@ -245,6 +247,14 @@ function VideoLayer({
   );
 }
 type PreviewBridge = {
+  rendered?: {
+    id: string;
+    url: string;
+    width: number;
+    height: number;
+    duration: number;
+    stale: boolean;
+  } | null;
   locked: boolean;
   canImportVideo: boolean;
   canRecord?: boolean;
@@ -263,6 +273,69 @@ type PreviewBridge = {
     previewTracks?: number[];
   };
 };
+function RenderedOutput({
+  output,
+  time,
+  playing,
+  playbackRate,
+  volume,
+}: {
+  output: NonNullable<PreviewBridge["rendered"]>;
+  time: number;
+  playing: boolean;
+  playbackRate: number;
+  volume: number;
+}) {
+  const ref = useRef<HTMLVideoElement>(null),
+    pending = useRef<Promise<void> | null>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const sync = () => {
+      v.playbackRate = playbackRate;
+      setMediaGain(v, volume);
+      const target = Math.min(time, Math.max(0, v.duration - 1 / 60));
+      if (!playing) {
+        v.pause();
+        if (Number.isFinite(target) && Math.abs(v.currentTime - target) > 0.005)
+          v.currentTime = target;
+      } else if (!v.seeking) {
+        if (Math.abs(v.currentTime - target) > 0.3) v.currentTime = target;
+        if (v.paused && !pending.current) {
+          const p = v.play();
+          pending.current = p;
+          p.catch(() => {}).finally(() => {
+            if (pending.current === p) pending.current = null;
+          });
+        }
+      }
+    };
+    v.addEventListener("loadedmetadata", sync);
+    v.addEventListener("seeked", sync);
+    if (v.readyState) sync();
+    return () => {
+      v.removeEventListener("loadedmetadata", sync);
+      v.removeEventListener("seeked", sync);
+    };
+  }, [output.url, time, playing, playbackRate, volume]);
+  useEffect(
+    () => () => {
+      if (ref.current) releaseMediaGain(ref.current);
+    },
+    [],
+  );
+  return (
+    <video
+      ref={ref}
+      src={output.url}
+      playsInline
+      preload="auto"
+      aria-label="Toolkit rendered output"
+      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+    />
+  );
+}
+
 function GraphicsLayer({
   overlay,
   time,
@@ -527,6 +600,7 @@ function App() {
       )
         return;
       const next = {
+        rendered: e.data.rendered ?? null,
         overlay,
         activity: activity
           ? {
@@ -576,6 +650,7 @@ function App() {
     [pending, setPending] = useState(false),
     [showComments, setShowComments] = useState(true),
     [showTranscript, setShowTranscript] = useState(false),
+    [sourceView, setSourceView] = useState(true),
     [showShortcuts, setShowShortcuts] = useState(false),
     [timelineFraction, setTimelineFraction] = useState(0.38),
     [commentBody, setCommentBody] = useState(""),
@@ -712,7 +787,10 @@ function App() {
     };
     return () => events.close();
   }, []);
-  const p = state?.project;
+  const p = state?.resolution?.project ?? state?.project;
+  const rendered = previewBridge?.rendered;
+  const viewWidth = rendered?.width ?? p?.width ?? 1920,
+    viewHeight = rendered?.height ?? p?.height ?? 1080;
   const layerState = (track: number) =>
     previewBridge
       ? { ...p?.layers?.[track], ...previewLayers[track] }
@@ -795,7 +873,7 @@ function App() {
         location.origin,
       );
   }, [p]);
-  const duration = p ? end(p) : 1;
+  const duration = rendered?.duration ?? (p ? end(p) : 1);
   const paddingTime = Math.min(3, duration * 0.05);
   const fitZoom = Math.min(
     160,
@@ -880,11 +958,11 @@ function App() {
   useEffect(() => {
     if (!stage.current || !p) return;
     const observer = new ResizeObserver((entries) =>
-      setScale(entries[0].contentRect.width / p.width),
+      setScale(entries[0].contentRect.width / viewWidth),
     );
     observer.observe(stage.current);
     return () => observer.disconnect();
-  }, [!!p, p?.width]);
+  }, [!!p, viewWidth]);
   useEffect(() => {
     if (!playing) return;
     let handle: number;
@@ -921,6 +999,15 @@ function App() {
     revision = p?.revision,
   ) {
     if (!connected || pending || previewBridge?.locked) return;
+    if (
+      rendered &&
+      !["comment", "comment-update", "transcript"].includes(route)
+    ) {
+      setNotice(
+        "This output is rendered. Return to the interactive timeline in Project history to make timeline edits.",
+      );
+      return false;
+    }
     setPlaying(false);
     setNotice("");
     setPending(true);
@@ -1297,6 +1384,7 @@ function App() {
     );
   const selectedClip = p!.clips.find((c) => c.id === selected);
   const canAnchorClip =
+    !rendered &&
     !!selectedClip &&
     time >= selectedClip.start &&
     time < selectedClip.start + selectedClip.duration;
@@ -1348,13 +1436,25 @@ function App() {
               tabIndex={0}
               role="status"
               aria-label={previewBridge.activity.label}
-              data-phase={previewBridge.activity.phase}
+              data-phase={
+                state.resolution?.warnings.length
+                  ? "warning"
+                  : previewBridge.activity.phase
+              }
               data-working={previewBridge.activity.working || proxiesPreparing}
-              aria-description={previewBridge.activity.details}
+              aria-description={
+                previewBridge.activity.details +
+                (state.resolution?.warnings.length
+                  ? ` · ${state.resolution.warnings.length} graphics hidden; inspect Sources`
+                  : "")
+              }
             >
               <span aria-hidden="true" />
               <span className="workspace-status-tip" aria-hidden="true">
                 {previewBridge.activity.label}
+                {state.resolution?.warnings.length
+                  ? ` · ${state.resolution.warnings.length} graphics hidden`
+                  : ""}
               </span>
             </span>
           )}
@@ -1374,7 +1474,7 @@ function App() {
           </button>
           <button
             aria-label="Toggle transcript"
-            title="Transcript (T)"
+            title="Sources & transcript (T)"
             aria-keyshortcuts="T"
             aria-expanded={showTranscript}
             onClick={() => setShowTranscript((v) => !v)}
@@ -1481,134 +1581,153 @@ function App() {
                       stage.current?.focus({ preventScroll: true })
                     }
                     style={{
-                      aspectRatio: `${p!.width}/${p!.height}`,
-                      width: `min(100cqw, ${(p!.width / p!.height) * 100}cqh)`,
+                      aspectRatio: `${viewWidth}/${viewHeight}`,
+                      width: `min(100cqw, ${(viewWidth / viewHeight) * 100}cqh)`,
                       marginInline: "auto",
                     }}
                   >
                     <div
                       style={{
-                        width: p!.width,
-                        height: p!.height,
+                        width: viewWidth,
+                        height: viewHeight,
                         transform: `scale(${scale})`,
                         transformOrigin: "top left",
                         position: "absolute",
                         inset: 0,
                       }}
                     >
-                      {sorted
-                        .filter((clip) => !layerState(clip.track)?.disabled)
-                        .map((clip) =>
-                          clip.kind === "video" ? (
-                            <VideoLayer
-                              key={clip.id}
-                              clip={{
-                                ...clip,
-                                muted:
-                                  clip.muted || !!layerState(clip.track)?.muted,
-                              }}
-                              time={time}
-                              playing={playing}
-                              playbackRate={playbackRate}
-                              previewQuality={proxyQuality}
-                              reportProxy={reportProxy}
-                              listeningVolume={
-                                listeningMuted ? 0 : listeningVolume
-                              }
-                              report={setNotice}
-                            />
-                          ) : clip.kind === "graphics" &&
-                            previewBridge ? null : state.boxes[clip.id] ? (
-                            <div
-                              key={clip.id}
-                              style={{
-                                display:
-                                  time >= clip.start &&
-                                  time < clip.start + clip.duration
-                                    ? "block"
-                                    : "none",
-                                position: "absolute",
-                                left: clip.x,
-                                top: clip.y,
-                                width: clip.width,
-                                height: clip.height,
-                              }}
-                            >
-                              {state.boxes[clip.id].map((b, i) => (
-                                <div
-                                  key={i}
-                                  style={{
-                                    position: "absolute",
-                                    left: b.x,
-                                    top: b.y,
-                                    width: b.width,
-                                    height: b.height,
-                                    background: b.color,
+                      {rendered ? (
+                        <RenderedOutput
+                          output={rendered}
+                          time={time}
+                          playing={playing}
+                          playbackRate={playbackRate}
+                          volume={listeningMuted ? 0 : listeningVolume}
+                        />
+                      ) : (
+                        <>
+                          {sorted
+                            .filter((clip) => !layerState(clip.track)?.disabled)
+                            .map((clip) =>
+                              clip.kind === "video" ? (
+                                <VideoLayer
+                                  key={clip.id}
+                                  clip={{
+                                    ...clip,
+                                    muted:
+                                      clip.muted ||
+                                      !!layerState(clip.track)?.muted,
                                   }}
+                                  time={time}
+                                  playing={playing}
+                                  playbackRate={playbackRate}
+                                  previewQuality={proxyQuality}
+                                  reportProxy={reportProxy}
+                                  listeningVolume={
+                                    listeningMuted ? 0 : listeningVolume
+                                  }
+                                  report={setNotice}
                                 />
-                              ))}
-                            </div>
-                          ) : (
-                            <div
-                              key={clip.id}
-                              className="unsupported"
-                              hidden={
-                                time < clip.start ||
-                                time >= clip.start + clip.duration
-                              }
-                            >
-                              Agent-managed: {clip.kind}
-                            </div>
-                          ),
-                        )}
-                      {previewBridge?.overlay &&
-                        (previewBridge.overlay.previewTracks?.length
-                          ? previewBridge.overlay.previewTracks
-                              .filter(
-                                (track) =>
-                                  !layerState(track)?.disabled &&
-                                  p!.clips.some(
-                                    (c) =>
-                                      c.kind === "graphics" &&
-                                      c.track === track,
-                                  ),
-                              )
-                              .map((track) => {
-                                const url = new URL(
-                                  previewBridge.overlay!.url,
-                                  location.origin,
-                                );
-                                url.searchParams.set("track", String(track));
-                                return (
+                              ) : clip.kind === "graphics" &&
+                                previewBridge ? null : state.boxes[clip.id] ? (
+                                <div
+                                  key={clip.id}
+                                  style={{
+                                    display:
+                                      time >= clip.start &&
+                                      time < clip.start + clip.duration
+                                        ? "block"
+                                        : "none",
+                                    position: "absolute",
+                                    left: clip.x,
+                                    top: clip.y,
+                                    width: clip.width,
+                                    height: clip.height,
+                                  }}
+                                >
+                                  {state.boxes[clip.id].map((b, i) => (
+                                    <div
+                                      key={i}
+                                      style={{
+                                        position: "absolute",
+                                        left: b.x,
+                                        top: b.y,
+                                        width: b.width,
+                                        height: b.height,
+                                        background: b.color,
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                <div
+                                  key={clip.id}
+                                  className="unsupported"
+                                  hidden={
+                                    time < clip.start ||
+                                    time >= clip.start + clip.duration
+                                  }
+                                >
+                                  Agent-managed: {clip.kind}
+                                </div>
+                              ),
+                            )}
+                          {previewBridge?.overlay &&
+                            (previewBridge.overlay.previewTracks?.length
+                              ? previewBridge.overlay.previewTracks
+                                  .filter(
+                                    (track) =>
+                                      !layerState(track)?.disabled &&
+                                      p!.clips.some(
+                                        (c) =>
+                                          c.kind === "graphics" &&
+                                          c.track === track,
+                                      ),
+                                  )
+                                  .map((track) => {
+                                    const url = new URL(
+                                      previewBridge.overlay!.url,
+                                      location.origin,
+                                    );
+                                    url.searchParams.set(
+                                      "track",
+                                      String(track),
+                                    );
+                                    return (
+                                      <GraphicsLayer
+                                        key={track}
+                                        track={track}
+                                        previewQuality={proxyQuality}
+                                        reportProxy={reportProxy}
+                                        overlay={{
+                                          ...previewBridge.overlay!,
+                                          url: url.href,
+                                        }}
+                                        time={time}
+                                        playing={playing}
+                                        playbackRate={playbackRate}
+                                      />
+                                    );
+                                  })
+                              : !needsLayerCache && (
                                   <GraphicsLayer
-                                    key={track}
-                                    track={track}
                                     previewQuality={proxyQuality}
                                     reportProxy={reportProxy}
-                                    overlay={{
-                                      ...previewBridge.overlay!,
-                                      url: url.href,
-                                    }}
+                                    overlay={previewBridge.overlay}
                                     time={time}
                                     playing={playing}
                                     playbackRate={playbackRate}
                                   />
-                                );
-                              })
-                          : !needsLayerCache && (
-                              <GraphicsLayer
-                                previewQuality={proxyQuality}
-                                reportProxy={reportProxy}
-                                overlay={previewBridge.overlay}
-                                time={time}
-                                playing={playing}
-                                playbackRate={playbackRate}
-                              />
-                            ))}
-                      {needsLayerCache && (
-                        <output className="preview-layer-refresh" role="status">
-                          Updating layer previews…
-                        </output>
+                                ))}
+                          {needsLayerCache && (
+                            <output
+                              className="preview-layer-refresh"
+                              role="status"
+                            >
+                              Updating layer previews…
+                            </output>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -2033,25 +2152,96 @@ function App() {
           },
           {
             id: "transcript",
-            title: "Transcript",
+            title: "Sources",
             visible: showTranscript,
             content: (
               <aside className="panel transcript-dock" aria-label="Transcript">
-                <TranscriptPanel
-                  project={p!}
-                  selectedAsset={selectedClip?.assetId}
-                  time={time}
-                  disabled={disabled}
-                  importCues={(assetId, transcript) =>
-                    mutate("transcript", { assetId, transcript })
+                <div className="source-tabs">
+                  {previewBridge?.canImportVideo && (
+                    <button
+                      disabled={disabled}
+                      title="Import without adding to timeline"
+                      onClick={() =>
+                        window.parent.postMessage(
+                          { type: "cmrx:add-video", assetOnly: true },
+                          location.origin,
+                        )
+                      }
+                    >
+                      Import source…
+                    </button>
+                  )}
+                  <button
+                    aria-pressed={sourceView}
+                    onClick={() => setSourceView(true)}
+                  >
+                    Source
+                  </button>
+                  <button
+                    aria-pressed={!sourceView}
+                    onClick={() => setSourceView(false)}
+                  >
+                    Transcript
+                  </button>
+                </div>
+                {sourceView ? (
+                  <SourcePanel
+                    project={state.project}
+                    disabled={disabled || !!rendered}
+                    report={setNotice}
+                    query={async (id, start) => {
+                      const response = await fetch(
+                        resource("source-window", { id, start: String(start) }),
+                      );
+                      const data = await response.json();
+                      if (!response.ok) throw Error(data.error);
+                      return data;
+                    }}
+                    insert={async (assetId, sourceStart, duration) =>
+                      mutate("add", {
+                        assetId,
+                        in: sourceStart,
+                        duration,
+                        start: time,
+                        track: 0,
+                      })
+                    }
+                    seek={(clipId, at) => {
+                      setSelected(clipId);
+                      setPlaying(false);
+                      setTime(at);
+                    }}
+                  />
+                ) : (
+                  <TranscriptPanel
+                    project={p!}
+                    selectedAsset={selectedClip?.assetId}
+                    time={time}
+                    disabled={disabled}
+                    importCues={(assetId, transcript) =>
+                      mutate("transcript", { assetId, transcript })
+                    }
+                    seek={(clipId, at) => {
+                      setSelected(clipId);
+                      setPlaying(false);
+                      setTime(at);
+                    }}
+                    report={setNotice}
+                  />
+                )}
+                <ComponentControls
+                  project={state.project}
+                  clipId={selected ?? ""}
+                  disabled={disabled || !!rendered}
+                  change={(props) =>
+                    void mutate("component-props", { id: selected, props })
                   }
-                  seek={(clipId, at) => {
-                    setSelected(clipId);
-                    setPlaying(false);
-                    setTime(at);
-                  }}
-                  report={setNotice}
                 />
+                {(state.resolution?.warnings ?? []).map((w) => (
+                  <small key={w.clipId} role="status">
+                    {w.clipId}: {w.code}
+                  </small>
+                ))}
               </aside>
             ),
           },
@@ -2101,7 +2291,7 @@ function App() {
           }
         }}
       />
-      <section className="panel timeline-panel">
+      <section className="panel timeline-panel" data-rendered={!!rendered}>
         {draft && (
           <output className="edit-feedback" aria-live="off">
             {drag.current?.mode === "move" ? "↔" : "↤↦"}{" "}
@@ -2112,7 +2302,11 @@ function App() {
         )}
         <div className="section-title timeline-tools">
           <div>
-            <h2>Timeline</h2>
+            <h2>
+              {rendered
+                ? `Rendered output${rendered.stale ? " · outdated" : ""}`
+                : "Timeline"}
+            </h2>
             <span className="nav-hint">
               Scroll to pan · Ctrl/⌘ + scroll to zoom · Space + drag
             </span>
@@ -2135,7 +2329,7 @@ function App() {
             project={p!}
             clip={selectedClip}
             time={time}
-            disabled={disabled || !!draft}
+            disabled={disabled || !!draft || !!rendered}
             update={(patch) => {
               if (
                 selectedClip &&
@@ -2171,7 +2365,7 @@ function App() {
               <Icon name="split" />
             </button>
             <button
-              disabled={disabled || !state.canUndo}
+              disabled={disabled || !!rendered || !state.canUndo}
               onClick={() => mutate("undo")}
               aria-label="Undo"
               title={`Undo${state.undoLabel ? ": " + state.undoLabel : ""} (Ctrl/⌘+Z)`}
@@ -2180,7 +2374,7 @@ function App() {
               <Icon name="undo" />
             </button>
             <button
-              disabled={disabled || !state.canRedo}
+              disabled={disabled || !!rendered || !state.canRedo}
               onClick={() => mutate("redo")}
               aria-label="Redo"
               title={`Redo${state.redoLabel ? ": " + state.redoLabel : ""} (Ctrl/⌘+Shift+Z)`}
@@ -2500,6 +2694,15 @@ function App() {
                             zoom={zoom}
                             url={resource("media-preview", {
                               id: clip.assetId!,
+                              ...(p!.assets.find((a) => a.id === clip.assetId)!
+                                .duration > 120
+                                ? {
+                                    start: String(Math.floor(clip.in)),
+                                    duration: String(
+                                      Math.ceil((clip.in % 1) + clip.duration),
+                                    ),
+                                  }
+                                : {}),
                             })}
                           />
                         )}
@@ -2796,6 +2999,20 @@ function App() {
               }}
             >
               Record screen or camera…
+            </button>
+          )}
+          {previewBridge && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "cmrx:project-tools" },
+                  location.origin,
+                );
+                setContextMenu(null);
+              }}
+            >
+              Project history & interchange…
             </button>
           )}
           {previewBridge && (

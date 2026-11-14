@@ -133,6 +133,49 @@
           }
         }
       }
+    },
+    "timeSchemaVersion": {
+      "const": 1
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    },
+    "previewMode": {
+      "const": "rendered"
+    },
+    "renderedOutput": {
+      "type": "object",
+      "required": [
+        "id",
+        "width",
+        "height",
+        "duration",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "duration": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
     }
   },
   "required": [
@@ -164,7 +207,7 @@
         "duration": {
           "type": "number",
           "minimum": 0.01,
-          "maximum": 7200
+          "maximum": 86400
         },
         "audio": {
           "type": "boolean"
@@ -279,7 +322,7 @@
         "in": {
           "type": "number",
           "minimum": 0,
-          "maximum": 7200
+          "maximum": 86400
         },
         "duration": {
           "type": "number",
@@ -322,6 +365,78 @@
           "minimum": 0,
           "maximum": 16,
           "default": 1
+        },
+        "timing": {
+          "type": "object",
+          "required": [
+            "start",
+            "in",
+            "duration"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/exactTime"
+            },
+            "in": {
+              "$ref": "#/$defs/exactTime"
+            },
+            "duration": {
+              "$ref": "#/$defs/exactTime"
+            }
+          }
+        },
+        "componentId": {
+          "type": "string"
+        },
+        "anchor": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "source",
+                "clip",
+                "semantic",
+                "timeline"
+              ]
+            },
+            "assetId": {
+              "type": "string"
+            },
+            "clipId": {
+              "type": "string"
+            },
+            "cueId": {
+              "type": "string"
+            },
+            "transcriptRevision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sourceTime": {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "$ref": "#/$defs/exactTime"
+                }
+              ]
+            },
+            "offset": {
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/exactTime"
+                }
+              ]
+            }
+          }
         }
       },
       "required": [
@@ -352,23 +467,32 @@
             ]
           },
           "then": {
-            "required": [
-              "props"
-            ],
-            "properties": {
-              "props": {
-                "type": "object",
+            "anyOf": [
+              {
                 "required": [
-                  "source"
+                  "componentId"
+                ]
+              },
+              {
+                "required": [
+                  "props"
                 ],
                 "properties": {
-                  "source": {
-                    "type": "string",
-                    "pattern": "^lib/[a-zA-Z0-9_/.-]+\\.dart$"
+                  "props": {
+                    "type": "object",
+                    "required": [
+                      "source"
+                    ],
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "pattern": "^lib/[a-zA-Z0-9_/.-]+\\.dart$"
+                      }
+                    }
                   }
                 }
               }
-            }
+            ]
           }
         }
       ]
@@ -384,7 +508,7 @@
             "time": {
               "type": "number",
               "minimum": 0,
-              "maximum": 600
+              "maximum": 86400
             }
           },
           "required": [
@@ -509,6 +633,81 @@
         }
       },
       "additionalProperties": true
+    },
+    "exactTime": {
+      "type": "object",
+      "required": [
+        "value",
+        "rate"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "rate": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "component": {
+      "type": "object",
+      "required": [
+        "id",
+        "schemaVersion",
+        "source",
+        "properties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,120}$"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^lib/[A-Za-z0-9_/.-]+\\.dart$"
+        },
+        "defaults": {
+          "type": "object"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "color",
+                  "enum"
+                ]
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "anyOf": [

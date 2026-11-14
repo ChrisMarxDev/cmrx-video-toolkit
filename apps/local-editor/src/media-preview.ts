@@ -30,13 +30,30 @@ export class MediaPreviews {
     this.closed = true;
     for (const child of this.children) child.kill("SIGTERM");
   }
-  async get(asset: Asset): Promise<MediaPreview> {
+  async get(
+    asset: Asset,
+    window?: { start: number; duration: number },
+  ): Promise<MediaPreview> {
+    const start = window?.start ?? 0,
+      duration = Math.min(
+        window?.duration ?? asset.duration,
+        asset.duration - start,
+      );
+    if (
+      !Number.isFinite(start) ||
+      start < 0 ||
+      !Number.isFinite(duration) ||
+      duration <= 0
+    )
+      throw Error("Invalid source preview window");
     const file = safeFile(this.root, asset.path);
     const stat = await fs.stat(file);
     const key = createHash("sha256")
       .update(
         JSON.stringify([
-          1,
+          2,
+          start,
+          duration,
           file,
           stat.size,
           stat.mtimeMs,
@@ -58,7 +75,7 @@ export class MediaPreviews {
     if (existing) return existing;
     const job = this.queue.then(async () => {
       if (this.closed) throw Error("Editor stopped");
-      const result = await this.generate(file, asset);
+      const result = await this.generate(file, asset, start, duration);
       // Failed extraction remains retryable on the next page load.
       if (!result.errors.length) {
         await fs.mkdir(path.dirname(cached), { recursive: true });
@@ -75,10 +92,16 @@ export class MediaPreviews {
       this.pending.delete(key);
     }
   }
-  private async generate(file: string, asset: Asset): Promise<MediaPreview> {
-    const interval = Math.max(1, asset.duration / 240);
-    const count = Math.ceil(asset.duration / interval);
+  private async generate(
+    file: string,
+    asset: Asset,
+    start: number,
+    duration: number,
+  ): Promise<MediaPreview> {
+    const interval = Math.max(1, duration / 240);
+    const count = Math.ceil(duration / interval);
     const result: MediaPreview = {
+      sourceStart: start,
       interval,
       count,
       columns: 12,
@@ -94,11 +117,12 @@ export class MediaPreviews {
           "-nostdin",
           "-threads",
           "1",
+          ...(start > 0 ? ["-ss", String(start)] : []),
           "-i",
           file,
           "-an",
           "-t",
-          String(asset.duration),
+          String(duration),
           "-vf",
           `fps=1/${interval}:start_time=0:round=up,scale=96:54:force_original_aspect_ratio=decrease,pad=96:54:(ow-iw)/2:(oh-ih)/2,tile=12x${Math.ceil(count / 12)}`,
           "-frames:v",
@@ -126,14 +150,18 @@ export class MediaPreviews {
     }
     if (asset.audio && !this.closed) {
       try {
-        result.peaks = await this.peaks(file, asset.duration);
+        result.peaks = await this.peaks(file, duration, start);
       } catch {
         result.errors.push("Audio waveform unavailable");
       }
     }
     return result;
   }
-  private peaks(file: string, duration: number): Promise<number[]> {
+  private peaks(
+    file: string,
+    duration: number,
+    start: number,
+  ): Promise<number[]> {
     return new Promise((resolve, reject) => {
       const child = spawn(
         "ffmpeg",
@@ -143,6 +171,7 @@ export class MediaPreviews {
           "-nostdin",
           "-threads",
           "1",
+          ...(start > 0 ? ["-ss", String(start)] : []),
           "-i",
           file,
           "-t",

@@ -1,3 +1,4 @@
+import { resolveProject } from "../../../flow/project/resolve.mjs";
 import {
   captureFiles,
   describeInputs,
@@ -113,7 +114,7 @@ export class Renderer {
   }
   start(project: Project) {
     if (this.processes.size) throw Error("One render at a time in this MVP");
-    const p = clone(project),
+    const p = resolveProject(project).project as Project,
       boxes = getBoxes(p, this.extensions),
       duration = end(p),
       id = randomUUID();
@@ -155,7 +156,14 @@ export class Renderer {
     for (const c of clips)
       if (c.kind === "video") {
         const asset = p.assets.find((a) => a.id === c.assetId)!;
-        args.push("-i", safeFile(inputRoot, asset.path));
+        args.push(
+          "-ss",
+          String(c.in),
+          "-t",
+          String(c.duration),
+          "-i",
+          safeFile(inputRoot, asset.path),
+        );
         indices.set(c.id, n++);
       } else if (!boxes[c.id])
         throw Error(
@@ -171,7 +179,7 @@ export class Renderer {
       if (c.kind === "video") {
         const i = indices.get(c.id)!;
         filters.push(
-          `[${i}:v]trim=start=${c.in}:duration=${c.duration},setpts=PTS-STARTPTS+${c.start}/TB,scale=${Math.round(c.width)}:${Math.round(c.height)},setsar=1,fps=${p.fps}[v${i}]`,
+          `[${i}:v]trim=start=0:duration=${c.duration},setpts=PTS-STARTPTS+${c.start}/TB,scale=${Math.round(c.width)}:${Math.round(c.height)},setsar=1,fps=${p.fps}[v${i}]`,
         );
         filters.push(
           `[${last}][v${i}]overlay=x=${c.x}:y=${c.y}:enable='${enabled}':eof_action=pass:repeatlast=0[${next}]`,
@@ -183,7 +191,7 @@ export class Renderer {
         ) {
           const name = `a${i}`;
           filters.push(
-            `[${i}:a]atrim=start=${c.in}:duration=${c.duration},asetpts=PTS-STARTPTS,volume=${c.volume ?? 1},adelay=${Math.round(c.start * 1000)}:all=1[${name}]`,
+            `[${i}:a]atrim=start=0:duration=${c.duration},asetpts=PTS-STARTPTS,volume=${c.volume ?? 1},adelay=${Math.round(c.start * 1000)}:all=1[${name}]`,
           );
           audio.push(`[${name}]`);
         }

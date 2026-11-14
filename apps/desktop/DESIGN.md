@@ -171,3 +171,13 @@ grey title strip. Keep standard traffic lights in the 46px app header, reserve
 or inputs draggable. Keep native window resizing/fullscreen behavior. The approved
 CMRX split-disc ICNS is the packaged launcher icon; set its PNG explicitly for the
 runtime Dock icon so development launches also avoid the Electron placeholder.
+
+
+## Toolkit development mentality
+
+The app is a development environment and UI for the video toolkit. Chat and visual
+inspection lead; transcripts, level maps and sampled frames help explain source
+time together. Do not turn the product into a transcript-first editor. Components
+remain arbitrary authored Flutter code; generate optional controls from their own
+schemas. When interactivity cannot represent a capability, offer rendered review
+in the same player without removing that capability from the toolkit.

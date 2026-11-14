@@ -1,5 +1,13 @@
 # Editing and execution contracts
 
+The app is the toolkit’s UI and development environment, with Flutter retained.
+It is not transcript-first and does not impose an editor capability ceiling.
+See [shared toolkit project contracts](../../flow/project/README.md) and the
+[implementation/acceptance plan](TOOLKIT_ENVIRONMENT_PLAN.md) for exact timing,
+multimodal source inspection, dynamically authored controls, checkpoints, OTIO
+interchange and verified rendered review.
+
+
 ## Document authority
 
 `apps/local-editor/src/workspace.ts` is the sole document acceptance authority.

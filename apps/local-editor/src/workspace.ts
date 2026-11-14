@@ -1,3 +1,4 @@
+import { canonicalize, assertTiming } from "../../../flow/project/time.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import {
   applyOperations,
@@ -84,6 +85,7 @@ export class Workspace extends EventEmitter {
       if (raw === this.raw) return;
       this.raw = raw;
       const p = validate(JSON.parse(raw));
+      assertTiming(p);
       if (JSON.stringify(p) === JSON.stringify(this.project)) {
         this.error = "";
         this.emit("change");
@@ -128,7 +130,7 @@ export class Workspace extends EventEmitter {
   accept(p: Project, reason: string, history = true, transaction?: Receipt) {
     validate(p);
     this.hooks.validate?.(p);
-    const next = clone(p);
+    const next = canonicalize(p) as Project;
     next.revision = this.project.revision + 1;
     // All calls are synchronous on one event loop. Preserve observed input before replacement.
     fs.mkdirSync(path.join(this.meta, "revisions"), { recursive: true });

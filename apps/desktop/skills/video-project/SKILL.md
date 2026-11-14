@@ -10,6 +10,16 @@ This is the single entry point for video work in the app. Load it with
 no separate installation there. Specialized toolkit skills are optional references
 for a chosen effect/framework, not alternative project formats.
 
+## Product imperative
+
+This app is a UI/development environment for the full toolkit, with Flutter
+retained. We are not transcript-first: inspect source frames, sound levels and
+transcripts together when useful, without requiring transcripts. Dynamically
+code components; never reduce a video request to a hardcoded element catalog.
+The interactive editor is not a capability ceiling. Arbitrary generated video
+can be registered and reviewed in the same player when controls cannot represent
+it. Read `flow/project/README.md` via `/toolkit` for the complete shared contracts.
+
 ## Start with the actual project
 
 Read `editor_context` and the workspace/project instructions in `projectAgent`.
@@ -183,3 +193,38 @@ approximate offsetMs and verify lip/audio sync; preserve source files and author
 separate timeline layers. Recording itself creates no clips. Abandoned partial
 captures may be retained under `.editor/recordings/`; only attempt recovery when
 asked, using a new output file rather than overwriting partial sources.
+
+## Source evidence, dynamic controls and recovery
+
+- `project_action {action: "source-window",assetId,start,duration}` returns actual
+  sampled images, peak levels and source cues (window at most 120 seconds). Cue
+  IDs/revisions survive timeline cuts. Source time is the normalized full-resolution
+  render input; do not assume a PTS mapping to an original HDR/VFR recording.
+- Sources → Import source… keeps long media off the timeline. `editor_edit add`
+  accepts `in,duration,start,track`; insert a chosen interval rather than the entire
+  recording. A transcript is optional evidence, never the primary editing surface.
+- `editor_batch` supports `component` definitions with `schemaVersion:1`, `source`
+  and authored `properties/defaults`; `add-graphics` can use `componentId` and props.
+  The Dart module reads `manifest['graphicsClip']['props']`. Schemas generate
+  controls for strings, numbers/ranges, booleans, colors and enums. Raw Dart clips
+  without schemas remain supported. Never hardcode an element catalog in the app.
+- Optional `anchor` operations bind graphics to source/cue plus explicit clip
+  occurrence. Resolved placement lives in `context.resolution`; it is a projection,
+  not a document replacement. Missing/trimmed/ambiguous anchors hide with warnings.
+- `clip-time` takes exact JSON rationals `{value:"150",rate:"30"}` under `timing`;
+  existing seconds edits are still accepted and projected at the authority.
+- Save `project_action checkpoint-create` (revision, label) before substantial work.
+  `checkpoint-diff` previews changes; `checkpoint-restore` (id, current revision)
+  restores source and document, first preserving current work. Timeline Undo alone
+  does not restore Dart source. Never restore over newer work without inspecting it.
+- `interchange-export` writes OTIO, native project and source sidecar with explicit
+  loss warnings. Import only the supported footage/gap subset against media already
+  registered in the project. Arbitrary Dart effects remain native or baked.
+- If custom composition/effects cannot preview interactively, generate the video
+  with `workspace_exec` into `assets/` or `media/`, then `project_action
+  output-register` with `path` and current revision. The app validates/captures it,
+  makes a browser-compatible copy if needed and uses the existing single player.
+  Do not invent dummy timeline clips or a second review player. Comments/seek/sound/
+  export remain available; structural cuts need `output-interactive` or revised
+  source and re-registration. Changed source marks output outdated; regenerate it
+  before claiming a current export. Preserve the original authored input.

@@ -1,3 +1,4 @@
+import { setupProjectTools } from "/project-tools.mjs";
 import { matrixCells } from "/matrix-loader.mjs";
 import { setupAssetManager } from "/asset-manager.mjs";
 import { setupAgentUI } from "/agent-settings.mjs";
@@ -28,6 +29,7 @@ if (!token || !editorToken) {
     "Open this workspace from the desktop app to connect securely.";
   $("#send").disabled = true;
 } else {
+  setupProjectTools({ call, showError });
   let latestState;
   let importingVideo = false;
   let requestedExport = null;
@@ -174,7 +176,7 @@ if (!token || !editorToken) {
       return;
     }
     if (e.data?.type === "cmrx:add-video") {
-      void importVideo();
+      void importVideo(e.data.assetOnly === true);
       return;
     }
     if (e.data?.type !== "cmrx:comment-positions") return;
@@ -207,6 +209,14 @@ if (!token || !editorToken) {
       {
         type: "cmrx:preview",
         overlay,
+        rendered: s.rendered
+          ? {
+              ...s.rendered,
+              url:
+                "/chat/artifact?" +
+                new URLSearchParams({ id: s.rendered.id, token }),
+            }
+          : null,
         locked: s.locked || importingVideo,
         canImportVideo: s.projectInfo?.selected !== false,
         canRecord: s.canRecord === true,
@@ -564,12 +574,12 @@ if (!token || !editorToken) {
       if (link) openTool(link);
     }
   });
-  async function importVideo() {
+  async function importVideo(assetOnly = false) {
     if (importingVideo || latestState?.locked) return;
     importingVideo = true;
     syncPreview();
     try {
-      await call("import");
+      await call("import", { assetOnly });
     } catch (e) {
       showError(e);
     } finally {

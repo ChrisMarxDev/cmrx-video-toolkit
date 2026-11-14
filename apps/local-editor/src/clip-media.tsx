@@ -101,10 +101,16 @@ export function ClipMedia({
       ctx.globalAlpha = clip.muted ? 0.45 : 1;
       for (let x = 0; x < el.width; x++) {
         const from = Math.floor(
-          (clip.in + (x / el.width) * clip.duration) * media.peakRate,
+          (clip.in -
+            (media.sourceStart || 0) +
+            (x / el.width) * clip.duration) *
+            media.peakRate,
         );
         const to = Math.ceil(
-          (clip.in + ((x + 1) / el.width) * clip.duration) * media.peakRate,
+          (clip.in -
+            (media.sourceStart || 0) +
+            ((x + 1) / el.width) * clip.duration) *
+            media.peakRate,
         );
         let peak = 0;
         for (let n = from; n < to; n++)

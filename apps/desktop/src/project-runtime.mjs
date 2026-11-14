@@ -119,6 +119,10 @@ export function projectRuntime(s) {
     },
     capabilities: {
       editTimeline: capability(!owner, owner),
+      interactiveTimeline: capability(
+        !owner && !s.rendered,
+        owner || (s.rendered ? "rendered-toolkit-output" : null),
+      ),
       seek: capability(true),
       previewLayers: capability(true),
       send: capability(

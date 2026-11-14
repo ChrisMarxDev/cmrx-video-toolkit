@@ -4,6 +4,12 @@ A local video workspace with subscription-backed chat, one composited player,
 editable footage/audio and arbitrary Flutter graphics. Start from a video or an
 empty project, describe an edit, then seek, trim and leave timed comments.
 
+The app is a development environment and UI for the full toolkit. Flutter
+components are authored dynamically; optional controls come from their schemas.
+Source inspection combines frames, sound levels and timed text. For video that
+needs arbitrary processing beyond the timeline, the same player supports verified
+rendered review. See [project contracts](../../flow/project/README.md).
+
 **Mac beta 0.1.0:** [download the signed and notarized Apple Silicon DMG](https://github.com/ChrisMarxDev/cmrx-video-toolkit/releases/download/desktop-v0.1.0/CMRX-Chat-Editor-0.1.0-macOS-arm64.dmg).
 Requires macOS 15+. Copy the app into Applications and open it; no Terminal or
 separate video/developer tools are needed. Connect your own provider account

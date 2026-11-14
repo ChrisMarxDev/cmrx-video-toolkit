@@ -1,3 +1,17 @@
+import { resolveAnchor } from "../../../flow/project/resolve.mjs";
+import {
+  snapSeconds,
+  canonicalize,
+  add,
+  subtract,
+  fromFrames,
+  frameIndex,
+  sourceAt,
+  timelineAt,
+  fromSeconds,
+  seconds,
+} from "../../../flow/project/time.mjs";
+import { validateDefinitions } from "../../../flow/project/components.mjs";
 export type TranscriptSegment = {
   start: number;
   end: number;
@@ -123,7 +137,7 @@ export function locateComment(
     return { time: null, reason: "source-changed" };
   if (a.sourceTime < c.in || a.sourceTime >= c.in + c.duration)
     return { time: null, reason: "trimmed-out" };
-  return { time: c.start + a.sourceTime - c.in };
+  return { time: seconds(timelineAt(c, fromSeconds(a.sourceTime))) };
 }
 export function addComment(
   p: Project,
@@ -190,6 +204,25 @@ export function validate(p: Project): Project {
   const num = (v: unknown, min: number, max: number) =>
     typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
   check(p && p.schemaVersion === 1, "schemaVersion must be 1");
+  check(
+    p.previewMode === undefined || p.previewMode === "rendered",
+    "Unknown preview mode",
+  );
+  if (p.previewMode === "rendered") {
+    const o = p.renderedOutput as any;
+    check(
+      o &&
+        typeof o.id === "string" &&
+        /^[\w-]{1,120}$/.test(o.id) &&
+        [o.width, o.height, o.duration].every(
+          (n) => typeof n === "number" && Number.isFinite(n) && n > 0,
+        ) &&
+        typeof o.sha256 === "string" &&
+        /^[a-f0-9]{64}$/.test(o.sha256),
+      "Rendered review needs a verified output descriptor",
+    );
+  }
+
   check(
     Number.isInteger(p.revision) && p.revision >= 0,
     "revision must be a nonnegative integer",
@@ -307,7 +340,7 @@ export function validate(p: Project): Project {
       "Assets must use relative media/ paths",
     );
     check(
-      num(a.duration, 0.01, 7200) && typeof a.audio === "boolean",
+      num(a.duration, 0.01, 86400) && typeof a.audio === "boolean",
       "Invalid asset metadata",
     );
   }
@@ -383,7 +416,7 @@ export function validate(p: Project): Project {
       "Clip must fit within 10 minutes",
     );
     check(
-      num(c.in, 0, 7200) && Number.isInteger(c.track) && num(c.track, 0, 7),
+      num(c.in, 0, 86400) && Number.isInteger(c.track) && num(c.track, 0, 7),
       "Invalid source offset or track",
     );
     check(
@@ -403,7 +436,10 @@ export function validate(p: Project): Project {
       "Clip volume must be 0–16 (linear gain)",
     );
     if (c.kind === "graphics") {
-      const source = c.props?.source;
+      const source = c.componentId
+        ? ((p.components as any[]) ?? []).find((d) => d.id === c.componentId)
+            ?.source
+        : c.props?.source;
       check(
         typeof source === "string" &&
           /^lib\/[a-zA-Z0-9_/.-]+\.dart$/.test(source) &&
@@ -453,7 +489,10 @@ export function validate(p: Project): Project {
     const a = c.anchor;
     check(a && typeof a === "object", "Comment anchor required");
     if (a.type === "timeline")
-      check(num(a.time, 0, 600), "Invalid timeline comment time");
+      check(
+        num(a.time, 0, p.previewMode === "rendered" ? 86400 : 600),
+        "Invalid timeline comment time",
+      );
     else {
       check(
         a.type === "clip" &&
@@ -470,6 +509,7 @@ export function validate(p: Project): Project {
       );
     }
   }
+  validateDefinitions(p);
   return p;
 }
 export function patchClip(
@@ -480,30 +520,79 @@ export function patchClip(
   const next = clone(p),
     c = next.clips.find((c) => c.id === id);
   if (!c) throw Error("Clip not found");
+  if (c.anchor && patch.start !== undefined) {
+    const result = resolveAnchor(p, c.anchor);
+    if (result.status === "resolved") {
+      const a = c.anchor as any;
+      const oldOffset =
+        typeof a.offset === "object" ? seconds(a.offset) : (a.offset ?? 0);
+      a.offset = oldOffset + patch.start - result.time;
+    }
+  }
   Object.assign(c, patch);
   return validate(next);
+}
+function remapGraphicsAnchors(
+  p: Project,
+  oldId: string,
+  newId: string,
+  sourceStart: number,
+) {
+  for (const c of p.clips) {
+    const a = c.anchor as any;
+    if (!a || a.clipId !== oldId) continue;
+    const cue =
+      a.type === "semantic"
+        ? p.assets
+            .find((x) => x.id === a.assetId)
+            ?.transcript?.find((x) => x.id === (a.cueId ?? a.wordId))
+        : null;
+    const source =
+      cue?.start ??
+      (typeof a.sourceTime === "object" ? seconds(a.sourceTime) : a.sourceTime);
+    if (Number.isFinite(source) && source >= sourceStart) a.clipId = newId;
+  }
 }
 export function splitClip(p: Project, id: string, time: number): Project {
   const next = clone(p),
     c = next.clips.find((c) => c.id === id);
   if (!c) throw Error("Clip not found");
-  const left = Math.round((time - c.start) * p.fps) / p.fps;
-  if (left < 1 / p.fps || c.duration - left < 1 / p.fps)
+  const exact = canonicalize(p).clips.find((c: any) => c.id === id)!.timing;
+  const delta = fromFrames(
+      frameIndex(fromSeconds(time - c.start), p.fps),
+      p.fps,
+    ),
+    left = seconds(delta),
+    remaining = subtract(exact.duration, delta);
+  if (left < 1 / p.fps || seconds(remaining) < 1 / p.fps)
     throw Error("Playhead must be inside the clip");
-  const right = {
+  const right: Clip = {
     ...clone(c),
     id: `clip-${crypto.randomUUID()}`,
-    start: c.start + left,
-    in: c.in + left,
-    duration: c.duration - left,
+    start: seconds(add(exact.start, delta)),
+    in: seconds(add(exact.in, delta)),
+    duration: seconds(remaining),
+    timing: {
+      start: add(exact.start, delta),
+      in: add(exact.in, delta),
+      duration: remaining,
+    },
   };
+  if (c.anchor) {
+    const a = right.anchor as any;
+    a.offset =
+      (typeof a.offset === "object" ? seconds(a.offset) : (a.offset ?? 0)) +
+      left;
+  }
   next.clips.push(right);
   for (const comment of next.comments ?? []) {
     const a = comment.anchor;
     if (a.type === "clip" && a.clipId === id && a.sourceTime >= right.in)
       a.clipId = right.id;
   }
+  remapGraphicsAnchors(next, id, right.id, right.in);
   c.duration = left;
+  c.timing = { ...exact, duration: delta };
   return validate(next);
 }
 /** Remove project time across all tracks, preserving source clocks and metadata. */
@@ -515,13 +604,15 @@ export function rippleDeleteRange(
   if (!Number.isFinite(from) || !Number.isFinite(to))
     throw Error("Invalid range");
   const frame = 1 / p.fps;
-  const start = Math.round(Math.min(from, to) * p.fps) / p.fps;
-  const stop = Math.round(Math.max(from, to) * p.fps) / p.fps;
+  const start = snapSeconds(Math.min(from, to), p.fps);
+  const stop = snapSeconds(Math.max(from, to), p.fps);
   if (start < 0 || stop > end(p) + frame / 2 || stop - start < frame - 1e-8)
     throw Error("Select at least one frame within the timeline");
   const next = clone(p),
     removed = stop - start;
   next.clips = next.clips.flatMap((c) => {
+    // Content-bound graphics follow source resolution; fixed graphics ripple normally.
+    if (c.anchor) return [c];
     const finish = c.start + c.duration;
     if (finish <= start) return [c];
     if (c.start >= stop)
@@ -540,6 +631,7 @@ export function rippleDeleteRange(
         duration: Math.max(frame, right),
       };
       pieces.push(piece);
+      remapGraphicsAnchors(next, c.id, piece.id, piece.in);
       for (const note of next.comments ?? []) {
         const a = note.anchor;
         if (a.type === "clip" && a.clipId === c.id && a.sourceTime >= piece.in)
@@ -561,7 +653,7 @@ export function dragClip(
   delta: number,
   track = c.track,
 ): Partial<Clip> {
-  const snap = (v: number) => Math.round(v * p.fps) / p.fps;
+  const snap = (v: number) => snapSeconds(v, p.fps);
   if (mode === "move")
     return {
       start: Math.max(0, Math.min(600 - c.duration, snap(c.start + delta))),

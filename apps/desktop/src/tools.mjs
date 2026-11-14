@@ -8,6 +8,38 @@ const number = { type: "number" },
   string = { type: "string" };
 export const tools = [
   [
+    "project_action",
+    "Toolkit project services. source-window combines source-clock frames, audio levels and timed cues (max 120s); checkpoint-create captures timeline and authored code, checkpoint-diff previews restoration, checkpoint-restore restores both with safety checkpoint and revision guard; interchange-export saves OTIO plus native project/source and loss warnings; output-register verifies an arbitrary generated assets/ or media/ video and shows it in the single review player without requiring timeline support; output-interactive returns to timeline preview. Use revision for writes. These do not restrict arbitrary Flutter authoring.",
+    object(
+      {
+        action: {
+          type: "string",
+          enum: [
+            "source-window",
+            "checkpoint-list",
+            "checkpoint-create",
+            "checkpoint-diff",
+            "checkpoint-restore",
+            "interchange-export",
+            "interchange-import",
+            "interchange-inspect",
+            "output-register",
+            "output-interactive",
+          ],
+        },
+        revision: { type: "integer" },
+        id: string,
+        label: string,
+        path: string,
+        assetId: string,
+        start: number,
+        duration: number,
+        timeline: { type: "object", additionalProperties: true },
+      },
+      ["action"],
+    ),
+  ],
+  [
     "assets_list",
     "Browse project or shared library assets. query searches names/descriptions/tags recursively; * lists recursively. Bundles remain single items. Does not execute code.",
     object({
@@ -40,7 +72,7 @@ export const tools = [
   ],
   [
     "editor_context",
-    "Read current video project, selected clip/playhead, jobs and revision.",
+    "Read authoring project, shared resolved projection and anchor warnings, selected clip/playhead, jobs and revision. Never replace authoring state with the derived projection.",
     object({}),
   ],
   [
@@ -69,6 +101,9 @@ export const tools = [
         id: string,
         assetId: string,
         source: string,
+        componentId: string,
+        props: { type: "object", additionalProperties: true },
+        in: number,
         name: string,
         start: number,
         duration: number,
@@ -99,6 +134,10 @@ export const tools = [
               type: {
                 type: "string",
                 enum: [
+                  "clip-time",
+                  "anchor",
+                  "component",
+                  "component-props",
                   "project",
                   "clip",
                   "layer",

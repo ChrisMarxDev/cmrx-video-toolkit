@@ -1,3 +1,4 @@
+import { ProjectServices } from "./project-services.mjs";
 import { mediaPaths, serveMedia } from "./media-routes.mjs";
 import { publicRenderJob } from "../../local-editor/dist/render-contract.mjs";
 import { startManualRender } from "./render-service.mjs";
@@ -213,11 +214,16 @@ export async function startApp({
   const playbackProxies = new PlaybackProxies(
     path.join(workspace, ".editor/playback-proxies"),
   );
-  let playground, agent;
+  let playground, agent, projectServices;
+  const projectAction = async (action, args) => {
+    projectServices ??= new ProjectServices({ workspace, editor, playground });
+    return projectServices.run(action, args);
+  };
   let importController, importTask;
   let importing = false,
     preparingRender = false;
-  let activeWrites = 0;
+  let activeWrites = 0,
+    activeSourceTools = 0;
   const runtime = () =>
     projectRuntime({
       ...state,
@@ -274,6 +280,10 @@ export async function startApp({
         skillRoot: agent.skills.shared,
         renderQueue,
       });
+  if (fs.existsSync(path.join(workspace, ".editor/checkpoints/restore.json"))) {
+    projectServices = new ProjectServices({ workspace, editor, playground });
+    projectServices.checkpoints.recover((await editor("/api/context")).project);
+  }
   const assets = new AssetLibrary({
     workspace,
     root: agentRoot,
@@ -348,6 +358,43 @@ export async function startApp({
                     ? "Inspecting an image…"
                     : "Working on your project…";
     publish();
+    if (projectServices?.busy)
+      throw Error("A project transaction is still running");
+    if (name === "project_action") {
+      if (activeSourceTools)
+        throw Error(
+          "Wait for source commands before starting a project transaction",
+        );
+      const value = await projectAction(args.action, args);
+      if (args.action === "source-window") {
+        const { sprite, ...evidence } = value;
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(evidence) },
+            ...(sprite?.startsWith("data:image/jpeg;base64,")
+              ? [
+                  {
+                    type: "image",
+                    mimeType: "image/jpeg",
+                    data: sprite.split(",")[1],
+                  },
+                ]
+              : []),
+          ],
+        };
+      }
+      return value;
+    }
+    if (["workspace_write", "workspace_exec"].includes(name)) {
+      activeSourceTools++;
+      try {
+        return await (name === "workspace_write"
+          ? playground.write(args.path, args.content)
+          : playground.exec(args.argv));
+      } finally {
+        activeSourceTools--;
+      }
+    }
     let extra;
     try {
       extra = await agent.tool(name, args, { editor, playground });
@@ -715,7 +762,14 @@ export async function startApp({
           let s = "";
           for await (const c of req) {
             s += c;
-            if (s.length > (url.pathname === "/chat/tool" ? 300000 : 64000))
+            if (
+              s.length >
+              (url.pathname === "/chat/project-action"
+                ? 2 * 1024 ** 2
+                : url.pathname === "/chat/tool"
+                  ? 300000
+                  : 64000)
+            )
               throw Error("Message too large");
           }
           body = s ? JSON.parse(s) : {};
@@ -725,7 +779,29 @@ export async function startApp({
           publish();
           result = state;
         } else if (req.method !== "POST") throw Error("POST required");
-        else if (url.pathname === "/chat/record") {
+        else if (url.pathname === "/chat/project-action") {
+          const mutation = ![
+            "checkpoint-list",
+            "checkpoint-diff",
+            "source-window",
+            "interchange-inspect",
+          ].includes(body.action);
+          if (mutation && locked())
+            throw Error("Finish the current edit first");
+          if (mutation) {
+            preparingRender = true;
+            publish();
+            while (activeWrites) await delay(10);
+          }
+          try {
+            result = await projectAction(body.action, body);
+          } finally {
+            if (mutation) {
+              preparingRender = false;
+              publish();
+            }
+          }
+        } else if (url.pathname === "/chat/record") {
           if (!record || projectInfo?.selected === false)
             throw Error("Open a project in the desktop app to record");
           await record();
@@ -1095,6 +1171,7 @@ export async function startApp({
             state.activity = "Preparing your video…";
             publish();
             importTask = importVideo({
+              assetOnly: body.assetOnly === true,
               workspace,
               source,
               editor,
@@ -1179,6 +1256,7 @@ export async function startApp({
           "/asset-manager.mjs",
           "/app-polish.css",
           "/dither-art.mjs",
+          "/project-tools.mjs",
         ].includes(url.pathname)
       ) {
         res.setHeader(
