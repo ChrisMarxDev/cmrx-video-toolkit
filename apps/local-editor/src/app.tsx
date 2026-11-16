@@ -1556,6 +1556,7 @@ function App() {
         </div>
       )}
       <DockLayout
+        fixed={!!previewBridge}
         panels={[
           {
             id: "preview",

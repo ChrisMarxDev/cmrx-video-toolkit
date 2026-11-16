@@ -34,7 +34,7 @@
   background-clip: padding-box;
 }
 .editor {
-  grid-template-rows: 48px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
+  grid-template-rows: 38.4px minmax(0, 1fr) 14px var(--timeline-height, 30dvh);
 }
 .editor > header {
   background: var(--app-surface);
@@ -57,11 +57,14 @@ button:hover:not(:disabled) {
   background: var(--app-hover);
 }
 .header-actions {
-  gap: 4px;
+  gap: 3.2px;
 }
 .header-actions button {
-  width: 32px;
-  height: 32px;
+  width: 25.6px;
+  height: 25.6px;
+  min-width: 25.6px;
+  min-height: 25.6px;
+  padding: 3.2px;
 }
 .workspace-grid,
 .dock-pane,
@@ -479,3 +482,7 @@ button:active:not(:disabled) {
   position: relative;
   z-index: 1;
 }
+
+/* Compact desktop toolbar: keep icon geometry and targets proportional. */
+.header-actions button .icon { width:12.8px; height:12.8px; }
+.header-actions .workspace-status {width:19.2px;height:22.4px;}

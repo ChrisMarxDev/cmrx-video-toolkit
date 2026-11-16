@@ -124,6 +124,18 @@ try {
     .click();
   await f.getByRole("button", { name: "Source frame 0.00 seconds" }).waitFor();
   await f.getByText("Source evidence", { exact: false }).waitFor();
+  assert.equal(await f.locator(".dock-title").count(), 0);
+  const toolbar = await f.locator(".editor > header").boundingBox();
+  assert.ok(Math.abs(toolbar.height - 38.4) < 0.1);
+  const toggle = await f
+    .getByRole("button", { name: "Toggle comments", exact: true })
+    .boundingBox();
+  assert.ok(Math.abs(toggle.height - 25.6) < 0.1);
+  assert.ok(Math.abs(toggle.width - 25.6) < 0.1);
+  await f.getByRole("button", { name: "Toggle comments", exact: true }).click();
+  assert.equal(await f.locator(".dock-title").count(), 0);
+  await f.getByRole("button", { name: "Toggle comments", exact: true }).click();
+
   assert.equal(await f.locator(".source-levels").count(), 1);
   await f.getByLabel("Source range start", { exact: true }).fill("1");
   await f.getByLabel("Source insert length").fill("1");

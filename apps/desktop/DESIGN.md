@@ -181,3 +181,7 @@ time together. Do not turn the product into a transcript-first editor. Component
 remain arbitrary authored Flutter code; generate optional controls from their own
 schemas. When interactivity cannot represent a capability, offer rendered review
 in the same player without removing that capability from the toolkit.
+
+Desktop panels have fixed positions and no title/grip rows. Keep Preview and
+Comments directly on their working surfaces. The comments/transcript toolbar uses
+a 38.4px row with 25.6px controls, 20% below the previous 48px/32px sizes.

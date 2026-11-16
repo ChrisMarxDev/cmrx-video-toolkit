@@ -38,7 +38,13 @@ function loadLayout() {
 }
 
 // Layout is a browser preference, never an authored project edit.
-export function DockLayout({ panels }: { panels: Panel[] }) {
+export function DockLayout({
+  panels,
+  fixed = false,
+}: {
+  panels: Panel[];
+  fixed?: boolean;
+}) {
   const [layout, setLayout] = useState(loadLayout);
   const [dragged, setDragged] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -57,7 +63,7 @@ export function DockLayout({ panels }: { panels: Panel[] }) {
       /* Optional preference. */
     }
   }, [layout]);
-  const visible = layout.order
+  const visible = (fixed ? defaults.order : layout.order)
     .map((id) => panels.find((p) => p.id === id)!)
     .filter((p) => p.visible);
   const reorder = (from: string, to: string) => {
@@ -162,50 +168,53 @@ export function DockLayout({ panels }: { panels: Panel[] }) {
             data-drop-target={dropTarget === panel.id}
             style={{ flexGrow: layout.weights[panel.id] }}
             onDragOver={(e) => {
-              if (dragged && dragged !== panel.id) {
+              if (!fixed && dragged && dragged !== panel.id) {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
                 setDropTarget(panel.id);
               }
             }}
             onDrop={(e) => {
+              if (fixed) return;
               e.preventDefault();
               if (dragged && dragged !== panel.id) reorder(dragged, panel.id);
               setDragged(null);
               setDropTarget(null);
             }}
           >
-            <div
-              className="dock-title"
-              draggable
-              tabIndex={0}
-              role="button"
-              aria-label={`Move ${panel.title} panel`}
-              title="Drag to another pane to swap · Alt + Left/Right to move"
-              onDragStart={(e) => {
-                e.dataTransfer.setData("text/plain", panel.id);
-                e.dataTransfer.effectAllowed = "move";
-                setDragged(panel.id);
-              }}
-              onDragEnd={() => {
-                setDragged(null);
-                setDropTarget(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.altKey && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const target =
-                    visible[index + (e.key === "ArrowLeft" ? -1 : 1)];
-                  if (target) reorder(panel.id, target.id);
-                }
-              }}
-            >
-              <span className="dock-grip" aria-hidden="true">
-                ⠿
-              </span>
-              {panel.title}
-            </div>
+            {!fixed && (
+              <div
+                className="dock-title"
+                draggable
+                tabIndex={0}
+                role="button"
+                aria-label={`Move ${panel.title} panel`}
+                title="Drag to another pane to swap · Alt + Left/Right to move"
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", panel.id);
+                  e.dataTransfer.effectAllowed = "move";
+                  setDragged(panel.id);
+                }}
+                onDragEnd={() => {
+                  setDragged(null);
+                  setDropTarget(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.altKey && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const target =
+                      visible[index + (e.key === "ArrowLeft" ? -1 : 1)];
+                    if (target) reorder(panel.id, target.id);
+                  }
+                }}
+              >
+                <span className="dock-grip" aria-hidden="true">
+                  ⠿
+                </span>
+                {panel.title}
+              </div>
+            )}
             {panel.content}
           </div>
         </React.Fragment>
