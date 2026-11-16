@@ -69,6 +69,10 @@ work; no separate skill installation is needed.
 Arbitrary source runs through the offline rendering worker. The provider agent
 and network-capable connection broker are separate processes from that worker;
 this is not an operating-system sandbox around the entire app.
+Linux worker commands use a private disk-backed scratch directory under
+`$XDG_CACHE_HOME` (or `~/.cache`) mounted at `/tmp`, removed after each command
+succeeds or fails. Raw frame capture can exceed available RAM; do not replace
+this with a RAM-backed tmpfs when configuring workers.
 
 While an agent task runs, sending a message queues a follow-up. A queued message's
 **Steer** button explicitly delivers it into the active task when the provider

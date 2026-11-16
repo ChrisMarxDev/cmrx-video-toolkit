@@ -452,6 +452,11 @@ export class Playground {
       });
       return this.macOSWorker.exec(argv, work, cwd, timeout, readOnlySource);
     }
+    // Raw RGBA capture can exceed RAM-backed /tmp before encoding starts.
+    // Give each command private disk-backed scratch space and remove it on exit.
+    const temporaryRoot = process.env.XDG_CACHE_HOME || path.join(os.homedir(), ".cache");
+    fs.mkdirSync(temporaryRoot, { recursive: true });
+    const temporary = fs.mkdtempSync(path.join(temporaryRoot, "cmrx-worker-tmp-"));
     const a = [
       "--unshare-all",
       "--die-with-parent",
@@ -475,7 +480,8 @@ export class Playground {
       "/proc",
       "--dev",
       "/dev",
-      "--tmpfs",
+      "--bind",
+      temporary,
       "/tmp",
       "--dir",
       "/home/worker",
@@ -561,7 +567,9 @@ export class Playground {
       cwd,
       ...argv,
     );
-    return this.host("bwrap", a, timeout);
+    return this.host("bwrap", a, timeout).finally(() => {
+      fs.rmSync(temporary, { recursive: true, force: true });
+    });
   }
   async exec(argv) {
     if (

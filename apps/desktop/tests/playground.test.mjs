@@ -310,3 +310,37 @@ test("inactive desktop projects defer automatic preview work until activated", a
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("Linux commands receive private disk-backed scratch and clean it on success or failure", {
+  skip: process.platform !== "linux",
+}, async () => {
+  const root = folder();
+  try {
+    const p = new Playground({ workspace: root });
+    p.worker = path.join(root, "worker");
+    const sentinel = path.join(root, "preserve.txt");
+    fs.writeFileSync(sentinel, "user source");
+    const scratch = [];
+    p.host = async (command, args) => {
+      assert.equal(command, "bwrap");
+      const i = args.indexOf("/tmp");
+      assert.equal(args[i - 2], "--bind");
+      const dir = args[i - 1];
+      scratch.push(dir);
+      assert(fs.statSync(dir).isDirectory());
+      assert.match(path.basename(dir), /^cmrx-worker-tmp-/);
+      assert.notEqual(dir, root);
+      fs.writeFileSync(path.join(dir, "capture.rgba"), "private frame bytes");
+      if (scratch.length === 2) throw Error("capture failed");
+      return { exitCode: 0, output: "done" };
+    };
+    await p.execRaw(["true"], root);
+    assert(!fs.existsSync(scratch[0]));
+    await assert.rejects(() => p.execRaw(["false"], root), /capture failed/);
+    assert(!fs.existsSync(scratch[1]));
+    assert.notEqual(scratch[0], scratch[1]);
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "user source");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
