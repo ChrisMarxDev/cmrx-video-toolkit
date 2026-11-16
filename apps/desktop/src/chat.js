@@ -5,7 +5,7 @@ import { setupAgentUI } from "/agent-settings.mjs";
 import { setupOnboarding } from "/onboarding.mjs";
 import { setupProviderUI } from "/settings-view.mjs";
 import { decorateBrandMentions, setBrandedText } from "/brand-ui.mjs";
-import { renderComments } from "/comment-payload.mjs";
+import { renderComments, visibleComments } from "/comment-payload.mjs";
 import { renderMessage } from "/message-view.mjs";
 document.querySelector("#activity-matrix").innerHTML = matrixCells;
 const $ = (s) => document.querySelector(s),
@@ -410,6 +410,7 @@ if (!token || !editorToken) {
       s.steering,
       connected,
       commentPositions,
+      s.openCommentIds,
     ]);
     if (queue.dataset.signature !== queueSignature) {
       queue.dataset.signature = queueSignature;
@@ -445,10 +446,10 @@ if (!token || !editorToken) {
             setBrandedText(text, item.text);
             content.append(text);
           }
-          if (item.comments?.length)
+          if (visibleComments(item.comments, s.openCommentIds).length)
             content.append(
               renderComments(
-                item.comments,
+                visibleComments(item.comments, s.openCommentIds),
                 document,
                 openComment,
                 commentPositions,
@@ -512,7 +513,7 @@ if (!token || !editorToken) {
           : ""),
     );
     downloadRequestedExport(s);
-    const next = JSON.stringify(s.messages);
+    const next = JSON.stringify([s.messages, s.openCommentIds]);
     if (next !== signature) {
       const list = $("#messages");
       const oldScroll = list.scrollTop;
@@ -538,10 +539,10 @@ if (!token || !editorToken) {
                     : "Assistant";
             setBrandedText(label, author);
             el.append(label);
-            if (m.comments?.length)
+            if (visibleComments(m.comments, s.openCommentIds).length)
               el.append(
                 renderComments(
-                  m.comments,
+                  visibleComments(m.comments, s.openCommentIds),
                   document,
                   openComment,
                   commentPositions,

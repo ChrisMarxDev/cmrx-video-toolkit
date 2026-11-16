@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { startApp } from "../src/server.mjs";
+import { visibleComments } from "../src/comment-payload.mjs";
 import { ClaudeProvider } from "../src/claude.mjs";
 const folder = () =>
   fs.mkdtempSync(
@@ -429,6 +430,10 @@ test("comment-only turns snapshot pending feedback, reject stale notes and persi
       "resolved",
     );
     assert.deepEqual((await state(app)).pendingComments, []);
+    const resolvedState = await state(app);
+    assert.deepEqual(resolvedState.openCommentIds, []);
+    assert.deepEqual(visibleComments(resolvedState.messages[0].comments, resolvedState.openCommentIds), []);
+    assert.equal(resolvedState.messages[0].comments[0].id, note.id, "sent snapshot is retained");
     await app.editor("/api/comment-update", {
       revision: 3,
       id: note.id,
@@ -441,6 +446,7 @@ test("comment-only turns snapshot pending feedback, reject stale notes and persi
     const restored = await state(app);
     assert.equal(restored.pendingComments[0].id, note.id);
     assert.equal(restored.pendingComments[0].reopenedRevision, 4);
+    assert.equal(visibleComments(restored.messages[0].comments, restored.openCommentIds)[0].id, note.id);
     assert.equal(restored.messages[0].comments[0].body, note.body);
     assert.equal(restored.messages[1].comments[0].body, changed.body);
   } finally {

@@ -261,6 +261,9 @@ export async function startApp({
       const doc = JSON.parse(
         fs.readFileSync(path.join(workspace, "project.json")),
       );
+      state.openCommentIds = (doc.comments || [])
+        .filter((comment) => comment.status === "open")
+        .map((comment) => comment.id);
       state.pendingComments = pendingComments(doc, [
         ...state.messages,
         ...state.queue,

@@ -45,3 +45,9 @@ export function renderComments(
   }
   return root;
 }
+
+// Live visibility is separate from immutable sent-message snapshots.
+export function visibleComments(comments, openIds) {
+  const open = new Set(openIds || []);
+  return (comments || []).filter((comment) => open.has(comment.id));
+}
