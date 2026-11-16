@@ -1,3 +1,4 @@
+const monitoring = require("./monitoring.cjs");
 const {
   app,
   BrowserWindow,
@@ -718,9 +719,14 @@ else {
           .shutdown()
           .catch(console.error)
           .then(() => Promise.allSettled(all().map((e) => e.service.close())))
-          .finally(() => app.exit());
+          .finally(async () => {
+            await monitoring.close(2000);
+            app.exit();
+          });
       });
     } catch (error) {
+      monitoring.captureException(error);
+      await monitoring.flush(2000);
       dialog.showErrorBox(
         "Could not open the app",
         error.stack || error.message,

@@ -1286,6 +1286,11 @@ export async function startApp({
         );
         return;
       }
+      if (url.pathname === "/sentry-renderer.js") {
+        res.setHeader("Content-Type", "text/javascript");
+        res.end(fs.readFileSync(path.resolve(here, "../../local-editor/dist/public/sentry-renderer.js")));
+        return;
+      }
       if (
         [
           "/chat.js",

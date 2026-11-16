@@ -133,3 +133,9 @@ project-branches-check: build
 # Real desktop agent-to-tab handoff; usage: make project-branches-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
 project-branches-native-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/project-branches-native.mjs
+
+.PHONY: sentry-upload
+# Upload the exact renderer build before packaging. Example: make sentry-upload SENTRY_ORG=my-org SENTRY_PROJECT=my-app
+sentry-upload:
+	@test -n "$(SENTRY_ORG)" -a -n "$(SENTRY_PROJECT)" || (echo 'Set SENTRY_ORG and SENTRY_PROJECT'; exit 1)
+	SENTRY_ORG="$(SENTRY_ORG)" SENTRY_PROJECT="$(SENTRY_PROJECT)" sentry sourcemap upload ../local-editor/dist/public --release "cmrx-desktop@$$(node -p 'require("./package.json").version')" --url-prefix app:///apps/local-editor/dist/public/

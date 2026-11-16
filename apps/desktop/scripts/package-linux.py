@@ -54,6 +54,8 @@ def main():
             source = REPO/name
             if source.is_symlink(): raise SystemExit('Package inputs cannot be symlinks: '+name)
             if source.is_file(): copy(source,app/name)
+    if os.environ.get('SENTRY_ORG') and os.environ.get('SENTRY_PROJECT'):
+        subprocess.run(['make','-C',str(REPO/'apps/desktop'),'sentry-upload'],check=True)
     copy(REPO/'apps/local-editor/dist',app/'apps/local-editor/dist')
     for package in ['desktop','local-editor']:
         subprocess.run(['npm','ci','--omit=dev','--ignore-scripts'],cwd=app/'apps'/package,check=True)

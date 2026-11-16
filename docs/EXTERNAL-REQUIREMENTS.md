@@ -309,3 +309,9 @@ Branded Mac disk images use macOS `hdiutil` and Xcode's `SetFile` to store `.Vol
 Desktop playback proxies reuse FFmpeg/ffprobe with libx264, AAC, libvpx-vp9, scale
 and setsar. Transparent cache resizing requires libvpx VP9 decoding as well as
 encoding; it must preserve alpha. No additional service, model or download is used.
+
+Desktop error monitoring uses `@sentry/electron` **8.4.0** (MIT), locked in
+`apps/desktop/package-lock.json`, and the Sentry ingestion service. The optional
+maintainer `sentry` CLI **0.49.0** from https://cli.sentry.dev uploads release source
+maps; end users do not install it. See `apps/desktop/MONITORING.md` for privacy,
+disabling telemetry and release gates. Update SDKs from npm/getsentry upstream.

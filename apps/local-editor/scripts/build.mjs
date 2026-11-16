@@ -114,3 +114,13 @@ await copyFile(
 );
 
 await copyFile("resources/ldrs/LICENSE", "dist/public/LDRS-LICENSE.txt");
+
+// Desktop renderer uses the same packaged public output; standalone editor builds
+// do not require the optional desktop SDK installation.
+if ((await import("node:fs")).existsSync("../desktop/node_modules/@sentry/electron")) {
+  await build({ entryPoints: ["../desktop/src/monitoring-renderer.mjs"],
+    outfile: "dist/public/sentry-renderer.js", bundle: true, platform: "browser",
+    format: "iife", target: "es2022", sourcemap: true, minify: false });
+} else {
+  await (await import("node:fs/promises")).writeFile("dist/public/sentry-renderer.js", "// Standalone editor: desktop monitoring unavailable.\n");
+}

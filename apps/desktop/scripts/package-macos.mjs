@@ -113,6 +113,8 @@ for (const name of new Set(files)) {
   if (fs.statSync(source).isFile()) copy(source, path.join(staging, name));
 }
 run("npm", ["--prefix", "apps/local-editor", "run", "build"]);
+if (process.env.SENTRY_ORG && process.env.SENTRY_PROJECT)
+  run("make", ["-C", "apps/desktop", "sentry-upload"]);
 copy(
   path.join(repo, "apps/local-editor/dist"),
   path.join(staging, "apps/local-editor/dist"),
