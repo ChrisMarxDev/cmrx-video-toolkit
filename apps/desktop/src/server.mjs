@@ -1,3 +1,4 @@
+import { ProjectBranches } from "./project-branches.mjs";
 import { ProjectServices } from "./project-services.mjs";
 import { mediaPaths, serveMedia } from "./media-routes.mjs";
 import { publicRenderJob } from "../../local-editor/dist/render-contract.mjs";
@@ -38,6 +39,7 @@ export async function startApp({
   pickVideo,
   record,
   pickProject,
+  openSiblingProject,
   projectInfo,
   recentProjects = () => [],
   playgroundFactory,
@@ -214,7 +216,23 @@ export async function startApp({
   const playbackProxies = new PlaybackProxies(
     path.join(workspace, ".editor/playback-proxies"),
   );
-  let playground, agent, projectServices;
+  let playground, agent, projectServices, projectBranches;
+  const workspaceProjects = async (args) => {
+    projectBranches ??= new ProjectBranches({
+      workspace,
+      workspaceRoot,
+      editor,
+      openProject: openSiblingProject,
+      onProgress: (text) => {
+        state.activity = text;
+        publish();
+      },
+    });
+    if (args.action === "list") return projectBranches.list();
+    if (args.action === "create") return projectBranches.create(args);
+    if (args.action === "open") return projectBranches.open(args.name);
+    throw Error("Unknown workspace project action");
+  };
   const projectAction = async (action, args) => {
     projectServices ??= new ProjectServices({ workspace, editor, playground });
     return projectServices.run(action, args);
@@ -374,6 +392,18 @@ export async function startApp({
         !["project_action", "editor_context", "editor_job"].includes(name))
     )
       throw Error("A project transaction is still running");
+    if (projectBranches?.busy)
+      throw Error(
+        "Workspace projects are being created; wait before changing source",
+      );
+    if (name === "workspace_projects") {
+      if (
+        args.action === "create" &&
+        (activeSourceTools || playground.running || projectServices?.busy)
+      )
+        throw Error("Finish source/render work before managing projects");
+      return workspaceProjects(args);
+    }
     if (name === "project_action") {
       if (activeSourceTools)
         throw Error(

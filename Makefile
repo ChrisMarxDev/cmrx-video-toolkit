@@ -309,7 +309,7 @@ desktop-deploy-configure:
 # Shared app/toolkit contracts; usage: make project-core-check
 project-core-check:
 	npm --prefix apps/local-editor run build
-	node --test apps/local-editor/tests/project-core.test.mjs apps/desktop/tests/project-services.test.mjs
+	node --test apps/local-editor/tests/project-core.test.mjs apps/desktop/tests/project-services.test.mjs apps/desktop/tests/project-branches.test.mjs
 # Resolved source/timeline view; usage: make project-inspect PROJECT=/path/to/project
 project-inspect:
 	$(if $(strip $(PROJECT)),,$(error PROJECT is required))

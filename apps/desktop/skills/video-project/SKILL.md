@@ -244,3 +244,27 @@ asked, using a new output file rather than overwriting partial sources.
   export remain available; structural cuts need `output-interactive` or revised
   source and re-registration. Changed source marks output outdated; regenerate it
   before claiming a current export. Preserve the original authored input.
+
+## Create independent videos from one recording
+
+Use `workspace_projects` rather than writing outside `/work` or trying to drive the
+app UI. `list` discovers projects in this workspace; `create` accepts current
+revision, stable `requestId` and 1–20 `{name,brief,script?,instructions?,memory?,ranges?}`
+plans. Every child needs a self-contained brief. Source ranges include `assetId`;
+timeline ranges omit it. Times are start/end seconds, and ranges concatenate.
+Use source windows/frames/audio/text to choose cuts; do not assume transcript-first
+editing. Read `flow/project/README.md` for the full contract.
+
+Timeline selections keep intersecting editable layers/comments and inherited code;
+source selections create fresh footage cuts with code/resources available. Children
+have independent full-quality media, authoring files and context; parent script,
+instructions, memory, selection and document snapshot are preserved under `context/`.
+Supply the script and relevant instructions for each child instead of relying on
+an earlier conversation. Shared workspace skills/instructions continue to apply.
+Validate/render children before claiming that arbitrary inherited custom composition
+code matches a changed edit; explicit source-code timing may need adaptation.
+
+Do not overwrite an existing name or change a plan under a reused request ID.
+Retry the exact same request safely after a lost response. `open` selects a named
+child tab; it does not move this running agent/session, send a message or start a
+second agent there. Creation leaves the parent's video and chat unchanged.

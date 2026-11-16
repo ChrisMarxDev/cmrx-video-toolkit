@@ -29,7 +29,14 @@ const runFile = promisify(execFile);
 const templates = fileURLToPath(new URL("../templates/", import.meta.url));
 const toolkit = fileURLToPath(new URL("../../../", import.meta.url));
 const pin = "10e442c1bb469118516df3335547f85ec92155e6";
-const sourceRoots = ["lib", "assets", "shaders", "test", "pubspec.yaml"];
+const sourceRoots = [
+  "lib",
+  "assets",
+  "shaders",
+  "test",
+  "pubspec.yaml",
+  "context",
+];
 const roots = [...sourceRoots, "tools", "skills", "script.md"];
 function walk(root, prefix = "") {
   if (!fs.existsSync(root)) return [];
@@ -130,7 +137,7 @@ export class Playground {
       if (!write && name === "project.json")
         return path.join(this.workspace, name);
       throw Error(
-        "Source access is limited to lib, assets, shaders, test, pubspec.yaml, tools, skills and script.md. Edit media through editor_edit.",
+        "Source access is limited to lib, assets, shaders, test, pubspec.yaml, tools, skills, script.md and context. Edit media through editor_edit.",
       );
     }
     let current = this.workspace;
@@ -263,17 +270,16 @@ export class Playground {
     );
   }
   hasGraphics() {
-    if (
-      JSON.parse(fs.readFileSync(path.join(this.workspace, "project.json")))
-        .previewMode === "rendered"
-    )
-      return false;
-    if (
-      JSON.parse(
-        fs.readFileSync(path.join(this.workspace, "project.json")),
-      ).clips?.some((c) => c.kind === "graphics")
-    )
-      return true;
+    const document = JSON.parse(
+      fs.readFileSync(path.join(this.workspace, "project.json")),
+    );
+    if (document.graphicsMode === "instances")
+      return (
+        document.previewMode !== "rendered" &&
+        document.clips?.some((c) => c.kind === "graphics")
+      );
+    if (document.previewMode === "rendered") return false;
+    if (document.clips?.some((c) => c.kind === "graphics")) return true;
     return (
       this.read("lib/graphics.dart").trim() !==
       fs.readFileSync(path.join(templates, "graphics.dart"), "utf8").trim()

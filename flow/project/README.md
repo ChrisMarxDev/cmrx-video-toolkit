@@ -173,3 +173,64 @@ Write commands require the running app and use its authenticated local service;
 inspection also works offline. Never print/store the service capability in agent
 instructions or Git. Browser acceptance uses fixtures; render acceptance runs actual
 Flutter over imported footage and verifies pixels, audio, anchoring and code restore.
+
+## One recording, multiple projects
+
+The in-app agent can use `workspace_projects` to list, create and open projects
+inside its own workspace. Creation is additive: parent project/media stay intact;
+existing names are never overwritten. No account state, chat, render cache or
+running agent is cloned. Opening a tab does not transfer the current agent into it.
+
+```json
+{
+  "action": "create",
+  "revision": 12,
+  "requestId": "interview-short-cuts-1",
+  "projects": [
+    {
+      "name": "first-idea",
+      "brief": "A standalone explanation of the first idea, for a new viewer.",
+      "script": "The script specific to this extract.",
+      "instructions": "Keep the demonstration and use concise captions.",
+      "ranges": [{"assetId":"recording-id","start":30,"end":55}]
+    },
+    {
+      "name": "second-idea",
+      "brief": "An independent second topic, with its own introduction.",
+      "ranges": [{"assetId":"recording-id","start":80,"end":105}]
+    }
+  ]
+}
+```
+
+With `assetId`, ranges use the recording's render-input clock. Without it they
+use the parent timeline clock, retaining intersecting editable graphics and timed
+comments. Multiple ranges concatenate in the given order. Do not mix source and
+timeline clocks within a child. An omitted/empty range list creates a blank project
+carrying source/resources/context. Render-only views do not pretend to have an
+editable timeline; use source ranges or a blank project for arbitrary code work.
+The parent's canvas/FPS remain the defaults. Interactive sequence limits still
+apply; arbitrary authored output remains available through rendered review.
+
+Each project contains its own `project.json`, `script.md`, `AGENTS.md`, `memory.md`,
+editable `lib/`, assets/media/shaders/skills/tools, and `context/` with the brief,
+selection/provenance, parent project snapshot and parent script/instructions/memory.
+Prior context is retained, with reserved parent metadata archived rather than
+replacing the child's provenance. Shared workspace instructions/skills still apply.
+Media files retain full quality; copying uses filesystem copy-on-write when available
+and ordinary independent copies otherwise. These are not hardlinks. On filesystems
+without copy-on-write, retaining complete media in each project consumes more disk.
+
+`branchProject` is a reusable, UI-independent derivation in `branch.mjs`. The desktop
+adapter validates projects, stages a whole batch, checks source revision/files,
+then publishes its folders. Keep a stable request ID when retrying the same plan;
+changed input rejects that ID. Ready interrupted batches finish without recopying
+or deleting already published children, including work added after their creation.
+No automatic child agent or model call is started. Use `open` with a name from `list`
+to open a child tab; continue its editing conversation there.
+
+Verification: `make -C apps/desktop project-branches-check` and
+`project-branches-native-check` (with the same Playwright/Electron variables used
+above). Tests cover source/timeline selection, context/media independence, replay,
+name collisions, invalid batches, symlinks, reopen/encoded audio/video output and
+native agent-to-tab routing.

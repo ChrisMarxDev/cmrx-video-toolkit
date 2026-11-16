@@ -254,6 +254,9 @@ else {
         });
         const service = await startApp({
           workspace: project.workspace,
+          openSiblingProject: async (folder) => {
+            await open(library.open(folder));
+          },
           record: isUtility ? undefined : () => recorder.open(project),
           workspaceRoot: isUtility
             ? undefined

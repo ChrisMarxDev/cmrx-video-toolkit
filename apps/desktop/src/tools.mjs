@@ -8,6 +8,42 @@ const number = { type: "number" },
   string = { type: "string" };
 export const tools = [
   [
+    "workspace_projects",
+    "Manage projects inside the current desktop workspace. list returns saved projects; create makes 1–20 independent projects from this project's media/code/context with per-project briefs and scripts, never re-encodes or overwrites existing projects. Provide current revision and stable requestId for retry safety. Each ranges entry is source time when assetId is given; otherwise it is current timeline time. Do not mix clocks within one child. Omit ranges for a blank project carrying resources/context. Timeline ranges retain intersecting editable graphics/comments; source ranges start fresh footage cuts, with inherited graphics source available. open selects a named project tab; the running agent stays bound to its original project, and no child agent is started. No provider credentials or chat sessions are copied.",
+    object(
+      {
+        action: { type: "string", enum: ["list", "create", "open"] },
+        revision: { type: "integer" },
+        requestId: string,
+        name: string,
+        projects: {
+          type: "array",
+          minItems: 1,
+          maxItems: 20,
+          items: object(
+            {
+              name: string,
+              brief: string,
+              script: string,
+              instructions: string,
+              memory: string,
+              ranges: {
+                type: "array",
+                maxItems: 100,
+                items: object({ assetId: string, start: number, end: number }, [
+                  "start",
+                  "end",
+                ]),
+              },
+            },
+            ["name", "brief"],
+          ),
+        },
+      },
+      ["action"],
+    ),
+  ],
+  [
     "project_action",
     "Toolkit project services. source-window combines source-clock frames, audio levels and timed cues (max 120s); checkpoint-create captures timeline and authored code, checkpoint-diff previews restoration, checkpoint-restore restores both with safety checkpoint and revision guard; interchange-export saves OTIO plus native project/source and loss warnings; output-register verifies an arbitrary generated assets/ or media/ video and shows it in the single review player without requiring timeline support; output-interactive returns to timeline preview. Use revision for writes. These do not restrict arbitrary Flutter authoring.",
     object(

@@ -125,3 +125,11 @@ toolkit-render-check: build
 # Actual Electron history/forms (optional MAC_APP=/path/App.app); usage: make toolkit-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
 toolkit-native-check: build
 	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" EDITOR_PACKAGED_APP="$(MAC_APP)" node tests/toolkit-environment-native.mjs
+
+.PHONY: project-branches-check project-branches-native-check
+# Workspace project creation/retries/cuts; usage: make project-branches-check
+project-branches-check: build
+	node --test tests/project-branches.test.mjs
+# Real desktop agent-to-tab handoff; usage: make project-branches-native-check EDITOR_PLAYWRIGHT=/path/to/playwright EDITOR_ELECTRON=/path/to/electron
+project-branches-native-check: build
+	EDITOR_PLAYWRIGHT="$(EDITOR_PLAYWRIGHT)" EDITOR_ELECTRON="$(EDITOR_ELECTRON)" node tests/project-branches-native.mjs

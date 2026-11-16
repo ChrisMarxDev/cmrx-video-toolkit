@@ -279,3 +279,9 @@ separately from document-only Undo. `previewMode: rendered` and verified
 requiring interactive clips. The agent can continue source authoring; structured
 editing remains available in the interactive projection. OTIO carries a documented
 footage subset and native/source sidecars with loss reporting.
+
+Derived workspace projects record `branch` provenance and may persist
+`graphicsMode: instances`: source-only or blank projects keep inherited graphics
+source available without automatically replaying legacy global overlays. Timeline
+branches retain intersecting graphics instances. Their initial revision is zero;
+parent chats, account sessions and undo history are not part of this document.

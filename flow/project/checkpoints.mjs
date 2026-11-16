@@ -16,6 +16,7 @@ const roots = [
   "README.md",
   "design.md",
   "design-system",
+  "context",
 ];
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const mediaHashes = new Map();

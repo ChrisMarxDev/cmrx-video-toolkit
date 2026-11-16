@@ -114,3 +114,22 @@ Automatic preview refreshes run only for the active desktop project and yield
 to queued edits. Switching tabs cancels a disposable refresh, while explicit
 exports and agent work continue. Export video downloads an existing fresh export
 directly; changed video content requires a new render.
+
+## Let the agent create several videos
+
+Ask, for example: “Turn this recording into three independent videos, give each
+one its own brief and script, and keep the editable graphics.” The agent can now
+list projects, create a batch from recording or timeline ranges, and open a project
+in its own tab. New projects also appear in the workspace project list under +.
+No browser/UI automation or extra provider connection is needed.
+
+Each new folder has its own timeline, script, instructions, memory, source media,
+editable code/resources and `context/` containing selection/provenance and parent
+reference material. The original stays intact. Recordings are retained complete
+and full quality; these are non-destructive project cuts, not trimmed source files.
+File copies use copy-on-write where supported; otherwise they use ordinary disk
+space. Histories, account credentials and render caches are not cloned.
+
+An open action changes the selected tab, not the running agent's project. Continue
+chatting inside a child to work on it independently. The agent-facing contract and
+checks are in [shared project contracts](../../flow/project/README.md#one-recording-multiple-projects).
