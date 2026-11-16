@@ -59,6 +59,22 @@ Ask the user to import device files through Add video, drag/drop or paste; inspe
 `projectAgent.importedAssets` and `workspace_files` for files already imported.
 Do not assume access to a phone, credentials or arbitrary host paths.
 
+## Native permissions and worker paths
+
+The provider's native shell/filesystem can be read-only while the app's editing
+tools are writable. Use `workspace_write`, `editor_edit`/`editor_batch` and
+`project_notes` for their respective mutations. Validate through `workspace_exec`.
+Try the relevant app tool and inspect its actual result before reporting a
+permission blocker; native read-only metadata alone does not require reopening.
+
+The worker mounts Fluvie at `/runtime/fluvie/packages/fluvie` and
+`/runtime/fluvie/packages/fluvie_media`, not `/fluvie`. Local project dependencies
+must live under captured source roots, for example `assets/vendor/my_package/`.
+Root-level `packages/`, `context/` and arbitrary reference folders are not exposed
+by source tools or copied into render snapshots. Put readable context in `assets/`
+or a project `skills/` folder. Fix invalid pubspec paths using `workspace_write`,
+then run `flutter pub get --offline` through `workspace_exec`.
+
 ## Keep the video editable and visible
 
 - `project.json` is the timeline authority. A Dart file or rendered MP4 alone does
