@@ -29,6 +29,7 @@ if (process.env.CHAT_DEBUG_PORT)
     process.env.CHAT_DEBUG_PORT,
   );
 app.setName("CMRX Chat Editor");
+if (process.env.CMRX_SOFTWARE_PREVIEW === "1") app.disableHardwareAcceleration();
 // Monitoring can cache Electron's userData path. Select the existing application
 // profile first, so an update does not appear to lose workspaces and accounts.
 const monitoring = require("./monitoring.cjs");

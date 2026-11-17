@@ -149,10 +149,12 @@ try {
         "0",
         path.join(dir, `overlay_track_${track}.webm`),
       ]);
-    fs.copyFileSync(
-      path.join(dir, "overlay_track_1.webm"),
-      path.join(dir, "overlay.webm"),
-    );
+    ff([
+      "-f", "lavfi", "-i",
+      "color=black@0:s=320x180:r=12:d=2,format=rgba,drawbox=x=0:y=0:w=160:h=180:color=0xEE2020@1:t=fill:replace=1,drawbox=x=160:y=0:w=160:h=180:color=0x2040EE@1:t=fill:replace=1",
+      "-c:v", "libvpx-vp9", "-threads", "1", "-pix_fmt", "yuva420p",
+      "-auto-alt-ref", "0", path.join(dir, "overlay.webm"),
+    ]);
     fs.copyFileSync(
       path.join(workspace, "media/source.mp4"),
       path.join(dir, "preview.mp4"),
@@ -300,6 +302,8 @@ try {
   const gray = (p) =>
     Math.abs(p[0] - p[1]) < 20 && Math.abs(p[1] - p[2]) < 20 && p[0] > 70;
   await seek();
+  assert.equal(await editor.locator('video[aria-label="Flutter graphics layer"]').count(), 1,
+    "normal playback uses one combined graphics stream");
   let colors = await pixels();
   assert(red(colors[0]) && blue(colors[1]), JSON.stringify(colors));
   await post("send", { text: "Hold the agent busy while I inspect layers" });

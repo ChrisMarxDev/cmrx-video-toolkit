@@ -4,18 +4,20 @@ import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import vm from 'node:vm';
 test('monitoring initializes after selecting the existing application profile', () => {
-  let name = 'Electron', observed;
-  const app = { setName(value) { name = value; } };
+  for (const software of [false, true]) {
+  let name = 'Electron', observed, hardwareDisabled = false;
+  const app = { setName(value) { name = value; }, disableHardwareAcceleration() { hardwareDisabled = true; } };
   const source = fs.readFileSync(new URL('../src/desktop.cjs', import.meta.url), 'utf8');
   vm.runInNewContext(source.slice(0, source.indexOf('if (!app.requestSingleInstanceLock())')), {
-    __dirname: '/test/app', process: { env: {} },
+    __dirname: '/test/app', process: { env: software ? { CMRX_SOFTWARE_PREVIEW: '1' } : {} },
     require(id) {
       if (id === 'electron') return { app };
-      if (id === './monitoring.cjs') { observed = name; return {}; }
+      if (id === './monitoring.cjs') { observed = { name, hardwareDisabled }; return {}; }
       return createRequire(import.meta.url)(id);
     },
   });
-  assert.equal(observed, 'CMRX Chat Editor');
+  assert.deepEqual(observed, { name: 'CMRX Chat Editor', hardwareDisabled: software });
+  }
 });
 const { cleanEvent } = createRequire(import.meta.url)('../src/monitoring-policy.cjs');
 test('monitoring allowlist removes project data, secrets, request tokens and host paths', () => {

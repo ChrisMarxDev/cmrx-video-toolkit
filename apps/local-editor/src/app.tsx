@@ -274,6 +274,7 @@ type PreviewBridge = {
     duration: number;
     id: string;
     thumbnails?: boolean;
+    stale?: boolean;
     previewTracks?: number[];
   };
 };
@@ -827,6 +828,17 @@ function App() {
           (c) => c.kind === "graphics" && c.track === Number(track),
         ),
     );
+  // Normal playback needs one composited graphics decoder. Isolated caches are
+  // only necessary when inspecting hidden/removed layers independently.
+  const splitGraphicsPreview =
+    !!previewBridge?.overlay?.previewTracks?.length && (
+    !!previewBridge.overlay.stale ||
+    Object.values(previewLayers).some((flags) => flags.disabled !== undefined) ||
+    previewBridge.overlay.previewTracks.some(
+      (track) =>
+        layerState(track)?.disabled ||
+        !p?.clips.some((clip) => clip.kind === "graphics" && clip.track === track),
+    ));
 
   useEffect(() => {
     if (p && !p.clips.some((clip) => clip.id === selected))
@@ -1678,8 +1690,8 @@ function App() {
                               ),
                             )}
                           {previewBridge?.overlay &&
-                            (previewBridge.overlay.previewTracks?.length
-                              ? previewBridge.overlay.previewTracks
+                            (splitGraphicsPreview
+                              ? (previewBridge.overlay.previewTracks ?? [])
                                   .filter(
                                     (track) =>
                                       !layerState(track)?.disabled &&

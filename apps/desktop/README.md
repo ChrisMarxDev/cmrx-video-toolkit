@@ -74,6 +74,13 @@ Linux worker commands use a private disk-backed scratch directory under
 succeeds or fails. Raw frame capture can exceed available RAM; do not replace
 this with a RAM-backed tmpfs when configuring workers.
 
+For a software-only preview session, launch with
+`CMRX_SOFTWARE_PREVIEW=1 make -C apps/desktop run` from the toolkit root.
+This disables Electron hardware acceleration before startup: video decoding and
+window compositing run on the CPU. It does not change source media or exports,
+and can increase CPU usage. Normal graphics playback uses one combined alpha
+stream; hiding individual layers temporarily selects their isolated caches.
+
 While an agent task runs, sending a message queues a follow-up. A queued message's
 **Steer** button explicitly delivers it into the active task when the provider
 supports this (currently ChatGPT). It leaves the queue only after acceptance;
