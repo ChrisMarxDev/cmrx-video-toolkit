@@ -31,6 +31,7 @@ if (!token || !editorToken) {
 } else {
   setupProjectTools({ call, showError });
   let latestState;
+  let projectVisible = window.__cmrxProjectVisible !== false;
   let importingVideo = false;
   let requestedExport = null;
   function downloadRequestedExport(state) {
@@ -208,6 +209,7 @@ if (!token || !editorToken) {
     $("#editor").contentWindow?.postMessage(
       {
         type: "cmrx:preview",
+        active: projectVisible,
         overlay,
         rendered: s.rendered
           ? {
@@ -233,6 +235,12 @@ if (!token || !editorToken) {
       location.origin,
     );
   };
+  window.addEventListener("cmrx:project-visibility", (event) => {
+    projectVisible = event.detail === true;
+    if (!projectVisible)
+      for (const media of document.querySelectorAll("video,audio")) media.pause();
+    syncPreview();
+  });
   // Keep the base editor intact; its optional comments dock starts closed in chat mode.
   $("#editor").onload = () => {
     const doc = $("#editor").contentDocument;

@@ -29,7 +29,9 @@ if (process.env.CHAT_DEBUG_PORT)
     process.env.CHAT_DEBUG_PORT,
   );
 app.setName("CMRX Chat Editor");
-if (process.env.CMRX_SOFTWARE_PREVIEW === "1") app.disableHardwareAcceleration();
+const { softwarePreviewEnabled } = require("./software-preview.cjs");
+if (softwarePreviewEnabled(app.getPath("userData"), process.env.CMRX_SOFTWARE_PREVIEW))
+  app.disableHardwareAcceleration();
 // Monitoring can cache Electron's userData path. Select the existing application
 // profile first, so an update does not appear to lose workspaces and accounts.
 const monitoring = require("./monitoring.cjs");
@@ -151,10 +153,17 @@ else {
           });
       }
       function show() {
-        for (const e of all())
-          e.view.setVisible(
-            !overlay && (settingsOnly ? e === utility : e === current()),
-          );
+        for (const e of all()) {
+          const visible = !win.isMinimized() && win.isVisible() &&
+            !overlay && (settingsOnly ? e === utility : e === current());
+          e.view.setVisible(visible);
+          if (e.visible !== visible) {
+            e.visible = visible;
+            e.view.webContents.executeJavaScript(
+              `window.__cmrxProjectVisible=${visible};window.dispatchEvent(new CustomEvent('cmrx:project-visibility',{detail:${visible}}))`,
+            ).catch(() => {});
+          }
+        }
         layout();
         win.setTitle(
           current()
@@ -388,7 +397,17 @@ else {
         persist();
         publish();
       }
+      const opening = new Map();
       async function open(project) {
+        let task = opening.get(project.workspace);
+        if (!task) {
+          task = openProject(project);
+          opening.set(project.workspace, task);
+        }
+        try { return await task; }
+        finally { if (opening.get(project.workspace) === task) opening.delete(project.workspace); }
+      }
+      async function openProject(project) {
         project.workspaceRoot ||= workspaces.ensure().folder;
         let e = entries.find((e) => e.project.workspace === project.workspace);
         if (!e) {
@@ -621,6 +640,8 @@ else {
         });
       });
       win.on("resize", layout);
+      for (const event of ["minimize", "restore", "hide", "show"])
+        win.on(event, show);
       await win.loadFile(rootFile);
       const index = process.argv.indexOf("--workspace");
       if (workspaces.saved.folder) {

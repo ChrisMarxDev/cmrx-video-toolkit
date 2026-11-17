@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Asset, Clip } from "./model";
 import type { MediaPreview } from "./media-preview";
-const cache = new Map<string, Promise<MediaPreview>>();
+import { acquirePreview } from "./preview-requests";
 
 export function ClipMedia({
   clip,
@@ -24,16 +24,8 @@ export function ClipMedia({
     setMedia(null);
     setImage(null);
     setFailed(false);
-    let request = cache.get(key);
-    if (!request) {
-      request = fetch(url).then(async (response) => {
-        if (!response.ok) throw Error("Preview unavailable");
-        return response.json() as Promise<MediaPreview>;
-      });
-      cache.set(key, request);
-      request.catch(() => cache.delete(key));
-    }
-    request
+    const request = acquirePreview<MediaPreview>(key, url);
+    request.promise
       .then((data) => {
         if (!active) return;
         setMedia(data);
@@ -53,6 +45,7 @@ export function ClipMedia({
       });
     return () => {
       active = false;
+      request.release();
     };
   }, [key]);
   useEffect(() => {

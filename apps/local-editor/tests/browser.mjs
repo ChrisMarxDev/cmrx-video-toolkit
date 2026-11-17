@@ -50,7 +50,8 @@ try {
     () => document.querySelector(".stage video")?.readyState >= 2,
   );
   // The second cut starts at 4s: it must not hold a decoder/buffer at time 0.
-  assert.equal(await page.locator(".stage video:not([src])").count(), 1);
+  assert.equal(await page.locator(".stage video").count(), 2,
+    "the far cut has no media element/decoder at time zero");
   await page.waitForFunction(() => {
     const canvases = [...document.querySelectorAll(".clip-media")];
     return (
@@ -741,9 +742,10 @@ try {
   );
   assert.deepEqual(readProject(), navigationProject);
   // Transcript imports persist as source time and seek the assembled timeline.
-  await page
-    .getByRole("button", { name: "Toggle transcript", exact: true })
-    .click();
+  const transcriptDock = page.getByRole("complementary", { name: "Transcript", exact: true });
+  if (!(await transcriptDock.isVisible()))
+    await page.getByRole("button", { name: "Toggle transcript", exact: true }).click();
+  await transcriptDock.getByRole("button", { name: "Transcript", exact: true }).click();
   await page.getByText("No transcript yet", { exact: true }).waitFor();
   await page
     .getByLabel("Transcript source", { exact: true })
@@ -771,6 +773,8 @@ try {
   await page
     .getByRole("button", { name: "Toggle transcript", exact: true })
     .click();
+  await page.getByRole("complementary", { name: "Transcript", exact: true })
+    .getByRole("button", { name: "Transcript", exact: true }).click();
   await page.locator(".transcript-cue").first().waitFor();
 
   await page.getByRole("textbox", { name: "Comment", exact: true }).waitFor();
@@ -802,7 +806,7 @@ try {
       .locator(".dock-pane")
       .evaluateAll((nodes) => nodes.map((node) => node.dataset.pane));
   await page
-    .getByRole("button", { name: "Move Transcript panel", exact: true })
+    .getByRole("button", { name: "Move Sources panel", exact: true })
     .dragTo(
       page.getByRole("button", { name: "Move Comments panel", exact: true }),
     );
@@ -971,9 +975,7 @@ try {
       .evaluateAll((videos) => videos.every((v) => v.muted)),
     true,
   );
-  const baseVideos = readProject().clips.filter(
-    (c) => c.kind === "video" && c.track === 0,
-  ).length;
+  const baseVideos = await page.locator('.stage video[data-track="0"]').count();
   const videosBeforeDisable = await page.locator(".stage video").count();
   await page
     .getByRole("button", { name: "Disable layer 0", exact: true })

@@ -6,12 +6,13 @@ import vm from 'node:vm';
 test('monitoring initializes after selecting the existing application profile', () => {
   for (const software of [false, true]) {
   let name = 'Electron', observed, hardwareDisabled = false;
-  const app = { setName(value) { name = value; }, disableHardwareAcceleration() { hardwareDisabled = true; } };
+  const app = { setName(value) { name = value; }, getPath() { assert.equal(name, 'CMRX Chat Editor'); return '/test-profile'; }, disableHardwareAcceleration() { hardwareDisabled = true; } };
   const source = fs.readFileSync(new URL('../src/desktop.cjs', import.meta.url), 'utf8');
   vm.runInNewContext(source.slice(0, source.indexOf('if (!app.requestSingleInstanceLock())')), {
     __dirname: '/test/app', process: { env: software ? { CMRX_SOFTWARE_PREVIEW: '1' } : {} },
     require(id) {
       if (id === 'electron') return { app };
+      if (id === './software-preview.cjs') return { softwarePreviewEnabled: (_profile, override) => override === '1' };
       if (id === './monitoring.cjs') { observed = { name, hardwareDisabled }; return {}; }
       return createRequire(import.meta.url)(id);
     },

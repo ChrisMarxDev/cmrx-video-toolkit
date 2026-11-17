@@ -250,14 +250,8 @@ try {
     ),
     savedTime,
   );
-  await reopenedA
-    .getByRole("button", { name: "Connect ChatGPT", exact: true })
-    .waitFor();
+  // The profile restores an explicitly enabled account; no new Connect click.
   await shell.getByRole("button", { name: "Settings", exact: true }).click();
-  await reopenedA
-    .getByRole("dialog", { name: "Settings" })
-    .getByRole("button", { name: "Connect ChatGPT", exact: true })
-    .click();
   await reopenedA
     .getByRole("dialog", { name: "Settings" })
     .getByText("Connected", { exact: true })
@@ -290,6 +284,16 @@ try {
     .waitFor();
   assert.equal(JSON.parse(fs.readFileSync(sessionPath)).folders.length, 0);
   assert(fs.existsSync(before.folders[0]));
+  const cold = path.join(root, "projects/projects/ColdRace");
+  fs.mkdirSync(cold);
+  fs.writeFileSync(path.join(cold, "project.json"), JSON.stringify({ ...initial, name: "ColdRace" }));
+  await shell.evaluate(async (folder) => {
+    await Promise.all(Array.from({ length: 3 }, () => window.projects.command("open", { folder })));
+  }, cold);
+  assert.equal(await shell.getByRole("tab", { name: "ColdRace", exact: true }).count(), 1,
+    "concurrent cold opens share one service, not competing workspace locks");
+  await shell.getByRole("button", { name: "Close ColdRace", exact: true }).click();
+  assert.equal(JSON.parse(fs.readFileSync(sessionPath)).folders.length, 0);
   console.log(
     "PASS: native create/open/deduplicate, isolated drafts, background agent, shared account, busy-close, restoration and empty state. Evidence " +
       root,

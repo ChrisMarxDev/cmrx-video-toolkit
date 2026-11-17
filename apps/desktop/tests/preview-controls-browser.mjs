@@ -334,8 +334,11 @@ try {
       .locator(".stage video:not([data-overlay])")
       .evaluate((v) => v.muted),
   );
+  const combined = await editor.locator('video[aria-label="Flutter graphics layer"]').elementHandle();
   await inspectLayer("Hide layer 1");
   await seek();
+  assert(await combined.evaluate(v => v.paused && !v.hasAttribute("src")),
+    "replaced graphics decoders are paused and unloaded");
   colors = await pixels();
   assert(gray(colors[0]) && blue(colors[1]), JSON.stringify(colors));
   await inspectLayer("Show layer 1");

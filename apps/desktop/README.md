@@ -80,6 +80,14 @@ This disables Electron hardware acceleration before startup: video decoding and
 window compositing run on the CPU. It does not change source media or exports,
 and can increase CPU usage. Normal graphics playback uses one combined alpha
 stream; hiding individual layers temporarily selects their isolated caches.
+The software choice is saved in the app profile for subsequent launches; use
+`CMRX_SOFTWARE_PREVIEW=0` once to restore hardware acceleration.
+Auto preview quality is capped at 1080p; original-resolution playback requires
+the explicit Original choice. Only clips near the playhead hold media elements,
+and hidden project views release their players and cancel pending filmstrip work.
+Timeline filmstrip requests use at most two connections so video ranges and UI
+requests remain usable on long, cut-heavy projects. Snapshot copying and input
+verification run in workers, including export preflight and output registration.
 
 While an agent task runs, sending a message queues a follow-up. A queued message's
 **Steer** button explicitly delivers it into the active task when the provider

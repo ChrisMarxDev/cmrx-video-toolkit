@@ -106,6 +106,15 @@ test("preview terminal/freshness states cannot look like ongoing rendering", () 
   );
   assert.equal(projectRuntime({ connected: false }).label, "Ready to edit");
 });
+test("a verified rendered review is ready despite old cancelled or failed preview caches", () => {
+  const r = projectRuntime({
+    rendered: { id: "review", stale: false },
+    jobs: [{ id: "old-cache", kind: "overlay", status: "canceled" }],
+  });
+  assert.equal(r.preview.phase, "ready");
+  assert.equal(r.preview.jobId, "review");
+  assert.equal(r.label, "Ready to edit");
+});
 
 test("service snapshots and agent context agree on runtime ownership without blocking context reads", async () => {
   const fs = await import("node:fs");

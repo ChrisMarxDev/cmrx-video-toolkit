@@ -106,6 +106,9 @@ try {
     "aac",
     path.join(dir, "preview.mp4"),
   ]);
+  // The synchronous fixture encoder can outlive HTTP keep-alive. Let Node
+  // process the idle socket's close event before issuing the next request.
+  await new Promise((resolve) => setImmediate(resolve));
   p = (await app.editor("/api/context")).project;
   app.playground.jobs.push({
     id: job,
@@ -295,6 +298,13 @@ try {
       .isVisible(),
   );
   await page.unroute("**/api/playback-preview*");
+  await quality.selectOption("720");
+  await widths(720);
+  await editor.locator("body").evaluate(() => Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 4 }));
+  await quality.selectOption("auto");
+  await widths(1080);
+  assert.equal(await editor.locator(".stage video").first().getAttribute("data-preview-quality"), "1080",
+    "Auto never falls back to full-resolution originals on high-DPI displays");
   await quality.selectOption("720");
   await widths(720);
   assert.equal(

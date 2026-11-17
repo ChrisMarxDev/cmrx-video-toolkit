@@ -42,6 +42,8 @@ export function projectRuntime(s) {
           track: active.track ?? null,
           trackCount: active.trackCount ?? null,
         }
+      : s.rendered && !s.rendered.stale
+        ? { phase: "ready", kind: "export", jobId: s.rendered.id }
       : s.sourceError
         ? { phase: "failed", kind: "graphics", reason: "source-error" }
         : previewJob && terminalFailure.has(previewJob.status)

@@ -746,7 +746,9 @@ export class Playground {
       accepted = false;
     try {
       const capturedFiles = this.inputFiles();
-      captureFiles(this.workspace, dest, capturedFiles);
+      await this.prepareInWorker("./render-snapshot-worker.mjs", {
+        mode: "copy", workspace: this.workspace, dest, files: capturedFiles,
+      });
       const source = path.join(dest, relative),
         sourceIdentity = fileIdentity(source);
       const original = await probe(source),
@@ -868,12 +870,10 @@ export class Playground {
           normalized: !compatible,
         },
       });
-      const inputManifest = describeInputs(
-        dest,
-        next,
-        capturedFiles,
-        this.engineIdentity(),
-      );
+      const { manifest: inputManifest } = await this.prepareInWorker("./render-snapshot-worker.mjs", {
+        mode: "manifest", dest, authoredProject: next, capturedFiles,
+        engine: this.engineIdentity(),
+      });
       fs.writeFileSync(path.join(dest, "project.json"), JSON.stringify(next));
       fs.writeFileSync(
         path.join(dest, "input-manifest.json"),

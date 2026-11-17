@@ -96,6 +96,19 @@ const seconds = (s: number) =>
     .toString()
     .padStart(2, "0")}:${(s % 60).toFixed(2).padStart(5, "0")}`;
 
+function useMediaDisposal(ref: React.RefObject<HTMLVideoElement | null>) {
+  useEffect(() => {
+    const media = ref.current;
+    return () => {
+      if (!media) return;
+      media.pause();
+      releaseMediaGain(media);
+      media.removeAttribute("src");
+      media.load();
+    };
+  }, []);
+}
+
 function VideoLayer({
   clip,
   time,
@@ -103,6 +116,7 @@ function VideoLayer({
   playbackRate,
   listeningVolume,
   previewQuality,
+  audioOnly,
   reportProxy,
   report,
 }: {
@@ -112,6 +126,7 @@ function VideoLayer({
   playbackRate: number;
   listeningVolume: number;
   previewQuality: string | null;
+  audioOnly: boolean;
   reportProxy: (id: string, status: ProxyState | null) => void;
   report: (s: string) => void;
 }) {
@@ -125,7 +140,7 @@ function VideoLayer({
   const preview = usePlaybackProxy(
     mediaURL,
     resource("playback-preview", { id: clip.assetId! }),
-    nearPlayhead ? previewQuality : null,
+    nearPlayhead && !audioOnly ? previewQuality : null,
   );
   useEffect(() => {
     reportProxy(clip.id, preview.status);
@@ -148,12 +163,7 @@ function VideoLayer({
         clip.muted ? 0 : (clip.volume ?? 1) * listeningVolume,
       );
   }, [clip.volume, clip.muted, listeningVolume, playing, active]);
-  useEffect(() => {
-    const media = ref.current;
-    return () => {
-      if (media) releaseMediaGain(media);
-    };
-  }, []);
+  useMediaDisposal(ref);
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
@@ -225,6 +235,7 @@ function VideoLayer({
     <video
       ref={ref}
       src={nearPlayhead ? preview.url : undefined}
+      data-track={clip.track}
       data-preview-state={preview.status}
       data-preview-quality={previewQuality || "original"}
       muted={clip.muted || listeningVolume === 0}
@@ -251,6 +262,7 @@ function VideoLayer({
   );
 }
 type PreviewBridge = {
+  active?: boolean;
   rendered?: {
     id: string;
     url: string;
@@ -323,12 +335,7 @@ function RenderedOutput({
       v.removeEventListener("seeked", sync);
     };
   }, [output.url, time, playing, playbackRate, volume]);
-  useEffect(
-    () => () => {
-      if (ref.current) releaseMediaGain(ref.current);
-    },
-    [],
-  );
+  useMediaDisposal(ref);
   return (
     <video
       ref={ref}
@@ -359,6 +366,7 @@ function GraphicsLayer({
   reportProxy: (id: string, status: ProxyState | null) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  useMediaDisposal(ref);
   const statusURL = new URL(overlay.url, location.origin);
   statusURL.pathname = "/chat/overlay-preview";
   const preview = usePlaybackProxy(overlay.url, statusURL.href, previewQuality);
@@ -605,6 +613,7 @@ function App() {
       )
         return;
       const next = {
+        active: e.data.active !== false,
         rendered: e.data.rendered ?? null,
         overlay,
         activity: activity
@@ -756,9 +765,7 @@ function App() {
     previewQuality === "original"
       ? null
       : previewQuality === "auto"
-        ? autoPixels > 1080
-          ? null
-          : autoPixels > 720
+        ? autoPixels > 720
             ? "1080"
             : "720"
         : previewQuality;
@@ -794,6 +801,10 @@ function App() {
   }, []);
   const p = state?.resolution?.project ?? state?.project;
   const rendered = previewBridge?.rendered;
+  const playerActive = previewBridge?.active !== false;
+  useEffect(() => {
+    if (!playerActive) setPlaying(false);
+  }, [playerActive]);
   const viewWidth = rendered?.width ?? p?.width ?? 1920,
     viewHeight = rendered?.height ?? p?.height ?? 1080;
   const layerState = (track: number) =>
@@ -1613,7 +1624,7 @@ function App() {
                         inset: 0,
                       }}
                     >
-                      {rendered ? (
+                      {playerActive && (rendered ? (
                         <RenderedOutput
                           output={rendered}
                           time={time}
@@ -1625,6 +1636,8 @@ function App() {
                         <>
                           {sorted
                             .filter((clip) => !layerState(clip.track)?.disabled)
+                            .filter((clip) => clip.kind !== "video" ||
+                              (time >= clip.start - 1 && time < clip.start + clip.duration + 0.25))
                             .map((clip) =>
                               clip.kind === "video" ? (
                                 <VideoLayer
@@ -1639,6 +1652,7 @@ function App() {
                                   playing={playing}
                                   playbackRate={playbackRate}
                                   previewQuality={proxyQuality}
+                                  audioOnly={/\.(wav|mp3|aac|m4a|ogg|flac)$/i.test(p!.assets.find(a => a.id === clip.assetId)?.path ?? "")}
                                   reportProxy={reportProxy}
                                   listeningVolume={
                                     listeningMuted ? 0 : listeningVolume
@@ -1745,7 +1759,7 @@ function App() {
                             </output>
                           )}
                         </>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2695,7 +2709,7 @@ function App() {
                       }}
                       onPointerDown={(e) => begin(e, clip, "move")}
                     >
-                      {clip.kind === "video" &&
+                      {playerActive && clip.kind === "video" &&
                         p!.assets.find((a) => a.id === clip.assetId) && (
                           <ClipMedia
                             clip={{
