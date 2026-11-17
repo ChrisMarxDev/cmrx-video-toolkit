@@ -252,7 +252,7 @@ export async function startApp({
       importing,
       recoveryRequired: !!projectServices?.recoveryRequired,
       steering: !!steeringPayload,
-      preparingRender,
+      preparingRender: preparingRender || !!playground?.snapshotWorkers?.size,
     });
   const locked = () => !runtime().capabilities.editTimeline.allowed;
   const publish = () => {

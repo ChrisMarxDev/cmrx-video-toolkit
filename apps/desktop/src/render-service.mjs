@@ -19,7 +19,7 @@ export async function startManualRender({
   try {
     while (activeWrites())
       await new Promise((resolve) => setTimeout(resolve, 10));
-    const current = playground.state();
+    const current = await playground.freshState();
     if (current.rendered) {
       if (current.rendered.stale)
         throw Error(

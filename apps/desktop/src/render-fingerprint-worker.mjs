@@ -6,7 +6,7 @@ import { Playground } from "./playground.mjs";
 const inspector = Object.assign(Object.create(Playground.prototype), {
   workspace: workerData.workspace,
 });
-parentPort.on("message", () => {
+const inspect = () => {
   try {
     parentPort.postMessage({
       fingerprint: inspector.fingerprint(),
@@ -15,4 +15,8 @@ parentPort.on("message", () => {
   } catch (error) {
     parentPort.postMessage({ sourceError: error.message, hasGraphics: true });
   }
-});
+};
+if (workerData.once) {
+  inspect();
+  parentPort.close();
+} else parentPort.on("message", inspect);

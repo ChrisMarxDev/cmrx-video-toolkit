@@ -263,10 +263,10 @@ export class Playground {
     );
   }
   get running() {
-    return this.jobs.some((j) => j.status === "running");
+    return !!this.snapshotWorkers?.size || this.jobs.some((j) => j.status === "running");
   }
   get blocking() {
-    return this.jobs.some(
+    return !!this.snapshotWorkers?.size || this.jobs.some(
       (j) => j.status === "running" && j.kind !== "overlay",
     );
   }
@@ -321,6 +321,40 @@ export class Playground {
       });
     }
     this.inspector.postMessage("inspect");
+  }
+  async prepareInWorker(file, workerData) {
+    const worker = new Worker(new URL(file, import.meta.url), { workerData });
+    this.snapshotWorkers ??= new Set();
+    this.snapshotWorkers.add(worker);
+    this.onChange();
+    try {
+      return await new Promise((resolve, reject) => {
+        worker.once("message", (result) => {
+          if (result.error) reject(Error(result.error));
+          else resolve(result);
+        });
+        worker.once("error", reject);
+        worker.once("exit", (code) => reject(Error(`Snapshot worker stopped (${code})`)));
+      });
+    } finally {
+      await worker.terminate();
+      this.snapshotWorkers.delete(worker);
+      this.onChange();
+    }
+  }
+  async captureInputs(dest, files, capturedFiles, authoredProject) {
+    const result = await this.prepareInWorker("./render-snapshot-worker.mjs", {
+      workspace: this.workspace, dest, files, capturedFiles,
+      authoredProject, engine: this.engineIdentity(),
+    });
+    return result.manifest;
+  }
+  async freshState() {
+    this.inspection = await this.prepareInWorker("./render-fingerprint-worker.mjs", {
+      workspace: this.workspace, once: true,
+    });
+    this.inspectedAt = Date.now();
+    return this.state({ background: true });
   }
   state({ background = false } = {}) {
     const latest = this.jobs
@@ -895,7 +929,7 @@ export class Playground {
       fs.readFileSync(path.join(this.workspace, "project.json")),
     );
     if (authoredProject.previewMode === "rendered") {
-      const current = this.state();
+      const current = await this.freshState();
       if (!current.rendered || current.rendered.stale)
         throw Error(
           "Generate and register the revised toolkit output before rendering/exporting it",
@@ -943,22 +977,11 @@ export class Playground {
     const dest = path.join(this.jobsDir, j.id);
     fs.mkdirSync(path.join(dest, "lib"), { recursive: true });
     const capturedFiles = this.inputFiles();
-    captureFiles(this.workspace, dest, [
+    const inputManifest = await this.captureInputs(dest, [
       "project.json",
       ...this.files(),
       ...capturedFiles,
-    ]);
-    const capturedProject = JSON.parse(
-      fs.readFileSync(path.join(dest, "project.json")),
-    );
-    if (JSON.stringify(capturedProject) !== JSON.stringify(authoredProject))
-      throw Error("Project changed during snapshot; retry");
-    const inputManifest = describeInputs(
-      dest,
-      capturedProject,
-      capturedFiles,
-      this.engineIdentity(),
-    );
+    ], capturedFiles, authoredProject);
     j.fingerprint = inputFingerprint(inputManifest);
     j.inputManifest = inputManifest;
     fs.writeFileSync(
@@ -1322,6 +1345,7 @@ export class Playground {
     return path.join(this.jobsDir, id, "preview.mp4");
   }
   cancel() {
+    for (const worker of this.snapshotWorkers ?? []) worker.terminate();
     this.outputController?.abort();
     this.renderController?.abort();
     for (const j of this.jobs)
@@ -1344,6 +1368,7 @@ export class Playground {
     this.inspectionClosed = true;
     await this.inspector?.terminate();
     this.cancel();
+    await Promise.allSettled([...(this.snapshotWorkers ?? [])].map((worker) => worker.terminate()));
     await this.renderTask;
     await this.outputTask?.catch(() => {});
   }

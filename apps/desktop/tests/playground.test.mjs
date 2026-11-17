@@ -101,6 +101,8 @@ test("background freshness checks stay off the caller thread and detect source c
     };
     p.state({ background: true });
     await waitFor(() => p.inspection?.fingerprint === original);
+    await p.freshState();
+    assert.equal(p.inspection.fingerprint, original, "export preflight also inspects in a worker");
     p.write("lib/changed.dart", "// new source");
     p.inspectedAt = 0;
     p.state({ background: true });
@@ -111,6 +113,36 @@ test("background freshness checks stay off the caller thread and detect source c
     p.state({ background: true });
     await waitFor(() => !!p.inspection.sourceError);
     assert.equal(p.inspection.fingerprint, undefined);
+  } finally {
+    await p?.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test("snapshot hashing yields to the UI, verifies captured inputs and can cancel preparation", async () => {
+  const root = folder();
+  let p;
+  try {
+    const project = { revision: 0 };
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify(project));
+    p = new Playground({ workspace: root });
+    fs.mkdirSync(path.join(root, "assets"));
+    fs.writeFileSync(path.join(root, "assets/media.bin"), Buffer.alloc(16 * 1024 * 1024, 7));
+    const files = p.inputFiles(), dest = path.join(root, ".editor/snapshot-test");
+    let ticks = 0;
+    const timer = setInterval(() => ticks++, 1);
+    let manifest;
+    try {
+      manifest = await p.captureInputs(dest, ["project.json", ...files], files, project);
+    } finally { clearInterval(timer); }
+    assert(ticks > 0, "UI timers run while media is copied/hashed");
+    assert.equal(manifest.files.find(f => f.path === "assets/media.bin").bytes, 16 * 1024 * 1024);
+    assert.equal(p.running, false);
+    await assert.rejects(p.captureInputs(dest, ["project.json", ...files], files, { revision: 999 }), /Project changed/);
+    const pending = p.captureInputs(dest, ["project.json", ...files], files, project);
+    assert(p.running && p.blocking);
+    p.cancel();
+    await assert.rejects(pending, /Snapshot worker stopped/);
+    assert.equal(p.running, false);
   } finally {
     await p?.close();
     fs.rmSync(root, { recursive: true, force: true });
