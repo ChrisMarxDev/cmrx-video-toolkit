@@ -148,7 +148,7 @@ test("service snapshots and agent context agree on runtime ownership without blo
       return fingerprint();
     };
     app.publish();
-    assert.equal(scans, 1, "one status publication scans inputs only once");
+    assert.equal(scans, 0, "status publication never scans inputs on the UI thread");
     await post("send", { text: "Inspect the project" });
     assert.equal(context.runtime.owner, "agent");
     const state = await (

@@ -277,7 +277,7 @@ export async function startApp({
       state.clipCount = doc.clips.length;
       state.projectName = info.selected ? info.name : doc.name;
     } catch {}
-    if (playground) Object.assign(state, playground.state());
+    if (playground) Object.assign(state, playground.state({ background: true }));
     if (agent) Object.assign(state, agent.snapshot());
     if (manager) {
       Object.assign(state, manager.snapshot());
@@ -468,7 +468,7 @@ export async function startApp({
     if (name === "editor_context") {
       return {
         ...(await editor("/api/context")),
-        playground: playground.state(),
+        playground: playground.state({ background: true }),
         runtime: runtime(),
         sourceFiles: playground.files(),
         projectAgent: agent.context(),
@@ -1424,8 +1424,9 @@ export async function startApp({
         !playground.running &&
         playground.hasGraphics()
       ) {
-        const fingerprint = playground.fingerprint();
-        const overlay = playground.state().overlay;
+        const fingerprint = playground.inspection?.fingerprint;
+        if (!fingerprint) return;
+        const overlay = playground.state({ background: true }).overlay;
         if (
           overlay?.fingerprint !== fingerprint &&
           lastOverlayAttempt !== fingerprint

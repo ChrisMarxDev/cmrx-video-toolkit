@@ -86,6 +86,36 @@ test("source boundaries, history, freshness and restart reconciliation", async (
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test("background freshness checks stay off the caller thread and detect source changes", async () => {
+  const root = folder();
+  let p;
+  try {
+    fs.writeFileSync(path.join(root, "project.json"), JSON.stringify({ revision: 0 }));
+    p = new Playground({ workspace: root });
+    const original = p.fingerprint();
+    p.fingerprint = () => { throw Error("synchronous UI inspection"); };
+    const waitFor = async (predicate) => {
+      for (let i = 0; i < 100 && !predicate(); i++)
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      assert(predicate());
+    };
+    p.state({ background: true });
+    await waitFor(() => p.inspection?.fingerprint === original);
+    p.write("lib/changed.dart", "// new source");
+    p.inspectedAt = 0;
+    p.state({ background: true });
+    await waitFor(() => p.inspection?.fingerprint !== original);
+    assert(p.inspection.fingerprint);
+    fs.writeFileSync(path.join(root, "project.json"), "invalid");
+    p.inspectedAt = 0;
+    p.state({ background: true });
+    await waitFor(() => !!p.inspection.sourceError);
+    assert.equal(p.inspection.fingerprint, undefined);
+  } finally {
+    await p?.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 test("service owns timeline during agent turn and render; stop releases it", async () => {
   const root = folder();
   let app, emit, tool;

@@ -19,6 +19,7 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { spawn, execFile, execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import { Worker } from "node:worker_threads";
 import { parse } from "yaml";
 import { MacOSWorker } from "./macos-worker.mjs";
 import {
@@ -285,7 +286,43 @@ export class Playground {
       fs.readFileSync(path.join(templates, "graphics.dart"), "utf8").trim()
     );
   }
-  state() {
+  inspectInBackground() {
+    if (this.inspectionClosed || this.inspectionPending ||
+        Date.now() - (this.inspectedAt ?? 0) < 1000) return;
+    this.inspectionPending = true;
+    this.inspectedAt = Date.now();
+    if (!this.inspector) {
+      const worker = new Worker(new URL("./render-fingerprint-worker.mjs", import.meta.url), {
+        workerData: { workspace: this.workspace },
+      });
+      this.inspector = worker;
+      worker.unref();
+      worker.on("message", (inspection) => {
+        this.inspection = inspection;
+        this.inspectionPending = false;
+        this.inspectedAt = Date.now();
+        if (!this.inspectionClosed) this.onChange();
+      });
+      worker.on("error", (error) => {
+        this.inspection = { sourceError: error.message, hasGraphics: true };
+        this.inspectionPending = false;
+        this.inspector = null;
+        if (!this.inspectionClosed) this.onChange();
+      });
+      worker.on("exit", (code) => {
+        if (this.inspector !== worker) return;
+        this.inspector = null;
+        this.inspectionPending = false;
+        if (!this.inspectionClosed) {
+          this.inspection = { sourceError: `Source inspection stopped (${code})`, hasGraphics: true };
+          this.inspectedAt = Date.now();
+          this.onChange();
+        }
+      });
+    }
+    this.inspector.postMessage("inspect");
+  }
+  state({ background = false } = {}) {
     const latest = this.jobs
       .filter((j) => j.status === "complete" && j.kind !== "overlay")
       .at(-1);
@@ -295,11 +332,16 @@ export class Playground {
     let fingerprint,
       sourceError,
       hasGraphics = true;
-    try {
-      fingerprint = this.fingerprint();
-      hasGraphics = this.hasGraphics();
-    } catch (e) {
-      sourceError = e.message;
+    if (background) {
+      this.inspectInBackground();
+      ({ fingerprint, sourceError, hasGraphics = true } = this.inspection ?? {});
+    } else {
+      try {
+        fingerprint = this.fingerprint();
+        hasGraphics = this.hasGraphics();
+      } catch (e) {
+        sourceError = e.message;
+      }
     }
     return {
       rendered: (() => {
@@ -1299,6 +1341,8 @@ export class Playground {
       } catch {}
   }
   async close() {
+    this.inspectionClosed = true;
+    await this.inspector?.terminate();
     this.cancel();
     await this.renderTask;
     await this.outputTask?.catch(() => {});
