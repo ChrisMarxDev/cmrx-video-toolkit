@@ -1,4 +1,3 @@
-const monitoring = require("./monitoring.cjs");
 const {
   app,
   BrowserWindow,
@@ -30,6 +29,9 @@ if (process.env.CHAT_DEBUG_PORT)
     process.env.CHAT_DEBUG_PORT,
   );
 app.setName("CMRX Chat Editor");
+// Monitoring can cache Electron's userData path. Select the existing application
+// profile first, so an update does not appear to lose workspaces and accounts.
+const monitoring = require("./monitoring.cjs");
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on("second-instance", () => {

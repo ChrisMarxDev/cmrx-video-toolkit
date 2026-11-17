@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import vm from 'node:vm';
+test('monitoring initializes after selecting the existing application profile', () => {
+  let name = 'Electron', observed;
+  const app = { setName(value) { name = value; } };
+  const source = fs.readFileSync(new URL('../src/desktop.cjs', import.meta.url), 'utf8');
+  vm.runInNewContext(source.slice(0, source.indexOf('if (!app.requestSingleInstanceLock())')), {
+    __dirname: '/test/app', process: { env: {} },
+    require(id) {
+      if (id === 'electron') return { app };
+      if (id === './monitoring.cjs') { observed = name; return {}; }
+      return createRequire(import.meta.url)(id);
+    },
+  });
+  assert.equal(observed, 'CMRX Chat Editor');
+});
 const { cleanEvent } = createRequire(import.meta.url)('../src/monitoring-policy.cjs');
 test('monitoring allowlist removes project data, secrets, request tokens and host paths', () => {
   const event = cleanEvent({ event_id: 'id', user: { email: 'private@example.test' },
