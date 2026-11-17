@@ -141,6 +141,14 @@ test("service snapshots and agent context agree on runtime ownership without blo
         body: JSON.stringify(body),
       });
     await post("login", { provider: "chatgpt" });
+    const fingerprint = app.playground.fingerprint.bind(app.playground);
+    let scans = 0;
+    app.playground.fingerprint = () => {
+      scans++;
+      return fingerprint();
+    };
+    app.publish();
+    assert.equal(scans, 1, "one status publication scans inputs only once");
     await post("send", { text: "Inspect the project" });
     assert.equal(context.runtime.owner, "agent");
     const state = await (

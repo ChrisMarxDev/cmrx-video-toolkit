@@ -421,6 +421,13 @@ export class Playground {
         detached: true,
         ...options,
       });
+      // Offline capture/encoding must yield to the interactive editor. Children
+      // inherit this priority; never change the Electron/UI process priority.
+      if (p.pid) {
+        try {
+          os.setPriority(p.pid, os.constants.priority.PRIORITY_BELOW_NORMAL);
+        } catch {}
+      }
       this.processes.add(p);
       let output = "";
       const append = (d) => {

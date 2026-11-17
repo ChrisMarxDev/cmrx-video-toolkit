@@ -116,17 +116,21 @@ function VideoLayer({
   report: (s: string) => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const active = time >= clip.start && time < clip.start + clip.duration;
+  // Keep the current/next cut warm, rather than allocating a decoder and
+  // preloading media for every cut in the entire timeline.
+  const nearPlayhead =
+    time >= clip.start - 1 && time < clip.start + clip.duration + 0.25;
   const mediaURL = resource("media", { id: clip.assetId! });
   const preview = usePlaybackProxy(
     mediaURL,
     resource("playback-preview", { id: clip.assetId! }),
-    previewQuality,
+    nearPlayhead ? previewQuality : null,
   );
   useEffect(() => {
     reportProxy(clip.id, preview.status);
     return () => reportProxy(clip.id, null);
   }, [clip.id, preview.status, reportProxy]);
-  const active = time >= clip.start && time < clip.start + clip.duration;
   const playbackEpoch = useRef(0);
   const pendingPlay = useRef<Promise<void> | null>(null);
   const lastResync = useRef(-Infinity);
@@ -220,12 +224,12 @@ function VideoLayer({
   return (
     <video
       ref={ref}
-      src={preview.url}
+      src={nearPlayhead ? preview.url : undefined}
       data-preview-state={preview.status}
       data-preview-quality={previewQuality || "original"}
       muted={clip.muted || listeningVolume === 0}
       playsInline
-      preload="auto"
+      preload={nearPlayhead ? "auto" : "none"}
       onError={() => {
         if (preview.url !== mediaURL) {
           preview.fallback();

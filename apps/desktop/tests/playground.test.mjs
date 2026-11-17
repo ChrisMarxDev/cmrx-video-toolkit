@@ -13,6 +13,28 @@ function folder() {
     ),
   );
 }
+test(
+  "worker subprocesses yield CPU priority without lowering the editor",
+  {
+    skip: process.platform === "win32",
+  },
+  async () => {
+    const p = Object.assign(Object.create(Playground.prototype), {
+      processes: new Set(),
+    });
+    const before = os.getPriority();
+    const result = await p.host(process.execPath, [
+      "-e",
+      "setTimeout(()=>console.log(require('node:os').getPriority()),50)",
+    ]);
+    assert(
+      Number(result.output.trim()) >=
+        os.constants.priority.PRIORITY_BELOW_NORMAL,
+    );
+    assert.equal(os.getPriority(), before);
+    assert.equal(p.processes.size, 0);
+  },
+);
 test("source boundaries, history, freshness and restart reconciliation", async () => {
   const root = folder();
   try {

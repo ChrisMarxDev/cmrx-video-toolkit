@@ -245,7 +245,10 @@ export async function startApp({
   const runtime = () =>
     projectRuntime({
       ...state,
-      ...(playground?.state() ?? {}),
+      // Ownership checks run on every tool/status event. They need live job
+      // lifecycles, not a full source fingerprint (which walks all media).
+      jobs: playground?.jobs ?? state.jobs,
+      running: playground?.running ?? state.running,
       importing,
       recoveryRequired: !!projectServices?.recoveryRequired,
       steering: !!steeringPayload,

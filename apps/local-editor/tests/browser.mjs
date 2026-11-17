@@ -49,6 +49,8 @@ try {
   await page.waitForFunction(
     () => document.querySelector(".stage video")?.readyState >= 2,
   );
+  // The second cut starts at 4s: it must not hold a decoder/buffer at time 0.
+  assert.equal(await page.locator(".stage video:not([src])").count(), 1);
   await page.waitForFunction(() => {
     const canvases = [...document.querySelectorAll(".clip-media")];
     return (
